@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { differenceInDays, format } from 'date-fns';
 
+// Import serialization utilities
+import { serializeObject } from '../../utils/serialization';
+
 // Import engagement components
 import StatusBadges from '../../components/engagement/StatusBadges';
 import ReadingProgressIndicator from '../../components/engagement/ReadingProgressIndicator';
@@ -329,29 +332,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const peopleAlsoViewed = await getPeopleAlsoViewedJobs(id as string);
     const relatedCategories = await getRelatedCategories();
     
-    // Format dates to avoid serialization errors
-    const formatJobForSerialization = (job: EnhancedJobListing) => {
-      return {
-        ...job,
-        postedDate: job.postedDate ? new Date(job.postedDate).toISOString() : null,
-        scrapedDate: job.scrapedDate ? new Date(job.scrapedDate).toISOString() : null,
-        expiresAt: job.expiresAt ? new Date(job.expiresAt).toISOString() : null,
-        createdAt: job.createdAt ? new Date(job.createdAt).toISOString() : null,
-        updatedAt: job.updatedAt ? new Date(job.updatedAt).toISOString() : null,
-        // Handle nested objects with dates
-        engagementMetrics: job.engagementMetrics ? {
-          ...job.engagementMetrics,
-          lastClicked: job.engagementMetrics.lastClicked ? new Date(job.engagementMetrics.lastClicked).toISOString() : null,
-          lastViewed: job.engagementMetrics.lastViewed ? new Date(job.engagementMetrics.lastViewed).toISOString() : null
-        } : undefined
-      };
-    };
-    
+    // Use the serialization utility to handle all date objects
     return {
       props: {
-        job: formatJobForSerialization(job),
-        similarJobs: similarJobs.map(formatJobForSerialization),
-        peopleAlsoViewed: peopleAlsoViewed.map(formatJobForSerialization),
+        job: serializeObject(job),
+        similarJobs: serializeObject(similarJobs),
+        peopleAlsoViewed: serializeObject(peopleAlsoViewed),
         relatedCategories
       }
     };
