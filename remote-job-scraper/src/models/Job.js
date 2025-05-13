@@ -47,8 +47,7 @@ const jobSchema = new mongoose.Schema({
       const date = new Date();
       date.setDate(date.getDate() + config.database.ttlDays);
       return date;
-    },
-    index: true
+    }
   },
   source: {
     type: String,

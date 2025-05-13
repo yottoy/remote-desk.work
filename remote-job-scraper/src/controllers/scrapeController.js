@@ -1,9 +1,20 @@
 const logger = require('../utils/logger');
 const database = require('../utils/database');
 const qualityFilter = require('../utils/qualityFilter');
+const fs = require('fs').promises;
+const path = require('path');
+const config = require('../../config/config');
+
+// Import scrapers
 const WeWorkRemotelyScraper = require('../scrapers/WeWorkRemotelyScraper');
 const RemoteCoScraper = require('../scrapers/RemoteCoScraper');
-const IndeedScraper = require('../scrapers/IndeedScraper');
+const UpworkScraper = require('../scrapers/UpworkScraper');
+const CareerjetScraper = require('../scrapers/CareerjetScraper');
+const CompanySiteScraper = require('../scrapers/CompanySiteScraper');
+const RemoteIoScraper = require('../scrapers/RemoteIoScraper');
+const HeyRemoteIoScraper = require('../scrapers/HeyRemoteIoScraper');
+const WorkewScraper = require('../scrapers/WorkewScraper');
+const VirtualVocationsScraper = require('../scrapers/VirtualVocationsScraper');
 
 /**
  * Main controller for scraping jobs
@@ -14,8 +25,16 @@ class ScrapeController {
     this.scrapers = [
       new WeWorkRemotelyScraper(),
       new RemoteCoScraper(),
-      new IndeedScraper()
+      new UpworkScraper(),
+      new CareerjetScraper(),
+      new CompanySiteScraper(),
+      new RemoteIoScraper(),
+      new HeyRemoteIoScraper(),
+      new WorkewScraper(),
+      new VirtualVocationsScraper()
     ];
+    
+    this.resultsDir = path.join(process.cwd(), 'results');
   }
 
   /**
@@ -38,6 +57,10 @@ class ScrapeController {
         sources: {}
       };
       
+      // Store all scraped jobs for saving to JSON
+      const allScrapedJobs = [];
+      const allFilteredJobs = [];
+      
       // Run each scraper
       for (const scraper of this.scrapers) {
         try {
@@ -51,6 +74,9 @@ class ScrapeController {
             stats.errors++;
             continue;
           }
+          
+          // Add to all scraped jobs collection
+          allScrapedJobs.push(...scrapedJobs);
           
           logger.info(`${scraper.name} scraped ${scrapedJobs.length} jobs`);
           
@@ -70,6 +96,9 @@ class ScrapeController {
           
           // Filter jobs for quality
           const filteredJobs = qualityFilter.filterJobs(scrapedJobs);
+          
+          // Add to filtered jobs collection
+          allFilteredJobs.push(...filteredJobs);
           
           // Update filtered count
           const filteredOutCount = scrapedJobs.length - filteredJobs.length;
@@ -104,6 +133,9 @@ class ScrapeController {
         timestamp: new Date()
       };
       
+      // Write results to file
+      await this.saveResultsToFile(allScrapedJobs);
+      
       logger.info('Job scrape process completed successfully');
       logger.info(`Summary: Scraped ${stats.totalScraped} jobs, filtered out ${stats.filteredOut}, saved ${stats.saved}`);
       
@@ -114,6 +146,32 @@ class ScrapeController {
     } finally {
       // Close database connection
       await database.disconnect();
+    }
+  }
+  
+  /**
+   * Save scrape results to a JSON file
+   * @param {Array} jobs - Array of scraped jobs
+   * @returns {Promise<string>} - Path to saved file
+   */
+  async saveResultsToFile(jobs) {
+    try {
+      // Create results directory if it doesn't exist
+      await fs.mkdir(this.resultsDir, { recursive: true });
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
+      const filename = `scrape-results-${timestamp}.json`;
+      const filePath = path.join(this.resultsDir, filename);
+      
+      // Write jobs to file
+      await fs.writeFile(filePath, JSON.stringify(jobs, null, 2));
+      
+      logger.info(`Scrape results saved to ${filePath}`);
+      return filePath;
+    } catch (error) {
+      logger.error(`Error saving results to file: ${error.message}`);
+      return null;
     }
   }
 }

@@ -1,41 +1,72 @@
-# Node.js dependencies
+# Node.js
 node_modules/
-
-# Environment variables
+npm-debug.log
+yarn-debug.log
+yarn-error.log
 .env
 .env.local
-.env.development
-.env.test
-.env.production
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+venv/
+ENV/
 
 # Logs
-logs/
+logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+python-bridge/jobspy_bridge.log
 
-# Scrape results
-results/
-
-# IDE files
-.idea/
-.vscode/
-*.sublime-project
-*.sublime-workspace
-
-# OS files
+# OS specific
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Testing
-coverage/
-.nyc_output/
+# Temp files
+*.tmp
+*.bak
+*.swp
+*~
 
-# Build directories
-dist/
-build/
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
 
-# Temporary files
-tmp/
-temp/ 
+# Test results and screenshots
+*-results/
+*-screenshots/
+baseline-results/
+
+# MongoDB data
+data/ 

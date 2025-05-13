@@ -1,0 +1,113 @@
+name: Test MongoDB Connection
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Run in debug mode'
+        required: false
+        default: 'false'
+
+jobs:
+  test-mongodb:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci
+      
+      # Create MongoDB test script
+      - name: Create test script
+        run: |
+          cat > test-mongodb.js << 'EOF'
+          require('dotenv').config();
+          const { MongoClient } = require('mongodb');
+
+          async function testMongoConnection() {
+            const uri = process.env.MONGODB_URI;
+            if (!uri) {
+              console.error('MONGODB_URI not provided in environment variables');
+              process.exit(1);
+            }
+            
+            console.log('Testing MongoDB connection...');
+            
+            const client = new MongoClient(uri, {
+              useNewUrlParser: true,
+              useUnifiedTopology: true
+            });
+            
+            try {
+              await client.connect();
+              console.log('Successfully connected to MongoDB');
+              
+              // Get database info
+              const adminDb = client.db().admin();
+              const dbInfo = await adminDb.listDatabases();
+              
+              console.log('Available databases:');
+              dbInfo.databases.forEach(db => {
+                console.log(`- ${db.name} (${db.sizeOnDisk} bytes)`);
+              });
+              
+              // Create test document
+              const testDb = client.db();
+              const testCollection = testDb.collection('connection_tests');
+              
+              const result = await testCollection.insertOne({
+                test_id: new Date().toISOString(),
+                message: 'GitHub Actions test',
+                timestamp: new Date()
+              });
+              
+              console.log(`Inserted test document with ID: ${result.insertedId}`);
+              
+              // Count documents
+              const count = await testCollection.countDocuments();
+              console.log(`Total test documents: ${count}`);
+              
+              await client.close();
+              console.log('Connection closed');
+              
+              return true;
+            } catch (error) {
+              console.error(`MongoDB connection error: ${error.message}`);
+              return false;
+            } finally {
+              await client.close();
+            }
+          }
+
+          testMongoConnection()
+            .then(success => {
+              if (success) {
+                process.exit(0);
+              } else {
+                process.exit(1);
+              }
+            })
+            .catch(error => {
+              console.error('Unhandled error:', error);
+              process.exit(1);
+            });
+          EOF
+      
+      # Set up environment variables
+      - name: Set up environment
+        run: |
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" > .env
+      
+      # Run the test
+      - name: Test MongoDB connection
+        run: node test-mongodb.js 

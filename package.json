@@ -1,0 +1,25 @@
+{
+  "name": "remote-job-scraper",
+  "version": "1.0.0",
+  "description": "A remote job scraper with JobSpy integration for Indeed",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node test-jobspy-integration.js",
+    "setup": "bash setup-jobspy.sh",
+    "bridge": "cd python-bridge && node start-bridge.js",
+    "scrape": "cd python-bridge && node scrape-all-jobs.js",
+    "full-scrape": "node scripts/run-full-scraper.js",
+    "dev": "cd frontend && npm run dev"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "dotenv": "^16.5.0",
+    "mongodb": "^6.3.0",
+    "playwright": "^1.52.0",
+    "xml2js": "^0.6.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

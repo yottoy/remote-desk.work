@@ -1,0 +1,90 @@
+name: JobSpy Scraper
+
+on:
+  # Run on schedule (every 6 hours)
+  schedule:
+    - cron: '0 */6 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Run in debug mode'
+        required: false
+        default: 'false'
+
+jobs:
+  scrape-indeed:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      # Set up Python environment for JobSpy bridge
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      # Install Python dependencies for JobSpy bridge
+      - name: Install Python dependencies
+        run: |
+          cd python-bridge
+          pip install -r requirements.txt
+          
+          # Rename the bridge file if it exists with the old name
+          if [ -f "indeed_bridge.py" ] && [ ! -f "jobspy_bridge.py" ]; then
+            cp indeed_bridge.py jobspy_bridge.py
+          fi
+      
+      # Install Node.js dependencies
+      - name: Install Node.js dependencies
+        run: npm ci
+      
+      # Configure environment
+      - name: Setup environment variables
+        run: |
+          echo "ENABLE_JOBSPY_INDEED=true" >> .env
+          echo "ENABLE_JOBSPY_LINKEDIN=true" >> .env
+          echo "ENABLE_JOBSPY_GLASSDOOR=true" >> .env
+          echo "ENABLE_JOBSPY_GOOGLE=true" >> .env
+          echo "ENABLE_JOBSPY_ZIPRECRUITER=true" >> .env
+          echo "ENABLE_JOBSPY_BAYT=true" >> .env
+          echo "ENABLE_JOBSPY_NAUKRI=true" >> .env
+          echo "JOBSPY_BRIDGE_URL=http://localhost:8000" >> .env
+          echo "JOBSPY_BRIDGE_HOST=127.0.0.1" >> .env
+          echo "JOBSPY_BRIDGE_PORT=8000" >> .env
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "LOG_LEVEL=info" >> .env
+      
+      # Run JobSpy Indeed scraper
+      - name: Run JobSpy scraper
+        run: node src/index.js
+      
+      # Upload logs as artifacts
+      - name: Archive logs
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs
+          path: |
+            logs/
+            python-bridge/jobspy_bridge.log
+          retention-days: 7
+      
+      # Upload results as artifacts (if in debug mode)
+      - name: Archive results
+        if: ${{ github.event.inputs.debug == 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: scrape-results
+          path: results/
+          retention-days: 1 

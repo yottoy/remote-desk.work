@@ -7,9 +7,22 @@ const config = require('../../config/config');
 class IndeedScraper extends BaseScraper {
   constructor() {
     super('Indeed');
-    this.baseUrl = config.sources.indeed.baseUrl;
-    this.apiKey = config.sources.indeed.apiKey;
-    this.queries = config.sources.indeed.queries;
+    this.baseUrl = config.sources.indeed?.baseUrl || 'https://api.indeed.com/ads';
+    this.apiKey = config.sources.indeed?.apiKey || '';
+    this.queries = config.sources.indeed?.queries || [
+      'data entry remote',
+      'administrative assistant remote',
+      'virtual assistant remote',
+      'customer service representative remote'
+    ];
+    this.credibilityScore = config.sources.indeed?.credibilityScore || 8;
+    this.browser = null;
+    this.page = null;
+    this.config = {
+      rateLimitMs: 2000,
+      maxRetries: 3,
+      retryDelayMs: 5000
+    };
   }
 
   /**
@@ -112,14 +125,14 @@ class IndeedScraper extends BaseScraper {
             url: apiJob.url,
             description: apiJob.snippet,
             descriptionText: this.cleanDescription(apiJob.snippet),
-            source: 'indeed',
+            source: 'Indeed',
             sourceId: apiJob.jobkey,
             postedDate: apiJob.date ? new Date(apiJob.date) : null
           };
           
           // Get full job details if snippet is too short
           if (!job.descriptionText || job.descriptionText.length < 200) {
-            const jobDetails = await this.scrapeJobDetails(job.url);
+            const jobDetails = await this.fetchJobDetailsWithAxios(job.url);
             job.description = jobDetails.description || job.description;
             job.descriptionText = jobDetails.descriptionText || job.descriptionText;
           }
@@ -162,7 +175,8 @@ class IndeedScraper extends BaseScraper {
       // Process each search query
       for (const query of this.queries) {
         try {
-          const queryJobs = await this.scrapeQueryFromWeb(query);
+          // Use axios instead of browser navigation
+          const queryJobs = await this.scrapeQueryWithAxios(query);
           jobs.push(...queryJobs);
           
           // Respect rate limits between queries
@@ -184,204 +198,239 @@ class IndeedScraper extends BaseScraper {
   }
 
   /**
-   * Scrape Indeed web for a specific query
+   * Scrape Indeed web using axios for a specific query
    * @param {string} query - Search query
    * @returns {Array} - Array of job objects
    */
-  async scrapeQueryFromWeb(query) {
-    // Encode query for URL
-    const encodedQuery = encodeURIComponent(query);
-    const searchUrl = `https://www.indeed.com/jobs?q=${encodedQuery}&l=Remote&sort=date`;
-    
-    logger.info(`Scraping Indeed web for query: "${query}" at ${searchUrl}`);
-    
-    const success = await this.navigateTo(searchUrl);
-    if (!success) {
-      logger.error(`Failed to navigate to Indeed search page for query: "${query}"`);
-      return [];
-    }
-    
+  async scrapeQueryWithAxios(query) {
     try {
-      // Wait for job listings to load
-      await this.waitForSelector('.jobsearch-ResultsList');
+      // Encode query for URL
+      const encodedQuery = encodeURIComponent(query);
+      const searchUrl = `https://www.indeed.com/jobs?q=${encodedQuery}&l=Remote&sort=date`;
       
-      // Get all job listings
-      const jobElements = await this.page.$$('.job_seen_beacon');
-      logger.info(`Found ${jobElements.length} job listings for query "${query}"`);
+      logger.info(`Scraping Indeed web for query: "${query}" at ${searchUrl}`);
+      
+      // Make the request with a browser-like header
+      const response = await axios.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Referer': 'https://www.indeed.com/'
+        },
+        timeout: 30000
+      });
+      
+      // Parse HTML with cheerio
+      const $ = cheerio.load(response.data);
+      
+      // Find job cards
+      const jobCards = $('.job_seen_beacon');
+      logger.info(`Found ${jobCards.length} job listings for query "${query}"`);
       
       const jobs = [];
       
-      // Process each job listing
-      for (const jobElement of jobElements) {
+      // Process each job card
+      jobCards.each((index, element) => {
         try {
           // Extract job data
-          const titleElement = await jobElement.$('.jobTitle a');
-          const companyElement = await jobElement.$('[data-testid="company-name"]');
-          const dateElement = await jobElement.$('.date');
+          const titleElement = $(element).find('.jobTitle a');
+          const companyElement = $(element).find('[data-testid="company-name"]');
+          const dateElement = $(element).find('.date');
           
-          if (!titleElement || !companyElement) {
+          if (!titleElement.length || !companyElement.length) {
             logger.debug('Skipping job listing with missing essential elements');
-            continue;
+            return; // Continue to next element (like 'continue' in a for loop)
           }
           
           // Get job details
-          const title = await titleElement.textContent().then(text => text.trim());
-          const company = await companyElement.textContent().then(text => text.trim());
-          const datePosted = await dateElement?.textContent().then(text => text?.trim().replace('Posted', '').trim() || '');
-          const jobUrl = await titleElement.getAttribute('href');
+          const title = titleElement.text().trim();
+          const company = companyElement.text().trim();
+          const datePosted = dateElement.length ? dateElement.text().trim().replace('Posted', '').trim() : '';
+          const jobUrl = titleElement.attr('href');
           
           // Skip if missing essential data
           if (!title || !company || !jobUrl) {
             logger.debug('Skipping job listing with missing essential data');
-            continue;
+            return;
           }
           
           // Create full job URL
           const url = jobUrl.startsWith('http') ? jobUrl : `https://www.indeed.com${jobUrl}`;
           
-          // Get job details page
-          const jobDetails = await this.scrapeJobDetails(url);
+          // Estimate posted date
+          const postedDate = this.estimatePostedDate(datePosted);
           
-          // Create job object
-          const job = {
+          // Schedule a job to fetch full details later
+          jobs.push({
             title,
             company,
             url,
-            source: 'indeed',
-            postedDate: this.parseDate(datePosted),
-            ...jobDetails
-          };
-          
-          jobs.push(job);
-          logger.debug(`Scraped job: ${job.title} at ${job.company}`);
-          
-          // Respect rate limits between job detail page visits
-          await this.delay(this.config.rateLimitMs);
+            source: 'Indeed',
+            postedDate,
+            // These fields will be populated later when we fetch full details
+            description: '',
+            descriptionText: '',
+            location: 'Remote',
+            fetchDetails: true
+          });
         } catch (error) {
-          logger.error(`Error processing Indeed job listing: ${error.message}`);
-          continue; // Continue with next job listing
+          logger.error(`Error processing job card: ${error.message}`);
+        }
+      });
+      
+      // Fetch full details for each job
+      const jobsWithDetails = [];
+      for (const job of jobs) {
+        if (job.fetchDetails) {
+          try {
+            // Fetch job details
+            const jobDetails = await this.fetchJobDetailsWithAxios(job.url);
+            
+            // Add details to job
+            jobsWithDetails.push({
+              ...job,
+              description: jobDetails.description || '',
+              descriptionText: jobDetails.descriptionText || '',
+              fetchDetails: undefined // Remove this temporary field
+            });
+            
+            // Respect rate limits
+            await this.delay(this.config.rateLimitMs);
+          } catch (error) {
+            logger.error(`Error fetching job details for ${job.url}: ${error.message}`);
+            // Include the job even without full details
+            jobsWithDetails.push({
+              ...job,
+              fetchDetails: undefined
+            });
+          }
+        } else {
+          jobsWithDetails.push({
+            ...job,
+            fetchDetails: undefined
+          });
         }
       }
       
-      return jobs;
+      return jobsWithDetails;
     } catch (error) {
-      logger.error(`Error scraping Indeed web for query "${query}": ${error.message}`);
+      logger.error(`Error scraping Indeed with axios for query "${query}": ${error.message}`);
       return [];
     }
   }
 
   /**
-   * Scrape details for a specific job
-   * @param {string} url - Job URL to scrape details from
-   * @returns {Object} - Job details
-   */
-  async scrapeJobDetails(url) {
-    logger.debug(`Scraping Indeed job details from ${url}`);
-    
-    try {
-      // For API mode, use axios to fetch the page
-      if (!this.browser) {
-        return this.fetchJobDetailsWithAxios(url);
-      }
-      
-      // For web scraping mode, use browser
-      const success = await this.navigateTo(url);
-      if (!success) {
-        logger.error(`Failed to navigate to Indeed job details page: ${url}`);
-        return {};
-      }
-      
-      try {
-        // Wait for job description to load
-        await this.waitForSelector('#jobDescriptionText');
-        
-        // Extract job description
-        const description = await this.page.$eval('#jobDescriptionText', 
-          el => el.outerHTML
-        ).catch(() => '');
-        
-        // Extract plain text description for analysis
-        const descriptionText = await this.page.$eval('#jobDescriptionText', 
-          el => el.textContent
-        ).catch(() => '');
-        
-        // Extract location
-        const location = await this.extractText('.jobsearch-JobInfoHeader-subtitle .icl-u-xs-mt--xs').catch(() => 'Remote');
-        
-        // Extract salary if available
-        const salary = await this.extractText('[data-testid="attribute_snippet_testid"]').catch(() => '');
-        
-        return {
-          description,
-          descriptionText: this.cleanDescription(descriptionText),
-          location: location || 'Remote',
-          salary
-        };
-      } catch (error) {
-        logger.error(`Error scraping Indeed job details from ${url}: ${error.message}`);
-        return {};
-      }
-    } catch (error) {
-      logger.error(`Error in Indeed job details scraping: ${error.message}`);
-      return {};
-    }
-  }
-
-  /**
-   * Fetch job details using axios (for API mode)
-   * @param {string} url - Job URL to fetch details from
-   * @returns {Object} - Job details
+   * Fetch job details from a job page
+   * @param {string} url - Job URL
+   * @returns {Object} - Job details object
    */
   async fetchJobDetailsWithAxios(url) {
     try {
+      logger.debug(`Fetching job details from ${url}`);
+      
       const response = await axios.get(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Referer': 'https://www.indeed.com/'
+        },
+        timeout: 30000
       });
       
-      const html = response.data;
-      const $ = cheerio.load(html);
+      // Parse HTML
+      const $ = cheerio.load(response.data);
       
-      // Extract job description
-      const description = $('#jobDescriptionText').html() || '';
-      
-      // Extract plain text description for analysis
-      const descriptionText = $('#jobDescriptionText').text() || '';
-      
-      // Extract location
-      const location = $('.jobsearch-JobInfoHeader-subtitle .icl-u-xs-mt--xs').text().trim() || 'Remote';
-      
-      // Extract salary if available
-      const salary = $('[data-testid="attribute_snippet_testid"]').text().trim() || '';
+      // Extract description
+      const descriptionElement = $('#jobDescriptionText');
+      const description = descriptionElement.html() || '';
+      const descriptionText = descriptionElement.text().trim() || '';
       
       return {
         description,
-        descriptionText: this.cleanDescription(descriptionText),
-        location,
-        salary
+        descriptionText
       };
     } catch (error) {
-      logger.error(`Error fetching Indeed job details with axios from ${url}: ${error.message}`);
-      return {};
+      logger.error(`Error fetching job details: ${error.message}`);
+      return {
+        description: '',
+        descriptionText: ''
+      };
     }
   }
 
   /**
-   * Clean HTML description to text
-   * @param {string} description - HTML or text description
-   * @returns {string} - Cleaned text description
+   * Clean description text
+   * @param {string} description - Job description
+   * @returns {string} - Cleaned description text
    */
   cleanDescription(description) {
     if (!description) return '';
-    
-    // Remove HTML tags
-    let text = description.replace(/<[^>]*>/g, ' ');
-    
-    // Normalize whitespace
-    text = text.replace(/\s+/g, ' ').trim();
-    
-    return text;
+    return description
+      .replace(/<[^>]+>/g, ' ') // Remove HTML tags
+      .replace(/\s+/g, ' ')     // Replace multiple spaces with a single space
+      .trim();
+  }
+  
+  /**
+   * Estimate posted date from description
+   * @param {string} dateText - Date text from job listing
+   * @returns {Date} - Estimated posted date
+   */
+  estimatePostedDate(dateText) {
+    try {
+      const now = new Date();
+      
+      if (!dateText) {
+        return now;
+      }
+      
+      // Parse "X days ago"
+      const daysMatch = dateText.match(/(\d+)\s*day/i);
+      if (daysMatch) {
+        const days = parseInt(daysMatch[1], 10);
+        const date = new Date();
+        date.setDate(date.getDate() - days);
+        return date;
+      }
+      
+      // Parse "X hours ago"
+      const hoursMatch = dateText.match(/(\d+)\s*hour/i);
+      if (hoursMatch) {
+        const hours = parseInt(hoursMatch[1], 10);
+        const date = new Date();
+        date.setHours(date.getHours() - hours);
+        return date;
+      }
+      
+      // Parse "Today" or "Just posted"
+      if (dateText.match(/today|just posted/i)) {
+        return now;
+      }
+      
+      // Parse "Yesterday"
+      if (dateText.match(/yesterday/i)) {
+        const date = new Date();
+        date.setDate(date.getDate() - 1);
+        return date;
+      }
+      
+      // Default to today
+      return now;
+    } catch (error) {
+      logger.error(`Error parsing date "${dateText}": ${error.message}`);
+      return new Date();
+    }
+  }
+  
+  /**
+   * Delay execution for a specified time
+   * @param {number} ms - Delay in milliseconds
+   * @returns {Promise} - Promise that resolves after the delay
+   */
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 
