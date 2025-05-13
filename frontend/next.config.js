@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
@@ -10,10 +12,14 @@ const nextConfig = {
     API_URL: process.env.API_URL || 'http://localhost:3001/api',
     SITE_NAME: 'ClickClickJob.com',
   },
-  // Configure output build directory for production
-  distDir: 'build',
-  // Enable static exports if needed for static hosting
-  // output: 'export',
+  // Remove custom distDir to use Next.js default (.next)
+  // distDir: 'build',
+  
+  // Add experimental config for monorepo support
+  experimental: {
+    outputFileTracingRoot: path.join(__dirname, '../'),
+  },
+  
   compiler: {
     // Remove console logs in production
     removeConsole: process.env.NODE_ENV === 'production',

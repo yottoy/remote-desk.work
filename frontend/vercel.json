@@ -4,7 +4,7 @@
   "buildCommand": "npm run build",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "outputDirectory": "build",
+  "outputDirectory": ".next",
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://api.clickclickjob.com/api/:path*" }
   ],
