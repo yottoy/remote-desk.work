@@ -1,0 +1,35 @@
+{
+  "name": "clickclickjob",
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm ci",
+  "framework": "nextjs",
+  "outputDirectory": "build",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://api.clickclickjob.com/api/:path*" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "API_URL": "https://api.clickclickjob.com/api",
+    "SITE_NAME": "ClickClickJob.com",
+    "NEXT_PUBLIC_SITE_URL": "https://clickclickjob.com"
+  }
+} 
