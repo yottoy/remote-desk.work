@@ -6,6 +6,7 @@
   "framework": "nextjs",
   "outputDirectory": ".next",
   "rewrites": [
+    { "source": "/", "destination": "/index.html" },
     { "source": "/api/:path*", "destination": "https://api.clickclickjob.com/api/:path*" }
   ],
   "headers": [

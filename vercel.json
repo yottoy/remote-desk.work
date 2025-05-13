@@ -1,5 +1,8 @@
 {
   "buildCommand": "cd frontend && npm run build",
   "installCommand": "cd frontend && npm ci",
-  "outputDirectory": "frontend/.next"
+  "outputDirectory": "frontend/.next",
+  "routes": [
+    { "src": "/(.*)", "dest": "/frontend/$1" }
+  ]
 } 
