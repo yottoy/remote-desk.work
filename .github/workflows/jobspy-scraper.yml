@@ -35,6 +35,14 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
       
+      # Create log directories
+      - name: Create log directories
+        run: |
+          mkdir -p logs
+          mkdir -p python-bridge/logs
+          touch logs/scraper.log
+          touch python-bridge/jobspy_bridge.log
+      
       # Install Python dependencies for JobSpy bridge
       - name: Install Python dependencies
         run: |
@@ -68,17 +76,35 @@ jobs:
       
       # Run JobSpy Indeed scraper
       - name: Run JobSpy scraper
-        run: node src/index.js
+        run: |
+          # Record start time
+          echo "Starting JobSpy scraper at $(date)" | tee -a logs/scraper.log
+          
+          # Run the scraper and capture output
+          node src/index.js 2>&1 | tee -a logs/scraper.log
+          
+          # Record completion
+          echo "JobSpy scraper completed at $(date)" | tee -a logs/scraper.log
+          
+          # Create a results summary
+          echo "=== SCRAPING RESULTS SUMMARY ===" > logs/summary.log
+          echo "Scraper run completed at: $(date)" >> logs/summary.log
+          
+          # Try to get job count from MongoDB if possible
+          echo "Checking MongoDB for job count..." >> logs/summary.log
+          node -e "require('dotenv').config(); const { MongoClient } = require('mongodb'); async function checkCount() { try { const client = new MongoClient(process.env.MONGODB_URI); await client.connect(); const db = client.db(); const count = await db.collection('jobs').countDocuments(); console.log('Total jobs in database: ' + count); } catch(e) { console.error('Error checking job count:', e.message); } finally { process.exit(0); } }; checkCount();" 2>&1 | tee -a logs/summary.log
       
       # Upload logs as artifacts - Updated to v4
       - name: Archive logs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: logs
           path: |
             logs/
-            python-bridge/jobspy_bridge.log
+            python-bridge/*.log
           retention-days: 7
+          if-no-files-found: warn
       
       # Upload results as artifacts (if in debug mode) - Updated to v4
       - name: Archive results
@@ -87,4 +113,5 @@ jobs:
         with:
           name: scrape-results
           path: results/
-          retention-days: 1 
+          retention-days: 1
+          if-no-files-found: warn 
