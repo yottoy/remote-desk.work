@@ -59,6 +59,12 @@ jobs:
       - name: Install Node.js dependencies
         run: npm ci
       
+      # Add a debug step to analyze the src/index.js file
+      - name: Debug src/index.js
+        run: |
+          npm install acorn acorn-walk
+          node -e "const fs = require('fs'); const path = require('path'); const acorn = require('acorn'); const walk = require('acorn-walk'); try { const indexPath = path.join(process.cwd(), 'src', 'index.js'); const indexContent = fs.readFileSync(indexPath, 'utf8'); console.log('=== ANALYSIS OF src/index.js ==='); const ast = acorn.parse(indexContent, { ecmaVersion: 2022, sourceType: 'module', locations: true }); console.log('\n=== BRIDGE MANAGER CALLS ==='); walk.simple(ast, { CallExpression(node) { if (node.callee.type === 'MemberExpression' && node.callee.object.name === 'bridgeManager') { const method = node.callee.property.name || '[computed]'; const location = node.loc ? `Line ${node.loc.start.line}:${node.loc.start.column}` : 'Unknown location'; console.log(`${location}: bridgeManager.${method}()`); } } }); const lines = indexContent.split('\n'); console.log('\n=== LINE 32 ==='); console.log(`Line 32: ${lines[31]}`); } catch (error) { console.error('Error analyzing file:', error); }" | tee -a logs/debug.log
+      
       # Configure environment
       - name: Setup environment variables
         run: |

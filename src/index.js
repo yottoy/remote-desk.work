@@ -28,7 +28,8 @@ async function initializeJobSpyBridge() {
     
     if (bridgeStarted) {
       logger.info('JobSpy bridge started successfully');
-      // The monitoring functionality is now built into the bridge manager
+      // Call the legacy startMonitoring function (which is now a no-op) to maintain backward compatibility
+      bridgeManager.startMonitoring();
     } else {
       logger.error('Failed to start JobSpy bridge');
     }

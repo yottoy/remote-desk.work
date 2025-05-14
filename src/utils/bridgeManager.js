@@ -190,8 +190,19 @@ async function stop() {
   }
 }
 
+/**
+ * Legacy function stub for startMonitoring
+ * @deprecated This function is deprecated and does nothing.
+ */
+function startMonitoring() {
+  logger.warn('bridgeManager.startMonitoring() was called, but this function is deprecated and does nothing.');
+  logger.warn('The monitoring functionality is now built into the bridge manager.');
+  return true;
+}
+
 module.exports = {
   isRunning,
   start,
-  stop
+  stop,
+  startMonitoring
 }; 
