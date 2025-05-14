@@ -200,9 +200,19 @@ function startMonitoring() {
   return true;
 }
 
+/**
+ * Legacy function to check bridge status
+ * @deprecated Use isRunning instead
+ * @returns {Promise<boolean>} True if the bridge is running
+ */
+async function checkStatus() {
+  return await isRunning();
+}
+
 module.exports = {
   isRunning,
   start,
   stop,
-  startMonitoring
+  startMonitoring,
+  checkStatus
 }; 
