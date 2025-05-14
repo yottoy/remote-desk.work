@@ -28,8 +28,7 @@ async function initializeJobSpyBridge() {
     
     if (bridgeStarted) {
       logger.info('JobSpy bridge started successfully');
-      // Start monitoring the bridge to auto-restart if it fails
-      bridgeManager.startMonitoring(60000); // Check every 60 seconds
+      // The monitoring functionality is now built into the bridge manager
     } else {
       logger.error('Failed to start JobSpy bridge');
     }

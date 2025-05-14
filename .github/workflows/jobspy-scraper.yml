@@ -36,10 +36,11 @@ jobs:
           cache: 'pip'
       
       # Create log directories
-      - name: Create log directories
+      - name: Create log and result directories
         run: |
           mkdir -p logs
           mkdir -p python-bridge/logs
+          mkdir -p results
           touch logs/scraper.log
           touch python-bridge/jobspy_bridge.log
       
@@ -68,11 +69,11 @@ jobs:
           echo "ENABLE_JOBSPY_ZIPRECRUITER=true" >> .env
           echo "ENABLE_JOBSPY_BAYT=true" >> .env
           echo "ENABLE_JOBSPY_NAUKRI=true" >> .env
-          echo "JOBSPY_BRIDGE_URL=http://localhost:8000" >> .env
-          echo "JOBSPY_BRIDGE_HOST=127.0.0.1" >> .env
+          echo "JOBSPY_BRIDGE_URL=http://0.0.0.0:8000" >> .env
+          echo "JOBSPY_BRIDGE_HOST=0.0.0.0" >> .env
           echo "JOBSPY_BRIDGE_PORT=8000" >> .env
           echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
-          echo "LOG_LEVEL=info" >> .env
+          echo "LOG_LEVEL=debug" >> .env
       
       # Run JobSpy Indeed scraper
       - name: Run JobSpy scraper
@@ -108,7 +109,7 @@ jobs:
       
       # Upload results as artifacts (if in debug mode) - Updated to v4
       - name: Archive results
-        if: ${{ github.event.inputs.debug == 'true' }}
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: scrape-results
