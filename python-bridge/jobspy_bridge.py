@@ -10,6 +10,8 @@ from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field, validator
 from dotenv import load_dotenv
 from jobspy import scrape_jobs, Site
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 # Load environment variables
 load_dotenv()
@@ -25,7 +27,27 @@ logging.basicConfig(
 )
 logger = logging.getLogger("jobspy_bridge")
 
+# Get environment variables
+GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
+HOST = os.environ.get('JOBSPY_BRIDGE_HOST', '0.0.0.0' if GITHUB_ACTIONS else '127.0.0.1')
+PORT = int(os.environ.get('JOBSPY_BRIDGE_PORT', '8000'))
+
+# Disable pydantic validation warnings if requested
+if os.environ.get('DISABLE_PYDANTIC_VALIDATION_WARNINGS', 'false').lower() in ('true', '1', 'yes'):
+    import warnings
+    from pydantic import PydanticDeprecatedSince20
+    warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
+
 app = FastAPI(title="JobSpy Bridge API", description="Bridge API for JobSpy job scrapers")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class JobRequest(BaseModel):
     site_names: List[str] = ["indeed"]
@@ -184,13 +206,10 @@ async def scrape_indeed(request: JobRequest):
     request.site_names = ["indeed"]
     return await scrape_all_jobs(request)
 
+# Run the API server if executed directly
 if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("JOBSPY_BRIDGE_PORT", 8000))
-    host = os.environ.get("JOBSPY_BRIDGE_HOST", "127.0.0.1")
-    
-    logger.info(f"Starting JobSpy bridge on http://{host}:{port}")
+    logger.info(f"Starting JobSpy bridge on http://{HOST}:{PORT}")
     try:
-        uvicorn.run("jobspy_bridge:app", host=host, port=port, reload=True)
+        uvicorn.run("jobspy_bridge:app", host=HOST, port=PORT, reload=True)
     except Exception as e:
         logger.error(f"Failed to start JobSpy bridge: {str(e)}") 

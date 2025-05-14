@@ -6,6 +6,16 @@ const bridgeManager = require('./utils/bridgeManager');
 const path = require('path');
 const fs = require('fs');
 
+// Check for GitHub Actions environment
+const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
+
+// If running in GitHub Actions, configure bridge URL to use 0.0.0.0
+if (isGitHubActions) {
+  process.env.JOBSPY_BRIDGE_URL = 'http://0.0.0.0:8000';
+  process.env.JOBSPY_BRIDGE_HOST = '0.0.0.0';
+  console.log('Running in GitHub Actions, configured bridge URL to use all interfaces');
+}
+
 /**
  * Initialize the JobSpy bridge if needed
  */
