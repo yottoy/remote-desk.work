@@ -10,12 +10,18 @@
     "bridge": "cd python-bridge && node start-bridge.js",
     "scrape": "cd python-bridge && node scrape-all-jobs.js",
     "full-scrape": "node scripts/run-full-scraper.js",
-    "dev": "cd frontend && npm run dev"
+    "dev": "cd frontend && npm run dev",
+    "admin-scraper": "node scripts/schedule-admin-scrapers.js",
+    "admin-scraper:run-now": "node scripts/schedule-admin-scrapers.js --run-now",
+    "admin-scraper:full": "node scripts/run-admin-scraper.js",
+    "admin-scraper:quick": "node scripts/run-admin-scraper.js --quick"
   },
   "dependencies": {
     "axios": "^1.6.5",
     "dotenv": "^16.5.0",
-    "mongodb": "^6.3.0",
+    "mongodb": "^6.16.0",
+    "mongoose": "^8.14.3",
+    "node-cron": "^3.0.3",
     "playwright": "^1.52.0",
     "xml2js": "^0.6.2"
   },
