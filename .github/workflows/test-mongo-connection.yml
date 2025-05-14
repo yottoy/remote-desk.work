@@ -14,11 +14,11 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       # Set up Node.js environment
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -42,11 +42,10 @@ jobs:
             }
             
             console.log('Testing MongoDB connection...');
+            console.log('MongoDB URI exists:', !!uri);
+            console.log('URI begins with:', uri.substring(0, 10) + '...');
             
-            const client = new MongoClient(uri, {
-              useNewUrlParser: true,
-              useUnifiedTopology: true
-            });
+            const client = new MongoClient(uri);
             
             try {
               await client.connect();
@@ -76,6 +75,18 @@ jobs:
               // Count documents
               const count = await testCollection.countDocuments();
               console.log(`Total test documents: ${count}`);
+              
+              // Check for jobs collection
+              const collections = await testDb.listCollections().toArray();
+              console.log('Available collections:', collections.map(c => c.name).join(', ') || 'No collections found');
+              
+              if (collections.some(c => c.name === 'jobs')) {
+                const jobsCollection = testDb.collection('jobs');
+                const jobCount = await jobsCollection.countDocuments();
+                console.log('Number of jobs in the database:', jobCount);
+              } else {
+                console.log('No jobs collection found.');
+              }
               
               await client.close();
               console.log('Connection closed');

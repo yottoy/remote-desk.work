@@ -70,9 +70,9 @@ jobs:
       - name: Run JobSpy scraper
         run: node src/index.js
       
-      # Upload logs as artifacts
+      # Upload logs as artifacts - Updated to v4
       - name: Archive logs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: logs
           path: |
@@ -80,10 +80,10 @@ jobs:
             python-bridge/jobspy_bridge.log
           retention-days: 7
       
-      # Upload results as artifacts (if in debug mode)
+      # Upload results as artifacts (if in debug mode) - Updated to v4
       - name: Archive results
         if: ${{ github.event.inputs.debug == 'true' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: scrape-results
           path: results/
