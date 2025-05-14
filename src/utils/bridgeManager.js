@@ -1,312 +1,197 @@
+/**
+ * JobSpy Bridge Manager
+ * 
+ * This module handles starting, stopping, and checking the status of the JobSpy Python bridge.
+ */
+
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const logger = require('./logger');
 
-class BridgeManager {
-  constructor() {
-    this.bridgeProcess = null;
-    this.bridgeUrl = process.env.JOBSPY_BRIDGE_URL || 'http://localhost:8000';
-    this.bridgePort = process.env.JOBSPY_BRIDGE_PORT || 8000;
-    this.bridgeHost = process.env.JOBSPY_BRIDGE_HOST || '127.0.0.1';
-    this.monitorInterval = null;
-    this.restartAttempts = 0;
-    this.maxRestartAttempts = 3;
-    this.isRunning = false;
-  }
+// Get bridge configuration from environment
+require('dotenv').config();
+const BRIDGE_URL = process.env.JOBSPY_BRIDGE_URL || 'http://127.0.0.1:8000';
+const BRIDGE_HOST = process.env.JOBSPY_BRIDGE_HOST || '127.0.0.1';
+const BRIDGE_PORT = process.env.JOBSPY_BRIDGE_PORT || 8000;
 
-  /**
-   * Start the Python bridge process
-   * @returns {Promise<boolean>} - Success status
-   */
-  async start() {
-    if (this.bridgeProcess) {
-      logger.info('Bridge process already running');
-      return true;
-    }
+// Check if we're running in GitHub Actions
+const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
 
-    logger.info('Starting JobSpy bridge...');
-    
-    // Check if Python is installed
-    try {
-      const pythonPath = await this._getPythonPath();
-      
-      // Check bridge script and requirements existence
-      const bridgeScriptPath = path.join(process.cwd(), 'python-bridge', 'jobspy_bridge.py');
-      const requirementsPath = path.join(process.cwd(), 'python-bridge', 'requirements.txt');
-      
-      if (!fs.existsSync(bridgeScriptPath)) {
-        throw new Error(`Bridge script not found at ${bridgeScriptPath}`);
-      }
-      
-      if (!fs.existsSync(requirementsPath)) {
-        throw new Error(`Requirements file not found at ${requirementsPath}`);
-      }
-      
-      // Try to install requirements
-      try {
-        await this._installDependencies(pythonPath, requirementsPath);
-      } catch (error) {
-        logger.warn(`Failed to install dependencies: ${error.message}`);
-        logger.warn('Continuing with bridge startup anyway...');
-      }
-      
-      // Start the bridge process
-      this.bridgeProcess = spawn(pythonPath, [bridgeScriptPath], {
-        env: {
-          ...process.env,
-          JOBSPY_BRIDGE_PORT: this.bridgePort,
-          JOBSPY_BRIDGE_HOST: this.bridgeHost,
-          PATH: `${process.env.PATH}:${process.env.HOME}/Library/Python/3.12/bin`
-        },
-        detached: true
-      });
-      
-      this.bridgeProcess.stdout.on('data', (data) => {
-        logger.info(`JobSpy bridge: ${data.toString().trim()}`);
-      });
-      
-      this.bridgeProcess.stderr.on('data', (data) => {
-        logger.error(`JobSpy bridge error: ${data.toString().trim()}`);
-      });
-      
-      this.bridgeProcess.on('error', (error) => {
-        logger.error(`Bridge process error: ${error.message}`);
-        this.isRunning = false;
-      });
-      
-      this.bridgeProcess.on('close', (code) => {
-        logger.warn(`Bridge process exited with code ${code}`);
-        this.bridgeProcess = null;
-        this.isRunning = false;
-        
-        if (this.monitorInterval) {
-          this._tryRestart();
-        }
-      });
-      
-      // Wait for bridge to start
-      const isRunning = await this._waitForBridgeStart();
-      this.isRunning = isRunning;
-      
-      if (isRunning) {
-        logger.info(`JobSpy bridge started successfully on ${this.bridgeUrl}`);
-        this.restartAttempts = 0;
-        return true;
-      } else {
-        logger.error('Failed to start JobSpy bridge');
-        this._killProcess();
-        return false;
-      }
-      
-    } catch (error) {
-      logger.error(`Failed to start JobSpy bridge: ${error.message}`);
-      return false;
-    }
-  }
+// Keep track of bridge process
+let bridgeProcess = null;
 
-  /**
-   * Stop the bridge process
-   */
-  stop() {
-    if (this.monitorInterval) {
-      clearInterval(this.monitorInterval);
-      this.monitorInterval = null;
-    }
+/**
+ * Check if the bridge is running
+ * @returns {Promise<boolean>} True if the bridge is running, false otherwise
+ */
+async function isRunning() {
+  try {
+    // In GitHub Actions environment, need to use different URL format
+    const healthURL = isGitHubActions 
+      ? `http://0.0.0.0:${BRIDGE_PORT}/health` 
+      : `${BRIDGE_URL}/health`;
     
-    this._killProcess();
-    this.isRunning = false;
-    logger.info('JobSpy bridge stopped');
-  }
-
-  /**
-   * Check if the bridge is running
-   * @returns {Promise<boolean>} - Running status
-   */
-  async checkStatus() {
-    try {
-      const response = await axios.get(this.bridgeUrl, { timeout: 5000 });
-      return response.status === 200;
-    } catch (error) {
-      logger.error(`Bridge status check failed: ${error.message}`);
-      return false;
-    }
-  }
-
-  /**
-   * Start monitoring the bridge process
-   * @param {number} intervalMs - Check interval in milliseconds
-   */
-  startMonitoring(intervalMs = 60000) {
-    if (this.monitorInterval) {
-      clearInterval(this.monitorInterval);
-    }
-    
-    this.monitorInterval = setInterval(async () => {
-      const isRunning = await this.checkStatus();
-      
-      if (!isRunning) {
-        logger.warn('Bridge is not responding, attempting to restart...');
-        this._tryRestart();
-      } else {
-        logger.debug('Bridge health check passed');
-      }
-    }, intervalMs);
-    
-    logger.info(`Bridge monitoring started with ${intervalMs}ms interval`);
-  }
-
-  /**
-   * Try to restart the bridge process
-   * @private
-   */
-  async _tryRestart() {
-    if (this.restartAttempts >= this.maxRestartAttempts) {
-      logger.error(`Maximum restart attempts (${this.maxRestartAttempts}) reached. Manual intervention required.`);
-      this.stop();
-      return;
-    }
-    
-    this.restartAttempts++;
-    logger.info(`Attempting to restart bridge (attempt ${this.restartAttempts}/${this.maxRestartAttempts})...`);
-    
-    // Kill any existing process first
-    this._killProcess();
-    
-    // Wait a bit before restarting
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    // Try to start again
-    const success = await this.start();
-    
-    if (!success && this.restartAttempts < this.maxRestartAttempts) {
-      // Exponential backoff for retries
-      const backoff = Math.pow(2, this.restartAttempts) * 5000;
-      logger.info(`Will retry in ${backoff/1000} seconds...`);
-      
-      setTimeout(() => {
-        this._tryRestart();
-      }, backoff);
-    }
-  }
-
-  /**
-   * Wait for the bridge to start responding
-   * @returns {Promise<boolean>} - Success status
-   * @private
-   */
-  async _waitForBridgeStart() {
-    const maxWaitTime = 30000; // 30 seconds
-    const interval = 1000; // 1 second
-    const maxAttempts = maxWaitTime / interval;
-    
-    logger.info(`Waiting up to ${maxWaitTime/1000} seconds for bridge to start...`);
-    
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        const response = await axios.get(this.bridgeUrl, { timeout: 2000 });
-        if (response.status === 200) {
-          return true;
-        }
-      } catch (error) {
-        // Continue trying
-      }
-      
-      await new Promise(resolve => setTimeout(resolve, interval));
-    }
-    
+    logger.debug(`Checking bridge status at ${healthURL}`);
+    const response = await axios.get(healthURL, { timeout: 2000 });
+    return response.status === 200;
+  } catch (error) {
+    logger.debug(`Bridge status check failed: ${error.message}`);
     return false;
-  }
-
-  /**
-   * Kill the bridge process if it exists
-   * @private
-   */
-  _killProcess() {
-    if (this.bridgeProcess) {
-      try {
-        process.kill(-this.bridgeProcess.pid, 'SIGINT');
-      } catch (error) {
-        // Process may already be gone
-      }
-      this.bridgeProcess = null;
-    }
-  }
-
-  /**
-   * Install Python dependencies
-   * @param {string} pythonPath - Path to Python executable
-   * @param {string} requirementsPath - Path to requirements.txt
-   * @returns {Promise<void>}
-   * @private
-   */
-  async _installDependencies(pythonPath, requirementsPath) {
-    return new Promise((resolve, reject) => {
-      logger.info('Installing Python dependencies...');
-      
-      const pipProcess = spawn(pythonPath, ['-m', 'pip', 'install', '-r', requirementsPath]);
-      
-      let output = '';
-      let error = '';
-      
-      pipProcess.stdout.on('data', (data) => {
-        output += data.toString();
-      });
-      
-      pipProcess.stderr.on('data', (data) => {
-        error += data.toString();
-      });
-      
-      pipProcess.on('error', (err) => {
-        reject(new Error(`Failed to run pip: ${err.message}`));
-      });
-      
-      pipProcess.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`pip install failed with code ${code}: ${error}`));
-        } else {
-          logger.info('Python dependencies installed successfully');
-          resolve();
-        }
-      });
-    });
-  }
-
-  /**
-   * Get the Python executable path
-   * @returns {Promise<string>} - Path to Python executable
-   * @private
-   */
-  async _getPythonPath() {
-    const pythonCommands = ['python3', 'python'];
-    
-    for (const cmd of pythonCommands) {
-      try {
-        await new Promise((resolve, reject) => {
-          const process = spawn(cmd, ['--version']);
-          
-          process.on('error', reject);
-          
-          process.on('close', (code) => {
-            if (code === 0) {
-              resolve();
-            } else {
-              reject(new Error(`${cmd} check failed with code ${code}`));
-            }
-          });
-        });
-        
-        return cmd;
-      } catch (error) {
-        // Try next command
-      }
-    }
-    
-    throw new Error('Python not found. Please install Python 3.10+ and make sure it is in your PATH');
   }
 }
 
-// Create and export a singleton instance
-const bridgeManager = new BridgeManager();
-module.exports = bridgeManager; 
+/**
+ * Start the JobSpy bridge
+ * @returns {Promise<boolean>} True if the bridge was started successfully, false otherwise
+ */
+async function start() {
+  try {
+    // Check if bridge is already running
+    if (await isRunning()) {
+      logger.info('JobSpy bridge is already running');
+      return true;
+    }
+    
+    logger.info('Starting JobSpy bridge...');
+    
+    // Install Python dependencies
+    logger.info('Installing Python dependencies...');
+    const pythonBridgeDir = path.join(process.cwd(), 'python-bridge');
+    const requirementsPath = path.join(pythonBridgeDir, 'requirements.txt');
+    
+    // Check if requirements file exists
+    if (!fs.existsSync(requirementsPath)) {
+      logger.error(`Requirements file not found at ${requirementsPath}`);
+      return false;
+    }
+    
+    // Install dependencies with pip
+    try {
+      const pipProcess = spawn('pip', ['install', '-r', requirementsPath], {
+        stdio: 'pipe'
+      });
+      
+      // Wait for pip to finish
+      await new Promise((resolve, reject) => {
+        pipProcess.on('close', (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`pip exited with code ${code}`));
+          }
+        });
+        
+        pipProcess.on('error', reject);
+      });
+      
+      logger.info('Python dependencies installed successfully');
+    } catch (error) {
+      logger.error(`Failed to install Python dependencies: ${error.message}`);
+      // Continue anyway - dependencies might already be installed
+    }
+    
+    // Start the bridge
+    const startBridgePath = path.join(pythonBridgeDir, 'start-bridge.js');
+    
+    // If start-bridge.js doesn't exist or can't be accessed, create a simple version
+    if (!fs.existsSync(startBridgePath)) {
+      logger.warn(`Bridge starter not found at ${startBridgePath}, using direct start method`);
+      
+      // Use uvicorn directly if in GitHub Actions environment
+      if (isGitHubActions) {
+        const bridgeFile = path.join(pythonBridgeDir, 'jobspy_bridge.py');
+        
+        // Ensure bridge file exists
+        if (!fs.existsSync(bridgeFile)) {
+          logger.error(`Bridge file not found at ${bridgeFile}`);
+          return false;
+        }
+        
+        // Start uvicorn directly
+        bridgeProcess = spawn('python', [
+          '-m', 'uvicorn',
+          'jobspy_bridge:app',
+          '--host', '0.0.0.0',
+          '--port', BRIDGE_PORT.toString()
+        ], {
+          cwd: pythonBridgeDir,
+          env: {
+            ...process.env,
+            PYTHONUNBUFFERED: '1',
+            DISABLE_PYDANTIC_VALIDATION_WARNINGS: 'true'
+          },
+          stdio: 'pipe'
+        });
+      } else {
+        // Start the bridge using Node's spawn
+        bridgeProcess = spawn('node', [path.join(__dirname, '../../python-bridge/start-bridge.js')], {
+          detached: true,
+          stdio: 'pipe'
+        });
+      }
+    } else {
+      // Use the start-bridge.js script
+      bridgeProcess = spawn('node', [startBridgePath], {
+        detached: true,
+        stdio: 'pipe'
+      });
+    }
+    
+    // Handle bridge output
+    bridgeProcess.stdout.on('data', (data) => {
+      const output = data.toString().trim();
+      logger.debug(`Bridge output: ${output}`);
+    });
+    
+    bridgeProcess.stderr.on('data', (data) => {
+      const output = data.toString().trim();
+      logger.error(`JobSpy bridge error: ${output}`);
+    });
+    
+    // Handle bridge exit
+    bridgeProcess.on('close', (code) => {
+      logger.warn(`Bridge process exited with code ${code}`);
+      bridgeProcess = null;
+    });
+    
+    // Wait for bridge to start (up to 30 seconds)
+    logger.info('Waiting up to 30 seconds for bridge to start...');
+    const start = Date.now();
+    const timeout = 30000; // 30 seconds
+    
+    while (Date.now() - start < timeout) {
+      if (await isRunning()) {
+        logger.info('JobSpy bridge started successfully');
+        return true;
+      }
+      
+      // Wait a bit before checking again
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    logger.error('Failed to start JobSpy bridge');
+    return false;
+  } catch (error) {
+    logger.error(`Error starting JobSpy bridge: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Stop the JobSpy bridge
+ */
+async function stop() {
+  if (bridgeProcess) {
+    logger.info('Stopping JobSpy bridge...');
+    bridgeProcess.kill();
+    bridgeProcess = null;
+  }
+}
+
+module.exports = {
+  isRunning,
+  start,
+  stop
+}; 

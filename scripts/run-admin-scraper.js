@@ -8,8 +8,18 @@
 const AdminDataEntryScraper = require('../src/scrapers/AdminDataEntryScraper');
 const database = require('../src/utils/database');
 const bridgeManager = require('../src/utils/bridgeManager');
+const logger = require('../src/utils/logger');
 const fs = require('fs').promises;
 const path = require('path');
+
+// Check for GitHub Actions environment
+const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
+
+// Configure bridge URL for GitHub Actions
+if (isGitHubActions) {
+  process.env.JOBSPY_BRIDGE_URL = 'http://0.0.0.0:8000';
+  process.env.JOBSPY_BRIDGE_HOST = '0.0.0.0';
+}
 
 /**
  * Main execution function
@@ -22,7 +32,7 @@ async function run() {
     // Check bridge
     const bridgeRunning = await bridgeManager.isRunning();
     if (!bridgeRunning) {
-      console.log('Starting JobSpy bridge...');
+      logger.info('Starting JobSpy bridge...');
       await bridgeManager.start();
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
@@ -39,11 +49,11 @@ async function run() {
       Object.keys(scraper.config.sources).forEach(source => {
         scraper.config.sources[source].enabled = quickSources.includes(source);
       });
-      console.log(`Quick mode enabled - only scraping sources: ${quickSources.join(', ')}`);
+      logger.info(`Quick mode enabled - only scraping sources: ${quickSources.join(', ')}`);
     }
     
     // Run scraper
-    console.log(`Starting admin/data entry scraper (${quickMode ? 'quick' : 'full'} mode)...`);
+    logger.info(`Starting admin/data entry scraper (${quickMode ? 'quick' : 'full'} mode)...`);
     const startTime = new Date();
     const results = await scraper.scrape();
     const endTime = new Date();
@@ -53,27 +63,27 @@ async function run() {
     await saveResultsToLog(results, quickMode);
     
     // Print summary results
-    console.log('=== Admin/Data Entry Scraper Summary ===');
-    console.log(`Run completed in ${duration.toFixed(1)}s`);
-    console.log(`Found: ${results.stats.totalJobs} jobs (${results.stats.adminJobsFound} admin, ${results.stats.dataEntryJobsFound} data entry, ${results.stats.customerServiceJobsFound} customer service)`);
-    console.log(`Filtered out: ${results.stats.filteredOut} irrelevant jobs`);
+    logger.info('=== Admin/Data Entry Scraper Summary ===');
+    logger.info(`Run completed in ${duration.toFixed(1)}s`);
+    logger.info(`Found: ${results.stats.totalJobs} jobs (${results.stats.adminJobsFound} admin, ${results.stats.dataEntryJobsFound} data entry, ${results.stats.customerServiceJobsFound} customer service)`);
+    logger.info(`Filtered out: ${results.stats.filteredOut} irrelevant jobs`);
     
     // Output JSON for when run from scheduler
     if (process.argv.includes('--json-output')) {
-      console.log(JSON.stringify(results));
+      logger.info(JSON.stringify(results));
     }
     
     // Clean exit
     process.exit(0);
   } catch (error) {
-    console.error('Error running admin/data entry scraper:', error);
+    logger.error('Error running admin/data entry scraper:', error);
     process.exit(1);
   } finally {
     // Disconnect from database
     try {
       await database.disconnect();
     } catch (err) {
-      console.error('Error disconnecting from database:', err);
+      logger.error('Error disconnecting from database:', err);
     }
     
     // Stop bridge if we started it
@@ -81,7 +91,7 @@ async function run() {
       try {
         await bridgeManager.stop();
       } catch (err) {
-        console.error('Error stopping bridge:', err);
+        logger.error('Error stopping bridge:', err);
       }
     }
   }
@@ -99,7 +109,7 @@ async function saveResultsToLog(results, isQuickRun) {
     try {
       await fs.mkdir(logDir, { recursive: true });
     } catch (error) {
-      console.error(`Failed to create logs directory: ${error.message}`);
+      logger.error(`Failed to create logs directory: ${error.message}`);
     }
     
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -107,16 +117,16 @@ async function saveResultsToLog(results, isQuickRun) {
     const logFile = path.join(logDir, `admin-entry-scraper-${logType}-${timestamp}.json`);
     
     await fs.writeFile(logFile, JSON.stringify(results, null, 2));
-    console.log(`Saved scraper results to ${logFile}`);
+    logger.info(`Saved scraper results to ${logFile}`);
   } catch (error) {
-    console.error(`Failed to save scraper results: ${error.message}`);
+    logger.error(`Failed to save scraper results: ${error.message}`);
   }
 }
 
 // Run the script if executed directly
 if (require.main === module) {
   run().catch(error => {
-    console.error('Fatal error in admin/data entry scraper:', error);
+    logger.error('Fatal error in admin/data entry scraper:', error);
     process.exit(1);
   });
 } 
