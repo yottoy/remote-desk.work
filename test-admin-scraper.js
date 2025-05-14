@@ -17,9 +17,22 @@ async function run() {
   try {
     console.log('Starting admin/data entry job scraper test with real website data...');
     
+    // Check for MongoDB URI
+    if (!process.env.MONGODB_URI) {
+      console.log('\n⚠️ No MongoDB URI found in environment variables.');
+      console.log('Data will be stored in-memory only and not persisted.');
+      console.log('To connect to MongoDB, run: node setup-mongodb.js\n');
+    } else {
+      console.log(`MongoDB URI found: ${process.env.MONGODB_URI.replace(/(?<=mongodb\+srv:\/\/[^:]+:)[^@]+(?=@)/, '******')}`);
+    }
+    
     // Connect to database
-    await database.connect();
-    console.log('Connected to database');
+    const dbConnected = await database.connect();
+    if (dbConnected && !database.useInMemory) {
+      console.log('✅ Connected to MongoDB database');
+    } else if (database.useInMemory) {
+      console.log('⚠️ Using in-memory storage (data will not be persisted)');
+    }
     
     // Check if bridge is running using the correct function
     const bridgeRunning = await bridgeManager.checkStatus();
