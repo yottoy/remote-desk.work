@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '../../components/layout/Layout';
 import SearchBar from '../../components/common/SearchBar';
-import JobCard from '../../components/common/JobCard';
-import FilterSidebar, { MobileFilterDrawer } from '../../components/common/FilterSidebar';
+import EnhancedJobCard from '../../components/common/EnhancedJobCard';
+import JobList from '../../components/common/JobList';
+import AdvancedFilters from '../../components/common/AdvancedFilters';
 
 // Mock data for jobs (in a real app, these would come from an API)
 const mockJobs = [
@@ -20,8 +21,13 @@ const mockJobs = [
     featured: true,
     jobType: 'full-time',
     experienceLevel: 'entry-level',
-    payRange: '$15-20/hr',
-    location_restriction: 'us-only'
+    payRange: '$15-20',
+    location_restriction: 'us-only',
+    jobCategory: 'data-entry',
+    skills: ['Fast typing', 'Attention to detail', 'Data verification'],
+    softwareRequirements: ['microsoft-office', 'excel'],
+    timezone: 'EST/CST preferred',
+    datePosted: 'today'
   },
   {
     _id: 'job2',
@@ -36,8 +42,13 @@ const mockJobs = [
     featured: true,
     jobType: 'part-time',
     experienceLevel: 'entry-level',
-    payRange: '$15-20/hr',
-    location_restriction: 'worldwide'
+    payRange: '$15-20',
+    location_restriction: 'worldwide',
+    jobCategory: 'administrative-assistant',
+    skills: ['Calendar management', 'Email management', 'Travel arrangements'],
+    softwareRequirements: ['microsoft-office', 'google-workspace'],
+    timezone: 'Flexible',
+    datePosted: 'this-week'
   },
   {
     _id: 'job3',
@@ -52,8 +63,13 @@ const mockJobs = [
     featured: true,
     jobType: 'full-time',
     experienceLevel: 'experienced',
-    payRange: '$15-20/hr',
-    location_restriction: 'us-only'
+    payRange: '$15-20',
+    location_restriction: 'us-only',
+    jobCategory: 'customer-service',
+    skills: ['Customer support', 'Problem solving', 'Phone etiquette'],
+    softwareRequirements: ['crm-systems'],
+    timezone: 'EST/PST',
+    datePosted: 'this-week'
   },
   {
     _id: 'job4',
@@ -68,8 +84,13 @@ const mockJobs = [
     featured: false,
     jobType: 'part-time',
     experienceLevel: 'no-experience',
-    payRange: 'under-$15/hr',
-    location_restriction: 'us-only'
+    payRange: 'under-$15',
+    location_restriction: 'us-only',
+    jobCategory: 'data-entry',
+    skills: ['Data verification', 'Basic computer skills'],
+    softwareRequirements: ['data-entry-software'],
+    timezone: 'Flexible',
+    datePosted: 'this-week'
   },
   {
     _id: 'job5',
@@ -84,8 +105,13 @@ const mockJobs = [
     featured: false,
     jobType: 'contract',
     experienceLevel: 'entry-level',
-    payRange: '$15-20/hr',
-    location_restriction: 'worldwide'
+    payRange: '$15-20',
+    location_restriction: 'worldwide',
+    jobCategory: 'transcription',
+    skills: ['Fast typing', 'Excellent hearing', 'Grammar skills'],
+    softwareRequirements: ['microsoft-office'],
+    timezone: 'Flexible',
+    datePosted: 'this-week'
   },
   {
     _id: 'job6',
@@ -100,96 +126,67 @@ const mockJobs = [
     featured: false,
     jobType: 'full-time',
     experienceLevel: 'experienced',
-    payRange: '$20-25/hr',
-    location_restriction: 'us-only'
+    payRange: '$20-25',
+    location_restriction: 'us-only',
+    jobCategory: 'administrative-assistant',
+    skills: ['Executive support', 'Calendar management', 'Travel arrangements', 'Confidentiality'],
+    softwareRequirements: ['microsoft-office', 'google-workspace'],
+    timezone: 'EST/CST',
+    datePosted: 'this-week'
+  },
+  {
+    _id: 'job7',
+    title: 'Bookkeeping Assistant',
+    company: 'FinanceHelp Inc',
+    location: 'Remote (US & Canada)',
+    description: 'Assist with accounts payable, accounts receivable, and general bookkeeping tasks...',
+    descriptionText: 'Assist with accounts payable, accounts receivable, and general bookkeeping tasks. Reconcile accounts and prepare financial reports. Experience with QuickBooks required.',
+    salary: '$20-24/hr',
+    postedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    qualityScore: 8.7,
+    featured: false,
+    jobType: 'part-time',
+    experienceLevel: 'experienced',
+    payRange: '$20-25',
+    location_restriction: 'us-canada',
+    jobCategory: 'bookkeeping',
+    skills: ['Bookkeeping', 'Account reconciliation', 'Financial reporting'],
+    softwareRequirements: ['quickbooks', 'excel'],
+    timezone: 'EST/CST',
+    datePosted: 'this-week'
+  },
+  {
+    _id: 'job8',
+    title: 'Entry-Level Data Processor',
+    company: 'DataWorks Solutions',
+    location: 'Remote (Worldwide)',
+    description: 'Process and validate data from multiple sources...',
+    descriptionText: 'Process and validate data from multiple sources. Format data according to company standards and check for accuracy and completeness.',
+    salary: '$13-15/hr',
+    postedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    qualityScore: 7.8,
+    featured: false,
+    jobType: 'full-time',
+    experienceLevel: 'no-experience',
+    payRange: 'under-$15',
+    location_restriction: 'worldwide',
+    jobCategory: 'data-entry',
+    skills: ['Basic computer skills', 'Attention to detail'],
+    softwareRequirements: ['microsoft-office', 'excel'],
+    timezone: 'Flexible',
+    datePosted: 'today'
   },
 ];
 
 const JobListingsPage = () => {
   const router = useRouter();
-  const { q: searchQuery, filters: initialFilters } = router.query;
+  const { q: searchQuery } = router.query;
   
   const [jobs, setJobs] = useState(mockJobs);
   const [filteredJobs, setFilteredJobs] = useState(mockJobs);
-  const [sortBy, setSortBy] = useState('newest');
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
-  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  
-  // Filter configurations
-  const filterSections = [
-    {
-      id: 'jobType',
-      title: 'Job Type',
-      type: 'checkbox' as const,
-      options: [
-        { id: 'full-time', label: 'Full-time' },
-        { id: 'part-time', label: 'Part-time' },
-        { id: 'contract', label: 'Contract' },
-        { id: 'temporary', label: 'Temporary' }
-      ]
-    },
-    {
-      id: 'experienceLevel',
-      title: 'Experience',
-      type: 'checkbox' as const,
-      options: [
-        { id: 'no-experience', label: 'No experience' },
-        { id: 'entry-level', label: 'Entry-level' },
-        { id: 'experienced', label: 'Experienced' }
-      ]
-    },
-    {
-      id: 'payRange',
-      title: 'Pay Range',
-      type: 'checkbox' as const,
-      options: [
-        { id: 'under-$15/hr', label: 'Under $15/hr' },
-        { id: '$15-20/hr', label: '$15-20/hr' },
-        { id: '$20-25/hr', label: '$20-25/hr' },
-        { id: '$25+/hr', label: '$25+/hr' }
-      ]
-    },
-    {
-      id: 'location_restriction',
-      title: 'Location',
-      type: 'checkbox' as const,
-      options: [
-        { id: 'worldwide', label: 'Worldwide' },
-        { id: 'us-only', label: 'US Only' }
-      ]
-    }
-  ];
-  
-  // Parse initial filters from URL
-  useEffect(() => {
-    if (initialFilters && typeof initialFilters === 'string') {
-      const parsedFilters = initialFilters.split(',');
-      const newActiveFilters: Record<string, string[]> = {};
-      
-      parsedFilters.forEach(filter => {
-        for (const section of filterSections) {
-          const matchingOption = section.options.find(option => option.id === filter);
-          if (matchingOption) {
-            if (!newActiveFilters[section.id]) {
-              newActiveFilters[section.id] = [];
-            }
-            newActiveFilters[section.id].push(matchingOption.id);
-          }
-        }
-      });
-      
-      setActiveFilters(newActiveFilters);
-    }
-  }, [initialFilters]);
-  
-  // Update filterSections with activeFilters
-  const filtersWithState = filterSections.map(section => ({
-    ...section,
-    options: section.options.map(option => ({
-      ...option,
-      checked: activeFilters[section.id]?.includes(option.id) || false
-    }))
-  }));
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'relevance'>('newest');
   
   // Apply filters and search
   useEffect(() => {
@@ -212,7 +209,14 @@ const JobListingsPage = () => {
           if (selectedOptions.length > 0) {
             // @ts-ignore - we know these properties exist on our mock jobs
             const jobValue = job[sectionId];
-            if (!jobValue || !selectedOptions.includes(jobValue)) {
+            
+            // Handle array values (like skills or softwareRequirements)
+            if (Array.isArray(jobValue)) {
+              const hasMatch = selectedOptions.some(option => jobValue.includes(option));
+              if (!hasMatch) return false;
+            } 
+            // Handle string values
+            else if (!jobValue || !selectedOptions.includes(jobValue)) {
               return false;
             }
           }
@@ -233,232 +237,221 @@ const JobListingsPage = () => {
   }, [jobs, searchQuery, activeFilters, sortBy]);
   
   // Handle filter changes
-  const handleFilterChange = (sectionId: string, optionId: string, checked: boolean) => {
-    setActiveFilters(prev => {
-      const newFilters = { ...prev };
-      
-      if (!newFilters[sectionId]) {
-        newFilters[sectionId] = [];
-      }
-      
-      if (checked) {
-        newFilters[sectionId] = [...newFilters[sectionId], optionId];
-      } else {
-        newFilters[sectionId] = newFilters[sectionId].filter(id => id !== optionId);
-      }
-      
-      // Clean up empty arrays
-      if (newFilters[sectionId].length === 0) {
-        delete newFilters[sectionId];
-      }
-      
-      return newFilters;
-    });
+  const handleFilterChange = (filterType: string, values: string[]) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [filterType]: values
+    }));
   };
   
-  // Create filter chips from active filters
-  const activeFilterChips = Object.entries(activeFilters).flatMap(([sectionId, optionIds]) => 
-    optionIds.map(optionId => {
-      const section = filterSections.find(s => s.id === sectionId);
-      const option = section?.options.find(o => o.id === optionId);
-      
-      return {
-        label: option?.label || optionId,
-        value: optionId,
-        active: true
-      };
-    })
-  );
-  
-  // Create category title based on filters
-  let categoryTitle = "REMOTE JOBS";
-  
-  // Count active filters
-  const totalActiveFilters = Object.values(activeFilters).flat().length;
+  // Get active filter count
+  const getActiveFilterCount = () => {
+    return Object.values(activeFilters).reduce(
+      (count, filters) => count + (filters ? filters.length : 0),
+      0
+    );
+  };
   
   return (
     <Layout
-      title={`Remote ${searchQuery || ''} Jobs | ${totalActiveFilters > 0 ? 'Filtered Results' : 'All Listings'} | ClickClickJob.com`}
-      description={`Find ${filteredJobs.length} verified remote ${searchQuery || ''} jobs with ${totalActiveFilters > 0 ? 'custom filters' : 'no experience needed'}. Work-from-home opportunities updated daily.`}
+      title="Remote Admin & Data Entry Jobs | ClickClickJob.com"
+      description="Browse verified remote admin and data entry jobs. Filter by pay, experience level, and job type to find your perfect work-from-home opportunity."
     >
-      <div className="bg-gray-50 min-h-screen">
-        {/* Search header */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-            <SearchBar 
-              placeholder="Search for jobs..."
-              defaultValue={searchQuery as string || ''}
-            />
-          </div>
+      {/* Page Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <h1 className="text-2xl font-bold text-gray-900">Remote Admin & Data Entry Jobs</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            {filteredJobs.length} verified remote opportunities
+          </p>
         </div>
-        
-        {/* Results heading and filters */}
-        <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">{categoryTitle}</h1>
-            <p className="text-gray-600 mt-1">{filteredJobs.length} verified remote opportunities</p>
-            
-            {activeFilterChips.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {activeFilterChips.map((chip) => (
-                  <button
-                    key={chip.value}
-                    onClick={() => {
-                      // Find which section this filter belongs to
-                      for (const [sectionId, optionIds] of Object.entries(activeFilters)) {
-                        if (optionIds.includes(chip.value)) {
-                          handleFilterChange(sectionId, chip.value, false);
-                          break;
-                        }
-                      }
-                    }}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                  >
-                    {chip.label}
-                    <svg className="ml-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                ))}
-                
-                <button
-                  onClick={() => setActiveFilters({})}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
-                >
-                  Clear All
-                </button>
-              </div>
-            )}
-          </div>
-          
-          <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-            {/* Filter sidebar - desktop */}
-            <div className="hidden lg:block lg:col-span-3">
-              <FilterSidebar 
-                filters={filtersWithState}
-                onFilterChange={handleFilterChange}
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="bg-gray-50 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div className="flex-1 min-w-0">
+              <SearchBar 
+                placeholder="Search job title, company, or keywords..."
+                defaultValue={searchQuery as string}
+                onSearch={(value) => router.push({
+                  pathname: '/jobs',
+                  query: { ...(value ? { q: value } : {}) }
+                })}
               />
             </div>
             
-            {/* Main content */}
-            <main className="lg:col-span-9">
-              {/* Sort controls */}
-              <div className="flex justify-between items-center mb-4">
-                <div className="lg:hidden">
-                  <button
-                    onClick={() => setIsFilterDrawerOpen(true)}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-                    </svg>
-                    Filters
-                  </button>
-                </div>
-                
-                <div className="flex items-center">
-                  <label htmlFor="sort-by" className="sr-only">Sort by</label>
-                  <select
-                    id="sort-by"
-                    name="sort-by"
-                    className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                  >
-                    <option value="newest">Newest</option>
-                    <option value="relevance">Relevance</option>
-                  </select>
-                </div>
-              </div>
-              
-              {/* Job listings */}
-              <div className="space-y-6">
-                {filteredJobs.length > 0 ? (
-                  filteredJobs.map((job) => (
-                    <JobCard key={job._id} job={job} />
-                  ))
-                ) : (
-                  <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs found</h3>
-                    <p className="text-gray-600 mb-4">Try adjusting your search criteria or removing some filters.</p>
-                    <button
-                      onClick={() => {
-                        setActiveFilters({});
-                        router.push('/jobs');
-                      }}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Reset All Filters
-                    </button>
-                  </div>
+            <div className="mt-4 md:mt-0 md:ml-4 flex items-center">
+              <button
+                type="button"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 md:hidden"
+                onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+              >
+                <svg className="-ml-1 mr-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <span className="ml-1 bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full text-xs">
+                    {getActiveFilterCount()}
+                  </span>
                 )}
-              </div>
-              
-              {/* Pagination */}
-              {filteredJobs.length > 0 && (
-                <div className="mt-8 flex justify-center">
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    <a
-                      href="#"
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                    >
-                      <span className="sr-only">Previous</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </a>
-                    <a
-                      href="#"
-                      aria-current="page"
-                      className="z-10 bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                    >
-                      1
-                    </a>
-                    <a
-                      href="#"
-                      className="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                    >
-                      2
-                    </a>
-                    <a
-                      href="#"
-                      className="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 hidden md:inline-flex relative items-center px-4 py-2 border text-sm font-medium"
-                    >
-                      3
-                    </a>
-                    <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                      ...
-                    </span>
-                    <a
-                      href="#"
-                      className="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                    >
-                      10
-                    </a>
-                    <a
-                      href="#"
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                    >
-                      <span className="sr-only">Next</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </a>
-                  </nav>
-                </div>
-              )}
-            </main>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-      
-      {/* Mobile filter drawer */}
-      <MobileFilterDrawer
-        isOpen={isFilterDrawerOpen}
-        onClose={() => setIsFilterDrawerOpen(false)}
-        filters={filtersWithState}
-        onFilterChange={handleFilterChange}
-      />
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar Filters (Desktop) */}
+          <div className="hidden md:block lg:w-1/4">
+            <div className="sticky top-6">
+              <AdvancedFilters 
+                onFilterChange={handleFilterChange}
+                selectedFilters={activeFilters}
+                showCounts={true}
+              />
+            </div>
+          </div>
+          
+          {/* Mobile Filters (Slide-out) */}
+          {isMobileFiltersOpen && (
+            <div className="fixed inset-0 flex z-40 md:hidden">
+              <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setIsMobileFiltersOpen(false)} />
+              <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+                <div className="flex-1 h-0 overflow-y-auto">
+                  <div className="px-4 py-3 flex items-center justify-between border-b border-gray-200">
+                    <h2 className="text-lg font-medium text-gray-900">Filters</h2>
+                    <button
+                      type="button"
+                      className="-mr-2 p-2 rounded-md text-gray-400 hover:text-gray-500"
+                      onClick={() => setIsMobileFiltersOpen(false)}
+                    >
+                      <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <AdvancedFilters
+                    onFilterChange={handleFilterChange}
+                    selectedFilters={activeFilters}
+                    className="border-0 shadow-none rounded-none"
+                    showCounts={true}
+                  />
+                </div>
+                <div className="border-t border-gray-200 px-4 py-3">
+                  <button
+                    type="button"
+                    className="w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    onClick={() => setIsMobileFiltersOpen(false)}
+                  >
+                    View {filteredJobs.length} jobs
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Job Listings */}
+          <div className="lg:w-3/4">
+            {filteredJobs.length > 0 ? (
+              <div className="space-y-6">
+                {/* Featured jobs shown separately at the top */}
+                {filteredJobs.some(job => job.featured) && (
+                  <div>
+                    <h2 className="text-lg font-medium text-gray-900 mb-3">Featured Opportunities</h2>
+                    <div className="space-y-4">
+                      {filteredJobs
+                        .filter(job => job.featured)
+                        .map(job => (
+                          <EnhancedJobCard 
+                            key={job._id} 
+                            job={job} 
+                            showDetails={true}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Regular jobs */}
+                <div>
+                  <h2 className="text-lg font-medium text-gray-900 mb-3">
+                    {filteredJobs.some(job => job.featured) ? 'More Jobs' : 'Available Jobs'}
+                  </h2>
+                  <div className="space-y-4">
+                    {filteredJobs
+                      .filter(job => !job.featured)
+                      .map(job => (
+                        <EnhancedJobCard key={job._id} job={job} />
+                      ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                <svg 
+                  className="mx-auto h-12 w-12 text-gray-400" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={1.5} 
+                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" 
+                  />
+                </svg>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">No jobs found</h3>
+                <p className="mt-2 text-sm text-gray-500">
+                  Try adjusting your search filters or removing some criteria to see more results.
+                </p>
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilters({})}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Pagination (only show if enough jobs) */}
+            {filteredJobs.length > 10 && (
+              <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
+                <div className="flex-1 flex justify-between sm:justify-end">
+                  <button
+                    type="button"
+                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Ad Placement */}
+            <div className="mt-8 bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <p className="text-xs text-gray-500 text-center mb-2">ADVERTISEMENT</p>
+              <div className="h-[120px] flex items-center justify-center bg-gray-100 rounded">
+                <p className="text-gray-400 text-sm">Unobtrusive Ad Placement</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </Layout>
   );
 };

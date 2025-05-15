@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import SearchBar from '../components/common/SearchBar';
-import JobCard from '../components/common/JobCard';
+import EnhancedJobCard from '../components/common/EnhancedJobCard';
 import CategoryCard from '../components/common/CategoryCard';
+import { useRouter } from 'next/router';
 
 // Mock data for featured jobs (in a real app, these would come from an API)
 const featuredJobs = [
@@ -18,7 +19,12 @@ const featuredJobs = [
     salary: '$18-22/hr',
     postedDate: new Date(),
     qualityScore: 9.2,
-    featured: true
+    featured: true,
+    jobType: 'full-time',
+    experienceLevel: 'entry-level',
+    payRange: '$15-20',
+    skills: ['Fast typing', 'Attention to detail', 'Data verification'],
+    softwareRequirements: ['Microsoft Office', 'Excel']
   },
   {
     _id: 'job2',
@@ -30,7 +36,12 @@ const featuredJobs = [
     salary: '$15-17/hr',
     postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
     qualityScore: 8.5,
-    featured: true
+    featured: true,
+    jobType: 'part-time',
+    experienceLevel: 'entry-level',
+    payRange: '$15-20',
+    skills: ['Calendar management', 'Email management', 'Travel arrangements'],
+    softwareRequirements: ['Microsoft Office', 'Google Workspace']
   },
   {
     _id: 'job3',
@@ -42,7 +53,12 @@ const featuredJobs = [
     salary: '$16-19/hr',
     postedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
     qualityScore: 8.8,
-    featured: true
+    featured: true,
+    jobType: 'full-time', 
+    experienceLevel: 'experienced',
+    payRange: '$15-20',
+    skills: ['Customer support', 'Problem solving', 'Phone etiquette'],
+    softwareRequirements: ['CRM Systems']
   }
 ];
 
@@ -57,6 +73,8 @@ const jobCategories = [
 ];
 
 const HomePage = () => {
+  const router = useRouter();
+  
   const filterChips = [
     { label: 'Entry-Level', value: 'entry-level' },
     { label: 'Part-Time', value: 'part-time' },
@@ -64,22 +82,41 @@ const HomePage = () => {
     { label: 'US Only', value: 'us-only' }
   ];
 
+  const handleSearch = (query: string) => {
+    router.push({
+      pathname: '/jobs',
+      query: { q: query }
+    });
+  };
+
+  const handleFilterChange = (filters: string[]) => {
+    router.push({
+      pathname: '/jobs',
+      query: { filters: filters.join(',') }
+    });
+  };
+
   return (
     <Layout
       title="Remote Data Entry Jobs | Work From Home Opportunities | ClickClickJob.com"
       description="Find verified remote data entry & administrative jobs. 100+ work-from-home opportunities updated daily. No experience options available."
     >
       {/* Hero Section */}
-      <section className="bg-blue-50 py-12 border-b border-blue-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            FIND REMOTE DATA ENTRY & ADMIN JOBS
+      <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Find Remote Admin & Data Entry Jobs
           </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            Find verified work-from-anywhere opportunities for admin professionals and data entry specialists with or without experience
+          </p>
           
           <div className="max-w-3xl mx-auto mt-8">
             <SearchBar 
-              placeholder="Search for jobs..."
+              placeholder="Search for job titles, skills, or companies..."
               filterChips={filterChips}
+              onSearch={handleSearch}
+              onFilterChange={handleFilterChange}
             />
           </div>
           
@@ -91,14 +128,17 @@ const HomePage = () => {
 
       {/* Featured Jobs Section */}
       <section className="py-12 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">
-            FEATURED JOBS
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
+            <span className="mr-3">Featured Jobs</span>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              Verified Opportunities
+            </span>
           </h2>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {featuredJobs.map(job => (
-              <JobCard key={job._id} job={job} variant="featured" />
+              <EnhancedJobCard key={job._id} job={job} />
             ))}
           </div>
           
@@ -115,9 +155,9 @@ const HomePage = () => {
 
       {/* Categories Section */}
       <section className="py-12 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
-            EXPLORE JOB CATEGORIES
+            Explore Job Categories
           </h2>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -144,62 +184,144 @@ const HomePage = () => {
 
       {/* Trust Section */}
       <section className="py-12 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
-            WHY TRUST CLICKCLICKJOB.COM
+            Why Choose ClickClickJob
           </h2>
           
-          <div className="bg-blue-50 rounded-lg p-6 md:p-8">
-            <ul className="space-y-4">
-              <li className="flex">
-                <svg className="h-6 w-6 text-green-500 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
+              <div className="text-blue-600 mb-4">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-gray-700">Every job verified by our team</span>
-              </li>
-              <li className="flex">
-                <svg className="h-6 w-6 text-green-500 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Verified Jobs</h3>
+              <p className="text-gray-600">All listings manually reviewed by our team to ensure quality</p>
+            </div>
+            
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
+              <div className="text-blue-600 mb-4">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                <span className="text-gray-700">Only verified remote opportunities</span>
-              </li>
-              <li className="flex">
-                <svg className="h-6 w-6 text-green-500 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Scams</h3>
+              <p className="text-gray-600">We filter out suspicious listings to protect job seekers</p>
+            </div>
+            
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
+              <div className="text-blue-600 mb-4">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                <span className="text-gray-700">Updated daily with fresh listings</span>
-              </li>
-              <li className="flex">
-                <svg className="h-6 w-6 text-green-500 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Daily Updates</h3>
+              <p className="text-gray-600">Fresh listings added daily from top employers</p>
+            </div>
+            
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
+              <div className="text-blue-600 mb-4">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span className="text-gray-700">Focused exclusively on data entry & admin roles</span>
-              </li>
-            </ul>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Specialized Focus</h3>
+              <p className="text-gray-600">Dedicated to admin and data entry remote positions</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Guide Section */}
       <section className="py-12 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">
-            REMOTE WORK GUIDE
-          </h2>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="md:flex md:items-center md:justify-between mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Remote Work Guide
+            </h2>
+            <Link 
+              href="/resources/remote-work-guide"
+              className="text-blue-600 hover:text-blue-800 font-medium hidden md:block"
+            >
+              Read our full guide →
+            </Link>
+          </div>
           
           <div className="bg-white shadow overflow-hidden rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">How to spot good opportunities:</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">How to find legitimate remote opportunities:</h3>
               
-              <ul className="list-disc pl-5 text-gray-700 space-y-2">
-                <li>Be wary of jobs requiring upfront payments or purchases</li>
-                <li>Research company reputation before applying</li>
-                <li>Check for clear job descriptions and requirements</li>
-                <li>Verify company contact information and website</li>
-                <li>Trust your instincts - if it seems too good to be true, it probably is</li>
-              </ul>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-gray-700">Research company reputation before applying</p>
+                    </div>
+                  </div>
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-gray-700">Be wary of jobs requiring upfront payments</p>
+                    </div>
+                  </div>
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-gray-700">Look for detailed job descriptions with clear requirements</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-gray-700">Verify company contact information and website</p>
+                    </div>
+                  </div>
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-gray-700">Watch for unrealistic salary promises</p>
+                    </div>
+                  </div>
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-gray-700">Check for secure application processes</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
               
-              <div className="mt-6">
+              <div className="mt-6 text-center md:hidden">
                 <Link 
                   href="/resources/remote-work-guide"
                   className="text-blue-600 hover:text-blue-800 font-medium"
@@ -209,6 +331,24 @@ const HomePage = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+      
+      {/* CTA Section */}
+      <section className="bg-blue-700 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Start Your Remote Career Today
+          </h2>
+          <p className="text-blue-100 mb-8 max-w-3xl mx-auto">
+            Browse through our extensive collection of administrative and data entry remote jobs, carefully verified and updated daily.
+          </p>
+          <Link 
+            href="/jobs"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-700 focus:ring-white"
+          >
+            Browse All Jobs
+          </Link>
         </div>
       </section>
     </Layout>
