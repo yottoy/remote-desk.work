@@ -18,9 +18,19 @@ const COMBINED_RESULTS_FILE = path.join(__dirname, 'combined-results.json');
 // Helper function to run a script and wait for it to complete
 function runScript(scriptPath) {
   return new Promise((resolve, reject) => {
-    logger.info(`Running script: ${scriptPath}`);
+    // Resolve script path to absolute path
+    const absolutePath = path.resolve(__dirname, scriptPath);
     
-    const process = spawn('node', [scriptPath], {
+    // Check if script exists
+    if (!fs.existsSync(absolutePath)) {
+      logger.warn(`Script ${absolutePath} not found. Skipping.`);
+      resolve();
+      return;
+    }
+    
+    logger.info(`Running script: ${absolutePath}`);
+    
+    const process = spawn('node', [absolutePath], {
       stdio: 'inherit',
       shell: true
     });
@@ -47,12 +57,20 @@ function readJsonFile(filePath) {
   try {
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, 'utf8');
-      return JSON.parse(data);
+      try {
+        return JSON.parse(data);
+      } catch (parseError) {
+        logger.error(`Error parsing JSON from ${filePath}: ${parseError.message}`);
+        return [];
+      }
+    } else {
+      logger.warn(`File not found: ${filePath}. Returning empty array.`);
+      return [];
     }
   } catch (error) {
     logger.error(`Error reading file ${filePath}: ${error.message}`);
+    return [];
   }
-  return [];
 }
 
 // Function to combine all results into one file
@@ -201,6 +219,12 @@ function combineResults() {
 // Function to analyze job titles for common patterns
 function analyzeJobTitles(jobs) {
   try {
+    // If no jobs, skip analysis
+    if (!jobs || jobs.length === 0) {
+      logger.info('No jobs to analyze');
+      return;
+    }
+    
     // Extract primary job categories from titles
     const titleWords = {};
     const roleTypes = {};
@@ -267,16 +291,19 @@ async function main() {
     // Check that the bridge is running
     logger.info('Make sure the JobSpy bridge is running (python3 jobspy_bridge.py)');
     
-    // List of scripts to run
+    // List of scripts to run with absolute paths
+    const scriptsDir = __dirname;
     const scripts = [
-      './scrape-all-jobs.js',       // Original JobSpy script
-      './scrape-alt-sites.js',      // Alternative sites script
-      './scrape-weworkremotely.js'  // WeWorkRemotely script
+      path.join(scriptsDir, 'scrape-all-jobs.js'),       // Original JobSpy script
+      path.join(scriptsDir, 'scrape-alt-sites.js'),      // Alternative sites script
+      path.join(scriptsDir, 'scrape-weworkremotely.js')  // WeWorkRemotely script
     ];
     
     // Run each script sequentially
     for (const script of scripts) {
-      await runScript(script);
+      // Convert to relative path for logging
+      const relativePath = path.relative(scriptsDir, script);
+      await runScript(relativePath);
     }
     
     // Combine results if enabled

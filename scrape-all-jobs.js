@@ -18,6 +18,14 @@ const PROXIES_FILE = path.join(__dirname, 'proxies.txt');
 const KEYWORDS_FILE = path.join(__dirname, 'admin-data-entry-keywords.json');
 const USE_PROXIES = process.env.USE_PROXIES === 'true' || false;
 
+// Configure logger
+const logger = {
+  debug: (...args) => console.debug(`DEBUG: ${args.join(' ')}`),
+  info: (...args) => console.log(`INFO: ${args.join(' ')}`),
+  warn: (...args) => console.warn(`WARNING: ${args.join(' ')}`),
+  error: (...args) => console.error(`ERROR: ${args.join(' ')}`)
+};
+
 // Load keywords configuration
 let keywordsConfig = {};
 try {
@@ -31,14 +39,6 @@ try {
     required_keywords: []
   };
 }
-
-// Configure logger
-const logger = {
-  debug: (...args) => console.debug(`DEBUG: ${args.join(' ')}`),
-  info: (...args) => console.log(`INFO: ${args.join(' ')}`),
-  warn: (...args) => console.warn(`WARNING: ${args.join(' ')}`),
-  error: (...args) => console.error(`ERROR: ${args.join(' ')}`)
-};
 
 // Helper function to delay execution
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
