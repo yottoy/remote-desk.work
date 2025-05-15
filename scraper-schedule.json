@@ -1,0 +1,60 @@
+{
+  "schedule": {
+    "weekday": [
+      {
+        "name": "morning-scrape",
+        "time": "07:00",
+        "sites": ["indeed", "linkedin"],
+        "search_terms": [
+          "remote data entry",
+          "remote administrative assistant",
+          "virtual assistant"
+        ],
+        "max_results_per_query": 30
+      },
+      {
+        "name": "evening-scrape",
+        "time": "18:00",
+        "sites": ["indeed", "linkedin", "weworkremotely"],
+        "search_terms": [
+          "remote data entry",
+          "remote administrative assistant",
+          "virtual assistant",
+          "work from home administrative"
+        ],
+        "max_results_per_query": 30
+      }
+    ],
+    "weekend": [
+      {
+        "name": "weekend-scrape",
+        "time": "12:00",
+        "sites": ["indeed", "linkedin", "weworkremotely"],
+        "search_terms": [
+          "remote data entry",
+          "remote administrative assistant",
+          "virtual assistant",
+          "work from home clerical"
+        ],
+        "max_results_per_query": 50
+      }
+    ]
+  },
+  "limits": {
+    "max_requests_per_hour": {
+      "indeed": 10,
+      "linkedin": 8,
+      "weworkremotely": 15
+    },
+    "delay_between_queries_ms": {
+      "indeed": 5000,
+      "linkedin": 7000,
+      "weworkremotely": 3000
+    }
+  },
+  "error_handling": {
+    "max_retries": 3,
+    "backoff_multiplier": 2,
+    "initial_retry_delay_ms": 30000
+  }
+} 

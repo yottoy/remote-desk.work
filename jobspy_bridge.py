@@ -167,9 +167,9 @@ async def scrape_with_retry(
                 if filtered_count > 0:
                     logger.info(f"Filtered out {filtered_count} jobs containing excluded keywords")
             
-            # If we got results, verify they match our requirements
+            # If we got results, apply additional filtering specific to admin/data entry jobs
             if not jobs_df.empty:
-                # Check if we have remote jobs (if that's what was requested)
+                # First, verify remote status for requested remote jobs
                 if is_remote:
                     # Count how many jobs explicitly mention remote
                     remote_count = 0
@@ -180,17 +180,53 @@ async def scrape_with_retry(
                         
                         if ('remote' in title or 'remote' in description or 
                             'work from home' in title or 'work from home' in description or
-                            'remote' in location_str or 'work from home' in location_str):
+                            'remote' in location_str or 'work from home' in location_str or
+                            'wfh' in title or 'wfh' in description or
+                            'virtual' in title or 'virtual' in description or
+                            'telecommute' in title or 'telecommute' in description):
                             remote_count += 1
                     
                     # Log the remote job percentage
                     remote_percentage = (remote_count / len(jobs_df)) * 100
                     logger.info(f"Found {remote_count}/{len(jobs_df)} ({remote_percentage:.1f}%) jobs that explicitly mention remote work")
                     
-                    # If less than 30% mention remote, but remote was requested, this might 
-                    # indicate a problem with the search
-                    if remote_percentage < 30 and len(jobs_df) > 5:
+                    # If less than 50% mention remote, this might indicate a problem with the search
+                    if remote_percentage < 50 and len(jobs_df) > 5:
                         logger.warning(f"Low percentage of remote jobs found ({remote_percentage:.1f}%). Results may not be accurate.")
+                
+                # Now apply domain-specific filtering for admin/data entry jobs
+                # Check if the jobs are really admin/data entry related by looking for specific keywords
+                admin_entry_keywords = [
+                    'data entry', 'administrative', 'admin', 'virtual assistant', 'assistant', 
+                    'clerical', 'typing', 'processor', 'customer service', 'receptionist', 
+                    'secretary', 'office assistant', 'transcription'
+                ]
+                
+                # Count how many jobs match our admin/data entry criteria
+                admin_count = 0
+                admin_rows = []
+                
+                for idx, row in jobs_df.iterrows():
+                    title = str(row.get('title', '')).lower()
+                    description = str(row.get('description', '')).lower()
+                    
+                    is_admin_job = False
+                    for keyword in admin_entry_keywords:
+                        if keyword in title or keyword in description:
+                            is_admin_job = True
+                            admin_count += 1
+                            admin_rows.append(idx)
+                            break
+                
+                # If less than 70% of jobs match our criteria and we have more than 5 jobs,
+                # filter to only include the matching jobs
+                admin_percentage = (admin_count / len(jobs_df)) * 100
+                logger.info(f"Found {admin_count}/{len(jobs_df)} ({admin_percentage:.1f}%) jobs that match admin/data entry criteria")
+                
+                if admin_percentage < 100 and len(jobs_df) > 5:
+                    original_count = len(jobs_df)
+                    jobs_df = jobs_df.loc[admin_rows]
+                    logger.info(f"Filtered from {original_count} to {len(jobs_df)} admin/data entry jobs")
             
             return jobs_df
             

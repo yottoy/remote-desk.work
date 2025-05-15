@@ -1,0 +1,11 @@
+# Example proxy list for JobSpy
+# Format: protocol://username:password@ip:port
+# Or: protocol://ip:port
+# 
+# Add your actual proxies below this line for use with scraping
+# You can get reliable proxies from services like Bright Data, Oxylabs, or SmartProxy
+# 
+# Example formats (replace with actual proxies):
+http://192.168.1.1:8080
+http://user:pass@192.168.1.2:8080
+socks5://192.168.1.3:1080

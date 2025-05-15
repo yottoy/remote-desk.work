@@ -18,6 +18,20 @@ const PROXIES_FILE = path.join(__dirname, 'proxies.txt');
 const KEYWORDS_FILE = path.join(__dirname, 'admin-data-entry-keywords.json');
 const USE_PROXIES = process.env.USE_PROXIES === 'true' || false;
 
+// Load keywords configuration
+let keywordsConfig = {};
+try {
+  keywordsConfig = JSON.parse(fs.readFileSync(KEYWORDS_FILE, 'utf8'));
+  logger.info(`Loaded keywords configuration with ${keywordsConfig.search_combinations?.length || 0} search combinations`);
+} catch (error) {
+  logger.error(`Failed to load keywords file: ${error.message}`);
+  keywordsConfig = { 
+    search_combinations: [],
+    exclude_keywords: [],
+    required_keywords: []
+  };
+}
+
 // Configure logger
 const logger = {
   debug: (...args) => console.debug(`DEBUG: ${args.join(' ')}`),
@@ -185,6 +199,22 @@ async function scrapeJobs(site, searchTerm, location = 'any', resultsWanted = 20
     const url = `${API_HOST}/scrape-jobs`;
     logger.debug(`Sending request to ${url}`);
     
+    // Load proxies if enabled
+    let proxies = [];
+    if (USE_PROXIES) {
+      try {
+        if (fs.existsSync(PROXIES_FILE)) {
+          const proxyText = fs.readFileSync(PROXIES_FILE, 'utf8');
+          proxies = proxyText.split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#'));
+          logger.info(`Loaded ${proxies.length} proxies from ${PROXIES_FILE}`);
+        }
+      } catch (error) {
+        logger.warn(`Failed to load proxies: ${error.message}`);
+      }
+    }
+    
     const requestBody = {
       site_names: [site],
       search_terms: [searchTerm],
@@ -192,9 +222,15 @@ async function scrapeJobs(site, searchTerm, location = 'any', resultsWanted = 20
       results_wanted: resultsWanted,
       hours_old: 72,
       is_remote: true,
-      distance: 50,
-      description_format: 'markdown'
+      distance: keywordsConfig.distance || 50,
+      description_format: 'markdown',
+      exclude_keywords: keywordsConfig.exclude_keywords || []
     };
+    
+    // Add proxies if available
+    if (USE_PROXIES && proxies.length > 0) {
+      requestBody.proxies = proxies;
+    }
     
     const response = await axiosClient.post(url, requestBody);
     
@@ -246,18 +282,23 @@ async function main() {
   
   logger.info('Bridge connection confirmed!');
   
-  // Define search combinations to try
-  const searchCombinations = [
-    { site: 'indeed', term: 'remote data entry', location: 'any' },
-    { site: 'indeed', term: 'remote administrative assistant', location: 'any' },
-    { site: 'indeed', term: 'virtual assistant', location: 'any' },
-    { site: 'linkedin', term: 'remote data entry', location: 'any' },
-    { site: 'linkedin', term: 'remote administrative assistant', location: 'any' },
-    { site: 'linkedin', term: 'virtual assistant', location: 'any' }
-  ];
+  // Use search combinations from keywords file if available
+  let searchCombinations = keywordsConfig.search_combinations || [];
   
-  logger.info(`Using ${searchCombinations.length} predefined search combinations from config`);
-  logger.info(`Using ${searchCombinations.length} predefined search combinations`);
+  // Fall back to default combinations if no valid ones were loaded
+  if (!searchCombinations.length) {
+    searchCombinations = [
+      { site: 'indeed', term: 'remote data entry', location: 'any' },
+      { site: 'indeed', term: 'remote administrative assistant', location: 'any' },
+      { site: 'indeed', term: 'virtual assistant', location: 'any' },
+      { site: 'linkedin', term: 'remote data entry', location: 'any' },
+      { site: 'linkedin', term: 'remote administrative assistant', location: 'any' },
+      { site: 'linkedin', term: 'virtual assistant', location: 'any' }
+    ];
+    logger.warn('Using fallback search combinations as none were loaded from config file');
+  }
+  
+  logger.info(`Using ${searchCombinations.length} search combinations from config`);
   
   // Store all found jobs
   const allJobs = [];
@@ -274,10 +315,35 @@ async function main() {
   for (const { site, term, location } of searchCombinations) {
     try {
       const jobs = await scrapeJobs(site, term, location);
-      allJobs.push(...jobs);
+      
+      // Apply additional filtering to ensure jobs match our requirements
+      const filteredJobs = jobs.filter(job => {
+        // Convert job fields to lowercase for case-insensitive matching
+        const title = (job.title || '').toLowerCase();
+        const description = (job.description || '').toLowerCase();
+        
+        // Check if job contains at least one required keyword
+        const hasRequiredKeyword = !keywordsConfig.required_keywords?.length || 
+          keywordsConfig.required_keywords.some(keyword => 
+            title.includes(keyword.toLowerCase()) || 
+            description.includes(keyword.toLowerCase())
+          );
+        
+        // Verify remote status in description if we have required terms
+        const isRemoteVerified = !keywordsConfig.description_required_terms?.length ||
+          keywordsConfig.description_required_terms.some(term => 
+            description.includes(term.toLowerCase())
+          );
+        
+        return hasRequiredKeyword && isRemoteVerified;
+      });
+      
+      logger.info(`After filtering: ${filteredJobs.length}/${jobs.length} jobs from ${site} matched criteria`);
+      
+      allJobs.push(...filteredJobs);
       
       if (stats[site]) {
-        stats[site].jobs += jobs.length;
+        stats[site].jobs += filteredJobs.length;
       }
       
       // Add random delay before next request
