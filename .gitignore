@@ -70,3 +70,4 @@ baseline-results/
 
 # MongoDB data
 data/ 
+.vercel

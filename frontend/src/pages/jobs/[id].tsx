@@ -17,6 +17,7 @@ import { ApplicationInstructions, CopyToClipboard } from '../../components/engag
 
 // Import job types
 import { EnhancedJobListing } from '../../types/job';
+import Metadata from '../../components/seo/Metadata';
 
 // Mock API function - this would be replaced by actual API call
 async function getJobById(id: string): Promise<EnhancedJobListing> {
@@ -169,28 +170,34 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
   const descriptionRef = useRef<HTMLDivElement>(null);
   const { addJobToRecentlyViewed } = useRecentlyViewedJobs();
   
-  // Add this job to recently viewed when the page loads
   useEffect(() => {
     if (job?._id) {
       addJobToRecentlyViewed(job._id);
     }
   }, [job, addJobToRecentlyViewed]);
 
-  const postedDaysAgo = job?.postedDate ? differenceInDays(new Date(), new Date(job.postedDate)) : 0;
-  const formattedPostedDate = job?.postedDate ? format(new Date(job.postedDate), 'MMMM d, yyyy') : '';
-
-  const jobLocationText = job?.location || 'Remote';
   const isVerified = job?.qualityScore >= 8;
+
+  if (!job) {
+    return (
+      <div>
+        <Head>
+          <title>Job Not Found | ClickClickJob.com</title>
+        </Head>
+        <p>Loading job details or job not found...</p>
+      </div>
+    );
+  }
 
   return (
     <>
-      <Head>
-        <title>{job.title} at {job.company} | Remote-Desk.work</title>
-        <meta 
-          name="description" 
-          content={`${job.title} at ${job.company}. ${job.salary ? `Salary: ${job.salary}.` : ''} ${jobLocationText}. Posted on ${formattedPostedDate}.`} 
-        />
-      </Head>
+      <Metadata 
+        jobTitle={job.title}
+        companyName={job.company}
+        jobDescription={job.descriptionText || job.description.substring(0, 250)}
+        location={job.location}
+        keywords={job.tags}
+      />
 
       <div className="bg-white min-h-screen">
         {/* Job details header */}
@@ -204,7 +211,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                 Back to search results
               </Link>
               <span className="text-gray-500 text-sm">
-                Posted {postedDaysAgo === 0 ? 'today' : postedDaysAgo === 1 ? 'yesterday' : `${postedDaysAgo} days ago`}
+                Posted {job.postedDate ? differenceInDays(new Date(), new Date(job.postedDate)) === 0 ? 'today' : differenceInDays(new Date(), new Date(job.postedDate)) === 1 ? 'yesterday' : `${differenceInDays(new Date(), new Date(job.postedDate))} days ago` : ''}
               </span>
             </div>
 
@@ -227,7 +234,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                     <svg className="w-4 h-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
-                    {jobLocationText}
+                    {job.location || 'Remote'}
                   </div>
                   {job.salary && (
                     <div className="mr-4 mb-2">
@@ -242,7 +249,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                     <svg className="w-4 h-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
-                    Posted {formattedPostedDate}
+                    Posted {job.postedDate ? format(new Date(job.postedDate), 'MMMM d, yyyy') : ''}
                   </div>
                 </div>
               </div>
