@@ -1,6 +1,9 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { promisify } = require('util');
+const writeFileAsync = promisify(fs.writeFile);
+const readFileAsync = promisify(fs.readFile);
 
 // Simple logger
 const logger = {
@@ -12,12 +15,14 @@ const logger = {
 
 // Configuration
 const API_HOST = process.env.JOBSPY_BRIDGE_URL || 'http://localhost:8000';
-const DELAY_BETWEEN_REQUESTS = 3000; // 3 seconds delay between requests to avoid rate limiting
-const RETRY_DELAY = 30000; // 30 seconds before retrying a failed source
-const MAX_RETRIES = 3; // Maximum number of retries per source
+const DELAY_BETWEEN_REQUESTS = process.env.DELAY_BETWEEN_REQUESTS ? parseInt(process.env.DELAY_BETWEEN_REQUESTS) : 3000; // ms
+const RETRY_DELAY = process.env.RETRY_DELAY ? parseInt(process.env.RETRY_DELAY) : 30000; // ms
+const MAX_RETRIES = process.env.MAX_RETRIES ? parseInt(process.env.MAX_RETRIES) : 3;
 const RESULTS_FILE = path.join(__dirname, 'scrape-results.json');
+const PROXIES_FILE = path.join(__dirname, 'proxies.txt');
+const USE_PROXIES = process.env.USE_PROXIES === 'true' || false;
 
-// Search terms to use - add more relevant terms to get more jobs
+// Search terms focused on admin/data entry jobs
 const SEARCH_TERMS = [
   'remote data entry',
   'remote administrative assistant',
@@ -36,13 +41,13 @@ const SEARCH_TERMS = [
   'remote bookkeeping',
   'work from home customer service',
   'remote executive assistant',
-  'work from home sales',
-  'remote tech support',
-  'remote project management',
-  'virtual customer service',
-  'remote marketing assistant',
-  'content writer remote',
-  'remote social media manager'
+  'remote project assistant',
+  'remote office admin',
+  'remote administrative coordinator',
+  'remote data specialist',
+  'remote data analyst',
+  'remote office manager',
+  'remote personal assistant'
 ];
 
 // Define multiple locations to search in
@@ -59,9 +64,9 @@ const SOURCES = [
   'indeed',
   'linkedin',
   'naukri'
-  // 'glassdoor',  // Disabled due to 403 errors
-  // 'zip_recruiter',  // Disabled due to 429 errors
-  // 'bayt'  // Disabled due to 403 errors
+  // 'glassdoor',  // Enable if needed with proxies
+  // 'zip_recruiter',  // Enable if needed with proxies
+  // 'bayt'  // Enable if needed with proxies
 ];
 
 // Global results tracking
@@ -76,8 +81,37 @@ const results = {
 // Helper function to delay execution
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Load proxies from file if they exist
+async function loadProxies() {
+  try {
+    if (!USE_PROXIES) return null;
+    
+    if (!fs.existsSync(PROXIES_FILE)) {
+      logger.warn(`Proxies file not found at ${PROXIES_FILE}. Proceeding without proxies.`);
+      return null;
+    }
+    
+    const data = await readFileAsync(PROXIES_FILE, 'utf8');
+    const proxies = data
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line && !line.startsWith('#'));
+    
+    if (proxies.length === 0) {
+      logger.warn('No valid proxies found in proxies file.');
+      return null;
+    }
+    
+    logger.info(`Loaded ${proxies.length} proxies`);
+    return proxies;
+  } catch (error) {
+    logger.error(`Failed to load proxies: ${error.message}`);
+    return null;
+  }
+}
+
 // Function to scrape a single source with a single search term
-async function scrapeJobs(source, searchTerm, location, retryCount = 0) {
+async function scrapeJobs(source, searchTerm, location, proxies, retryCount = 0) {
   // Add source to stats if not exists
   if (!results.sourceStats[source]) {
     results.sourceStats[source] = { jobsFound: 0, searchTerms: {}, errors: 0 };
@@ -91,17 +125,34 @@ async function scrapeJobs(source, searchTerm, location, retryCount = 0) {
   try {
     logger.info(`Scraping ${source} for "${searchTerm}" in location "${location || 'any'}"...`);
     
-    const response = await axios.post(`${API_HOST}/scrape-jobs`, {
+    // Create request payload
+    const payload = {
       site_names: [source],
       search_terms: [searchTerm],
       location: location,
       results_wanted: 50,  // Request more results
-      hours_old: 168,  // 7 days instead of 3
+      hours_old: 168,  // 7 days
       is_remote: true,
       country_indeed: "USA",
       distance: 100
-    }, {
-      timeout: 60000 // 60 second timeout
+    };
+    
+    // Add proxies if available
+    if (proxies && proxies.length > 0) {
+      // Select a random subset of proxies (up to 5)
+      const proxyCount = Math.min(5, proxies.length);
+      const selectedProxies = [];
+      
+      for (let i = 0; i < proxyCount; i++) {
+        const randomIndex = Math.floor(Math.random() * proxies.length);
+        selectedProxies.push(proxies[randomIndex]);
+      }
+      
+      payload.proxies = selectedProxies;
+    }
+    
+    const response = await axios.post(`${API_HOST}/scrape-jobs`, payload, {
+      timeout: 120000 // 2 minute timeout
     });
     
     // Check for actual jobs array in response
@@ -140,7 +191,7 @@ async function scrapeJobs(source, searchTerm, location, retryCount = 0) {
       const retryDelayMs = RETRY_DELAY * Math.pow(2, retryCount);
       logger.warn(`Retrying in ${retryDelayMs/1000} seconds (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
       await delay(retryDelayMs);
-      return scrapeJobs(source, searchTerm, location, retryCount + 1);
+      return scrapeJobs(source, searchTerm, location, proxies, retryCount + 1);
     }
     
     return 0;
@@ -148,12 +199,12 @@ async function scrapeJobs(source, searchTerm, location, retryCount = 0) {
 }
 
 // Save results to a JSON file
-function saveResults() {
+async function saveResults() {
   results.endTime = new Date();
   results.duration = (results.endTime - results.startTime) / 1000; // in seconds
   
   try {
-    fs.writeFileSync(RESULTS_FILE, JSON.stringify(results, null, 2));
+    await writeFileAsync(RESULTS_FILE, JSON.stringify(results, null, 2));
     logger.info(`Results saved to ${RESULTS_FILE}`);
   } catch (error) {
     logger.error(`Failed to save results: ${error.message}`);
@@ -182,6 +233,9 @@ async function scrapeAllJobs() {
     process.exit(1);
   }
   
+  // Load proxies if enabled
+  const proxies = await loadProxies();
+  
   // Go through each source
   for (const source of SOURCES) {
     logger.info(`Starting scraping with source: ${source}`);
@@ -189,17 +243,18 @@ async function scrapeAllJobs() {
     // Go through each search term and location combination
     for (const searchTerm of SEARCH_TERMS) {
       for (const location of LOCATIONS) {
-        await scrapeJobs(source, searchTerm, location);
+        await scrapeJobs(source, searchTerm, location, proxies);
         
         // Delay between requests to avoid rate limiting
-        logger.info(`Waiting ${DELAY_BETWEEN_REQUESTS/1000} seconds before next request...`);
-        await delay(DELAY_BETWEEN_REQUESTS);
+        const delayTime = DELAY_BETWEEN_REQUESTS + Math.floor(Math.random() * 2000); // Add jitter
+        logger.info(`Waiting ${delayTime/1000} seconds before next request...`);
+        await delay(delayTime);
       }
     }
   }
   
   // Save final results
-  saveResults();
+  await saveResults();
   
   logger.info(`Scraping complete! Total jobs found: ${results.totalJobs}`);
   

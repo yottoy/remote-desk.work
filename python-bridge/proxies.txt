@@ -1,0 +1,14 @@
+# Proxy list format: ip:port or ip:port:username:password
+# Example:
+# 192.168.1.1:8080
+# 192.168.1.2:8080:username:password
+#
+# Add your proxies below, one per line
+# You can purchase rotating proxies from providers like:
+# - Bright Data
+# - Oxylabs
+# - SmartProxy
+# - ProxyBonanza
+# - SOAX
+#
+# Using proxies helps avoid rate limiting and IP blocks from job sites 
