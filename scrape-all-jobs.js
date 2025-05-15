@@ -1,3 +1,11 @@
+// Import required modules
+const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
+const { promisify } = require('util');
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+
 // Configuration
 const API_HOST = process.env.JOBSPY_BRIDGE_URL || 'http://127.0.0.1:8000'; // Always use explicit IPv4
 const DELAY_BETWEEN_REQUESTS = process.env.DELAY_BETWEEN_REQUESTS ? parseInt(process.env.DELAY_BETWEEN_REQUESTS) : 3000; // ms
@@ -9,6 +17,23 @@ const RESULTS_FILE = path.join(__dirname, 'scrape-results.json');
 const PROXIES_FILE = path.join(__dirname, 'proxies.txt');
 const KEYWORDS_FILE = path.join(__dirname, 'admin-data-entry-keywords.json');
 const USE_PROXIES = process.env.USE_PROXIES === 'true' || false;
+
+// Configure logger
+const logger = {
+  debug: (...args) => console.debug(`DEBUG: ${args.join(' ')}`),
+  info: (...args) => console.log(`INFO: ${args.join(' ')}`),
+  warn: (...args) => console.warn(`WARNING: ${args.join(' ')}`),
+  error: (...args) => console.error(`ERROR: ${args.join(' ')}`)
+};
+
+// Helper function to delay execution
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Function to add random delay jitter
+const randomDelay = baseMs => {
+  const jitter = Math.random() * baseMs * 0.5; // Add up to 50% jitter
+  return baseMs + jitter;
+};
 
 // Configure axios to use IPv4
 const originalCreate = axios.create;
@@ -32,6 +57,18 @@ const axiosClient = axios.create({
   }
 });
 
+// DNS resolution check
+async function checkDnsResolution(hostname) {
+  try {
+    const { stdout } = await exec(`getent hosts ${hostname}`);
+    logger.debug(`DNS resolution for ${hostname}: ${stdout.trim()}`);
+    return stdout.trim();
+  } catch (error) {
+    logger.warn(`Failed to resolve ${hostname}: ${error.message}`);
+    return null;
+  }
+}
+
 // Check if the bridge is running
 async function checkBridgeStatus(retryCount = 0) {
   try {
@@ -53,6 +90,9 @@ async function checkBridgeStatus(retryCount = 0) {
     // Get hostname from URL for DNS resolution test
     const urlObj = new URL(url);
     const hostname = urlObj.hostname;
+    
+    // Check DNS resolution
+    await checkDnsResolution(hostname);
     
     logger.debug(`Checking connection to ${hostname}:${urlObj.port}`);
     
@@ -135,4 +175,142 @@ async function checkBridgeStatus(retryCount = 0) {
     
     return false;
   }
-} 
+}
+
+// Scrape jobs function
+async function scrapeJobs(site, searchTerm, location = 'any', resultsWanted = 20, retryCount = 0) {
+  try {
+    logger.info(`Scraping ${site} for "${searchTerm}" in location "${location}"...`);
+    
+    const url = `${API_HOST}/scrape-jobs`;
+    logger.debug(`Sending request to ${url}`);
+    
+    const requestBody = {
+      site_names: [site],
+      search_terms: [searchTerm],
+      location: location,
+      results_wanted: resultsWanted,
+      hours_old: 72,
+      is_remote: true,
+      distance: 50,
+      description_format: 'markdown'
+    };
+    
+    const response = await axiosClient.post(url, requestBody);
+    
+    if (response.data && response.data.jobs && Array.isArray(response.data.jobs)) {
+      logger.info(`Found ${response.data.jobs.length} jobs from ${site} for "${searchTerm}" in location "${location}"`);
+      return response.data.jobs;
+    } else {
+      logger.warn(`No jobs found or invalid response from ${site} for "${searchTerm}"`);
+      return [];
+    }
+  } catch (error) {
+    logger.error(`Error scraping ${site} for "${searchTerm}": ${error.message}`);
+    
+    if (retryCount < MAX_RETRIES) {
+      logger.info(`Retrying in ${RETRY_DELAY/1000} seconds (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+      await delay(RETRY_DELAY);
+      return scrapeJobs(site, searchTerm, location, resultsWanted, retryCount + 1);
+    }
+    
+    return [];
+  }
+}
+
+// Main function
+async function main() {
+  console.log(`Starting JobSpy scraper at ${new Date().toUTCString()}`);
+  logger.info('Starting mass job scraping operation');
+  logger.info(`Using bridge at: ${API_HOST}`);
+  logger.info(`Node.js version: ${process.version}`);
+  logger.info(`OS: ${process.platform} ${process.arch}`);
+  
+  // Test localhost resolution
+  logger.info('Testing localhost resolution:');
+  try {
+    const { stdout } = await exec('getent hosts localhost');
+    logger.info(stdout.trim());
+  } catch (error) {
+    logger.warn(`Could not resolve localhost: ${error.message}`);
+  }
+  
+  // Check bridge connection
+  logger.info('Checking bridge connection...');
+  const isConnected = await checkBridgeStatus();
+  
+  if (!isConnected) {
+    logger.error('Failed to connect to JobSpy bridge. Make sure it is running.');
+    process.exit(1);
+  }
+  
+  logger.info('Bridge connection confirmed!');
+  
+  // Define search combinations to try
+  const searchCombinations = [
+    { site: 'indeed', term: 'remote data entry', location: 'any' },
+    { site: 'indeed', term: 'remote administrative assistant', location: 'any' },
+    { site: 'indeed', term: 'virtual assistant', location: 'any' },
+    { site: 'linkedin', term: 'remote data entry', location: 'any' },
+    { site: 'linkedin', term: 'remote administrative assistant', location: 'any' },
+    { site: 'linkedin', term: 'virtual assistant', location: 'any' }
+  ];
+  
+  logger.info(`Using ${searchCombinations.length} predefined search combinations from config`);
+  logger.info(`Using ${searchCombinations.length} predefined search combinations`);
+  
+  // Store all found jobs
+  const allJobs = [];
+  const stats = {};
+  
+  // Initialize statistics
+  for (const combo of searchCombinations) {
+    if (!stats[combo.site]) {
+      stats[combo.site] = { jobs: 0, errors: 0 };
+    }
+  }
+  
+  // Process each search combination
+  for (const { site, term, location } of searchCombinations) {
+    try {
+      const jobs = await scrapeJobs(site, term, location);
+      allJobs.push(...jobs);
+      
+      if (stats[site]) {
+        stats[site].jobs += jobs.length;
+      }
+      
+      // Add random delay before next request
+      const waitTime = randomDelay(DELAY_BETWEEN_REQUESTS);
+      logger.info(`Waiting ${waitTime.toFixed(3)} seconds before next request...`);
+      await delay(waitTime);
+    } catch (error) {
+      logger.error(`Error processing combination (${site}, ${term}, ${location}): ${error.message}`);
+      if (stats[site]) {
+        stats[site].errors += 1;
+      }
+    }
+  }
+  
+  // Save results to file
+  try {
+    fs.writeFileSync(RESULTS_FILE, JSON.stringify(allJobs, null, 2));
+    logger.info(`Results saved to ${RESULTS_FILE}`);
+  } catch (error) {
+    logger.error(`Failed to save results: ${error.message}`);
+  }
+  
+  // Summary
+  logger.info(`Scraping complete! Total jobs found: ${allJobs.length}`);
+  for (const [site, data] of Object.entries(stats)) {
+    logger.info(`Source: ${site} - Jobs found: ${data.jobs}, Errors: ${data.errors}`);
+  }
+  
+  console.log(`JobSpy scraper completed at ${new Date().toUTCString()}`);
+}
+
+// Run the main function
+main().catch(error => {
+  logger.error(`Unhandled error in main: ${error.message}`);
+  process.exit(1);
+}); 

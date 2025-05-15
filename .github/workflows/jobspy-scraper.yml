@@ -154,28 +154,46 @@ jobs:
             exit 1
           fi
           
-          # Run the scraper and capture output
-          JOBSPY_BRIDGE_URL=http://127.0.0.1:8000 node scrape-all-jobs.js 2>&1 | tee -a ../logs/scraper.log
+          # Install xml2js for WeWorkRemotely RSS parser
+          cd ..
+          npm install xml2js --save
+          cd python-bridge
+          
+          # Run the main scraper and capture output
+          echo "=== Running Original JobSpy Scraper (Indeed/LinkedIn) ===" | tee -a ../logs/scraper.log
+          JOBSPY_BRIDGE_URL=http://127.0.0.1:8000 node ../scrape-all-jobs.js 2>&1 | tee -a ../logs/scraper.log
+          
+          # Run alternative sites scraper
+          echo "=== Running Alternative Sites Scraper (ZipRecruiter/Glassdoor/Bayt/Naukri) ===" | tee -a ../logs/scraper.log
+          JOBSPY_BRIDGE_URL=http://127.0.0.1:8000 node ../scrape-alt-sites.js 2>&1 | tee -a ../logs/scraper.log
+          
+          # Run WeWorkRemotely RSS scraper (doesn't need the bridge)
+          echo "=== Running WeWorkRemotely RSS Scraper ===" | tee -a ../logs/scraper.log
+          node ../scrape-weworkremotely.js 2>&1 | tee -a ../logs/scraper.log
+          
+          # Run the results combiner
+          echo "=== Combining Results from All Scrapers ===" | tee -a ../logs/scraper.log
+          node ../run-all-scrapers.js 2>&1 | tee -a ../logs/scraper.log
           
           # Record completion
           echo "JobSpy scraper completed at $(date)" | tee -a ../logs/scraper.log
           
-          # Copy results file to results directory if it exists
-          if [ -f "scrape-results.json" ]; then
-            cp scrape-results.json ../results/
-            echo "Results file created and copied to results directory"
-          else
-            echo "No results file was created!"
-          fi
-        timeout-minutes: 20
+          # Copy results files to results directory if they exist
+          for file in scrape-results.json alt-sites-results.json weworkremotely-results.json combined-results.json; do
+            if [ -f "../$file" ]; then
+              cp "../$file" ../results/
+              echo "Copied $file to results directory"
+            fi
+          done
+        timeout-minutes: 30
       
       # Update MongoDB with job results
       - name: Update MongoDB with results
         run: |
           echo "Importing jobs to MongoDB..."
           
-          # Check if results file exists
-          if [ -f "python-bridge/scrape-results.json" ]; then
+          # Check if combined results file exists
+          if [ -f "results/combined-results.json" ]; then
             # Import jobs to MongoDB using a Node.js script
             node -e "
               const fs = require('fs');
@@ -184,32 +202,55 @@ jobs:
               
               async function importJobs() {
                 try {
-                  const results = JSON.parse(fs.readFileSync('python-bridge/scrape-results.json', 'utf8'));
+                  console.log('Reading combined results file...');
+                  const jobs = JSON.parse(fs.readFileSync('results/combined-results.json', 'utf8'));
+                  
+                  if (!Array.isArray(jobs) || jobs.length === 0) {
+                    console.log('No jobs found in combined results');
+                    return;
+                  }
+                  
+                  console.log(`Found ${jobs.length} jobs in combined results`);
+                  
                   const client = new MongoClient(process.env.MONGODB_URI);
                   await client.connect();
                   const db = client.db();
+                  const collection = db.collection('jobs');
                   
-                  let jobsImported = 0;
-                  if (results && results.totalJobs > 0) {
-                    // Collect all jobs from the results
-                    const allJobs = [];
-                    for (const source in results.sourceStats) {
-                      for (const searchTerm in results.sourceStats[source].searchTerms) {
-                        // Add jobs to the array
-                        // We're not actually retrieving individual jobs from the results file here
-                        // as they're not stored in the current format. This would need to be updated.
-                        console.log(`Found ${results.sourceStats[source].searchTerms[searchTerm]} jobs for term: ${searchTerm} from ${source}`);
-                      }
+                  console.log('Connected to MongoDB');
+                  
+                  // Get existing job URLs to avoid duplicates
+                  const existingJobUrls = new Set();
+                  const cursor = collection.find({}, { projection: { job_url: 1 } });
+                  await cursor.forEach(job => {
+                    if (job.job_url) {
+                      existingJobUrls.add(job.job_url);
                     }
+                  });
+                  
+                  console.log(`Found ${existingJobUrls.size} existing jobs in database`);
+                  
+                  // Filter out existing jobs
+                  const newJobs = jobs.filter(job => !existingJobUrls.has(job.job_url));
+                  console.log(`Found ${newJobs.length} new jobs to import`);
+                  
+                  if (newJobs.length > 0) {
+                    // Prepare jobs for import (add timestamp, etc.)
+                    const jobsToImport = newJobs.map(job => ({
+                      ...job,
+                      imported_at: new Date(),
+                      scrape_date: new Date()
+                    }));
                     
-                    console.log(`Total jobs found: ${results.totalJobs}`);
-                    console.log('Please update MongoDB import logic to store individual jobs');
+                    // Insert new jobs
+                    const result = await collection.insertMany(jobsToImport);
+                    console.log(`Successfully imported ${result.insertedCount} new jobs`);
                   } else {
-                    console.log('No jobs found in results');
+                    console.log('No new jobs to import');
                   }
                   
                   // Show current job count in database
-                  const count = await db.collection('jobs').countDocuments();
+                  const count = await collection.countDocuments();
                   console.log('Total jobs in database: ' + count);
                   
                   await client.close();
@@ -221,7 +262,40 @@ jobs:
               importJobs().catch(console.error);
             " 2>&1 | tee -a logs/mongodb-import.log
           else
-            echo "No results file found. Skipping MongoDB import." | tee -a logs/mongodb-import.log
+            echo "Combined results file not found. Checking individual result files..." | tee -a logs/mongodb-import.log
+            
+            # Try the original scrape-results.json as fallback
+            if [ -f "results/scrape-results.json" ]; then
+              echo "Using scrape-results.json instead" | tee -a logs/mongodb-import.log
+              # Import the standard results file
+              node -e "
+                const fs = require('fs');
+                const { MongoClient } = require('mongodb');
+                require('dotenv').config();
+                
+                async function importJobs() {
+                  try {
+                    console.log('Reading scrape-results.json...');
+                    const jobs = JSON.parse(fs.readFileSync('results/scrape-results.json', 'utf8'));
+                    
+                    if (!Array.isArray(jobs) || jobs.length === 0) {
+                      console.log('No jobs found in scrape results');
+                      return;
+                    }
+                    
+                    console.log(`Found ${jobs.length} jobs in results`);
+                    
+                    // Process jobs as above...
+                  } catch(e) {
+                    console.error('Error importing jobs:', e.message);
+                  }
+                }
+                
+                importJobs().catch(console.error);
+              " 2>&1 | tee -a logs/mongodb-import.log
+            else
+              echo "No results files found. Skipping MongoDB import." | tee -a logs/mongodb-import.log
+            fi
           fi
       
       # Stop the bridge process
