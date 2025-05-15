@@ -18,6 +18,8 @@ const API_HOST = process.env.JOBSPY_BRIDGE_URL || 'http://localhost:8000';
 const DELAY_BETWEEN_REQUESTS = process.env.DELAY_BETWEEN_REQUESTS ? parseInt(process.env.DELAY_BETWEEN_REQUESTS) : 3000; // ms
 const RETRY_DELAY = process.env.RETRY_DELAY ? parseInt(process.env.RETRY_DELAY) : 30000; // ms
 const MAX_RETRIES = process.env.MAX_RETRIES ? parseInt(process.env.MAX_RETRIES) : 3;
+const BRIDGE_CHECK_RETRIES = 5;
+const BRIDGE_CHECK_DELAY = 3000; // ms
 const RESULTS_FILE = path.join(__dirname, 'scrape-results.json');
 const PROXIES_FILE = path.join(__dirname, 'proxies.txt');
 const KEYWORDS_FILE = path.join(__dirname, 'admin-data-entry-keywords.json');
@@ -173,6 +175,7 @@ async function scrapeJobs(source, searchTerm, location, proxies, config, retryCo
       payload.proxies = selectedProxies;
     }
     
+    logger.debug(`Sending request to ${API_HOST}/scrape-jobs`);
     const response = await axios.post(`${API_HOST}/scrape-jobs`, payload, {
       timeout: 120000 // 2 minute timeout
     });
@@ -197,6 +200,14 @@ async function scrapeJobs(source, searchTerm, location, proxies, config, retryCo
       error.message;
     
     logger.error(`Failed to scrape ${source} for "${searchTerm}": ${errorMessage}`);
+    
+    // Check if it's a connection error - if so, verify bridge is running
+    if (error.code === 'ECONNREFUSED' || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+      const bridgeRunning = await checkBridgeStatus();
+      if (!bridgeRunning) {
+        throw new Error('Bridge connection lost during scraping');
+      }
+    }
     
     // Track error
     results.sourceStats[source].errors++;
@@ -234,12 +245,21 @@ async function saveResults() {
 }
 
 // Check if the bridge is running
-async function checkBridgeStatus() {
+async function checkBridgeStatus(retryCount = 0) {
   try {
+    logger.debug(`Checking bridge status at ${API_HOST}/health`);
     const response = await axios.get(`${API_HOST}/health`, { timeout: 5000 });
+    logger.debug(`Bridge health check response: ${response.status}`);
     return response.status === 200;
   } catch (error) {
     logger.error(`Bridge is not running: ${error.message}`);
+    
+    if (retryCount < BRIDGE_CHECK_RETRIES) {
+      logger.info(`Retrying bridge health check in ${BRIDGE_CHECK_DELAY/1000} seconds (attempt ${retryCount + 1}/${BRIDGE_CHECK_RETRIES})...`);
+      await delay(BRIDGE_CHECK_DELAY);
+      return checkBridgeStatus(retryCount + 1);
+    }
+    
     return false;
   }
 }
@@ -247,6 +267,7 @@ async function checkBridgeStatus() {
 // Main function to run all scrapers
 async function scrapeAllJobs() {
   logger.info('Starting mass job scraping operation');
+  logger.info(`Using bridge at: ${API_HOST}`);
   
   // Check if bridge is running
   const bridgeRunning = await checkBridgeStatus();
@@ -254,6 +275,8 @@ async function scrapeAllJobs() {
     logger.error('JobSpy bridge is not running. Please start it first.');
     process.exit(1);
   }
+  
+  logger.info('Bridge connection confirmed!')
   
   // Load keywords configuration
   const config = await loadKeywordConfig();
