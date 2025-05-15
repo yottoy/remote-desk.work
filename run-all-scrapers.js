@@ -97,8 +97,18 @@ function combineResults() {
     // Aggregate all jobs
     const allJobs = [];
     let uniqueJobUrls = new Set();
-    let uniqueTitleCompanyPairs = new Set();
+    let uniqueTitleCompanyLocPairs = new Set();
     let possibleDuplicates = [];
+    
+    // Tracking for deduplication metrics
+    const deduplicationStats = {
+      totalProcessed: 0,
+      duplicateUrl: 0,
+      duplicateTitleCompany: 0,
+      keptWithDifferentLocation: 0,
+      keptWithDifferentSalary: 0,
+      addedAsUnique: 0
+    };
     
     // Process each result file
     for (const file of resultFiles) {
@@ -110,6 +120,8 @@ function combineResults() {
       
       // Process each job
       for (const job of jobs) {
+        deduplicationStats.totalProcessed++;
+        
         // Always add source metadata
         job.source_file = fileSource;
         job.import_date = new Date().toISOString();
@@ -120,10 +132,12 @@ function combineResults() {
         const normalizedLocation = (job.location || '').toLowerCase().trim();
         
         // Create a unique key based on URL (primary deduplication method)
-        const jobUrl = job.job_url || '';
+        const jobUrl = job.job_url || job.url || '';
         
-        // Create a secondary key based on title + company (for jobs with different URLs but same content)
-        const titleCompanyKey = `${normalizedTitle}|${normalizedCompany}`;
+        // Create a secondary key based on title + company + partial location (for jobs with different URLs but same content)
+        // Only use first part of location to avoid over-deduplication (e.g., "Remote, USA" vs "Remote")
+        const locationPrefix = normalizedLocation.split(',')[0].trim();
+        const titleCompanyLocKey = `${normalizedTitle}|${normalizedCompany}|${locationPrefix}`;
         
         // Decision logic for adding jobs
         let shouldAdd = true;
@@ -133,35 +147,49 @@ function combineResults() {
         if (jobUrl && uniqueJobUrls.has(jobUrl)) {
           shouldAdd = false;
           duplicateReason = 'duplicate_url';
+          deduplicationStats.duplicateUrl++;
         } 
-        // If we have the same title+company combination, it's a potential duplicate
-        else if (titleCompanyKey && uniqueTitleCompanyPairs.has(titleCompanyKey)) {
+        // If we have the same title+company+location combination, it's a potential duplicate
+        else if (titleCompanyLocKey && uniqueTitleCompanyLocPairs.has(titleCompanyLocKey)) {
           // Before rejecting, check if it's really a duplicate or just similar listings
-          // If locations differ significantly, it might be different positions
+          // Find existing job with same title+company
           const existingJob = allJobs.find(j => 
             (j.title || '').toLowerCase().trim() === normalizedTitle && 
-            (j.company || '').toLowerCase().trim() === normalizedCompany
+            (j.company || '').toLowerCase().trim() === normalizedCompany &&
+            (j.location || '').toLowerCase().trim().split(',')[0] === locationPrefix
           );
           
           if (existingJob) {
             const existingLocation = (existingJob.location || '').toLowerCase().trim();
             
-            // If locations are different enough, keep both
+            // Check for meaningful differences in full location
             if (normalizedLocation && existingLocation && 
+                normalizedLocation !== existingLocation && 
                 !normalizedLocation.includes(existingLocation) && 
                 !existingLocation.includes(normalizedLocation)) {
               
               // Likely different locations for same role - keep both
               logger.debug(`Keeping similar job with different location: ${job.title} at ${job.company} (${job.location} vs ${existingJob.location})`);
-              
-              // Still mark as possible duplicate for later analysis
               job.possible_duplicate = true;
               job.duplicate_check = `Similar to job ID: ${existingJob.id || 'unknown'}`;
               possibleDuplicates.push(job);
-            } else {
+              deduplicationStats.keptWithDifferentLocation++;
+            } 
+            // Check for salary differences
+            else if (job.salary && existingJob.salary && 
+                    job.salary !== existingJob.salary) {
+              
+              // Different salary information - might be different position or update
+              logger.debug(`Keeping similar job with different salary: ${job.title} at ${job.company} (${job.salary} vs ${existingJob.salary})`);
+              job.possible_duplicate = true;
+              job.duplicate_check = `Similar to job ID: ${existingJob.id || 'unknown'} but different salary`;
+              deduplicationStats.keptWithDifferentSalary++;
+            }
+            else {
               // Same title, company, and similar location - likely duplicate
               shouldAdd = false;
               duplicateReason = 'duplicate_content';
+              deduplicationStats.duplicateTitleCompany++;
             }
           }
         }
@@ -172,12 +200,13 @@ function combineResults() {
           if (jobUrl) {
             uniqueJobUrls.add(jobUrl);
           }
-          if (titleCompanyKey) {
-            uniqueTitleCompanyPairs.add(titleCompanyKey);
+          if (titleCompanyLocKey) {
+            uniqueTitleCompanyLocPairs.add(titleCompanyLocKey);
           }
           
           // Add job to our final list
           allJobs.push(job);
+          deduplicationStats.addedAsUnique++;
         } else if (duplicateReason) {
           logger.debug(`Skipped duplicate job: ${job.title} at ${job.company} (${duplicateReason})`);
         }
@@ -185,7 +214,14 @@ function combineResults() {
     }
     
     // Log duplicate stats
-    logger.info(`Found ${possibleDuplicates.length} possible duplicates that were kept for different locations`);
+    logger.info(`Found ${possibleDuplicates.length} possible duplicates that were kept for different locations/salaries`);
+    logger.info('Deduplication statistics:');
+    logger.info(`  Total jobs processed: ${deduplicationStats.totalProcessed}`);
+    logger.info(`  Duplicate URLs rejected: ${deduplicationStats.duplicateUrl} (${(deduplicationStats.duplicateUrl/deduplicationStats.totalProcessed*100).toFixed(1)}%)`);
+    logger.info(`  Duplicate title+company rejected: ${deduplicationStats.duplicateTitleCompany} (${(deduplicationStats.duplicateTitleCompany/deduplicationStats.totalProcessed*100).toFixed(1)}%)`);
+    logger.info(`  Kept despite similarity (different location): ${deduplicationStats.keptWithDifferentLocation} (${(deduplicationStats.keptWithDifferentLocation/deduplicationStats.totalProcessed*100).toFixed(1)}%)`);
+    logger.info(`  Kept despite similarity (different salary): ${deduplicationStats.keptWithDifferentSalary} (${(deduplicationStats.keptWithDifferentSalary/deduplicationStats.totalProcessed*100).toFixed(1)}%)`);
+    logger.info(`  Added as unique: ${deduplicationStats.addedAsUnique} (${(deduplicationStats.addedAsUnique/deduplicationStats.totalProcessed*100).toFixed(1)}%)`);
     
     // Save combined results
     fs.writeFileSync(COMBINED_RESULTS_FILE, JSON.stringify(allJobs, null, 2));

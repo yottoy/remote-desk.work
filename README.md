@@ -1,105 +1,87 @@
-# ClickClickJob.com
+# ClickClickJob Job Scraper
 
-A sophisticated remote job aggregation platform built to scrape, filter, and present high-quality remote job listings from multiple sources.
+A system for scraping remote admin and data entry job postings from various sites using JobSpy.
 
-## Overview
+## Features
 
-ClickClickJob.com (previously RemoteDesk.work) is designed to help remote job seekers find quality job listings by:
+- Scrapes multiple job sites (Indeed, LinkedIn, WeWorkRemotely, etc.)
+- Focuses on remote admin and data entry positions
+- Deduplicates job listings across sources
+- Filters out irrelevant jobs and scams
+- Rotates proxies to avoid IP blocking
 
-1. Scraping multiple job sites for remote positions
-2. Filtering and scoring jobs based on quality metrics
-3. Presenting listings through a clean, user-friendly interface
-4. Enabling advanced search and filtering capabilities
+## GitHub Actions Workflow
 
-## Repository Structure
+This project includes a GitHub Actions workflow that:
 
-- `python-bridge/` - Python-Node.js bridge for JobSpy integration
-- `scripts/` - Automation scripts for running scrapers
-- `frontend/` - Next.js frontend application
-- `remote-job-scraper/` - Node.js backend scrapers and API
-- `CODEBASE_REVIEW.md` - Comprehensive codebase review
+1. Automatically runs every 12 hours
+2. Sets up the Python and Node.js environment
+3. Tests the environment and dependencies
+4. Runs all scrapers in sequence
+5. Combines and processes results
+6. Saves job data as artifacts
 
-## Core Technologies
-
-- **Frontend**: Next.js, React, TailwindCSS
-- **Backend**: Node.js, Express
-- **Database**: MongoDB
-- **Scraping**: JobSpy (Python), Playwright, Axios
-- **CI/CD**: GitHub Actions
-
-## Getting Started
+## Running Locally
 
 ### Prerequisites
 
 - Node.js 16+
 - Python 3.10+
-- MongoDB
+- npm
 
 ### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/clickclickjob.git
-   cd clickclickjob
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   cd python-bridge && pip install -r requirements.txt
-   ```
-
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-4. Start the development environment:
-   ```bash
-   # Start the Python bridge
-   npm run bridge
-   
-   # In another terminal, start the scrapers
-   npm run scrape
-   
-   # In another terminal, start the frontend
-   npm run dev
-   ```
-
-## Features
-
-- Multi-source job scraping (Indeed, LinkedIn, Naukri, etc.)
-- Quality filtering and ranking
-- User-friendly search interface
-- Comprehensive job details
-- Mobile-responsive design
-
-## Architecture
-
-The system is comprised of three main components:
-
-1. **Job Scrapers**: Python and Node.js scrapers that collect job listings
-2. **Processing Pipeline**: Filters, deduplicates, and scores job listings
-3. **Frontend Application**: User interface for browsing and searching jobs
-
-## Running the Scrapers
-
-Use the comprehensive scraper script:
-
 ```bash
-npm run full-scrape
+# Install Node.js dependencies
+npm install
+
+# Install Python dependencies
+npm run setup-python
 ```
 
-This will start the Python bridge, run all configured scrapers, and save results to MongoDB.
+### Running
 
-## Development
+```bash
+# Run the diagnostic test
+node test-github-environment.js
 
-See the specific README files in each directory for detailed development instructions:
+# Run all scrapers
+npm start
 
-- [Python Bridge README](python-bridge/README.md)
-- [Scripts README](scripts/README.md)
-- [Frontend README](frontend/README.md)
+# Run specific scrapers
+npm run scrape-indeed
+npm run scrape-all
+npm run scrape-alt
+npm run scrape-wwr
+```
+
+## GitHub Setup
+
+1. Push to GitHub using the included script:
+   ```bash
+   ./push-to-github.sh
+   ```
+
+2. Go to your GitHub repository
+3. Click on the "Actions" tab
+4. Run the "Run Job Scrapers" workflow
+
+## Results
+
+Job results are stored in several files:
+
+- `indeed-results.json`: Indeed-specific jobs
+- `scrape-results.json`: Main JobSpy results
+- `alt-sites-results.json`: Alternative sites
+- `combined-results.json`: All deduplicated jobs
+
+## Troubleshooting
+
+If you encounter issues with the JobSpy bridge:
+
+1. Make sure Python dependencies are installed: `npm run setup-python`
+2. Test the bridge: `node test-bridge.js`
+3. Check job results in the `github-test-result.json` file
 
 ## License
 
@@ -107,5 +89,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- JobSpy library for Python job scraping capabilities
-- All contributors and maintainers 
+- [JobSpy](https://github.com/nickpollard/jobspy) - Python library for job scraping
+- All contributors who have helped improve this system 

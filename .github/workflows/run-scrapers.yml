@@ -1,0 +1,62 @@
+name: Run Job Scrapers
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */12 * * *'  # Run every 12 hours
+
+jobs:
+  scrape-jobs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Install Node.js dependencies
+        run: npm ci
+      
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas uvicorn fastapi jobspy python-dotenv
+      
+      - name: Test GitHub environment
+        run: node test-github-environment.js
+      
+      - name: Start JobSpy bridge in background
+        run: |
+          python jobspy_bridge.py &
+          sleep 5  # Give bridge time to start
+      
+      - name: Test bridge connection
+        run: node test-bridge.js
+      
+      - name: Run Indeed scraper
+        run: node scrape-indeed.js
+      
+      - name: Run all scrapers
+        run: node run-all-scrapers.js
+      
+      - name: Upload job results
+        uses: actions/upload-artifact@v3
+        with:
+          name: job-results
+          path: |
+            indeed-results.json
+            scrape-results.json
+            alt-sites-results.json
+            combined-results.json
+            github-test-result.json 

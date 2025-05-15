@@ -15,12 +15,14 @@ require('dotenv').config();
 const BRIDGE_URL = process.env.JOBSPY_BRIDGE_URL || 'http://127.0.0.1:8000';
 const BRIDGE_HOST = process.env.JOBSPY_BRIDGE_HOST || '127.0.0.1';
 const BRIDGE_PORT = process.env.JOBSPY_BRIDGE_PORT || 8000;
+const MAX_STARTUP_ATTEMPTS = 3;
 
-// Check if we're running in GitHub Actions
-const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
+// Path to bridge PID file
+const BRIDGE_PID_FILE = path.join(process.cwd(), 'python-bridge', 'bridge_pid.txt');
 
 // Keep track of bridge process
 let bridgeProcess = null;
+let startupAttempts = 0;
 
 /**
  * Check if the bridge is running
@@ -28,13 +30,28 @@ let bridgeProcess = null;
  */
 async function isRunning() {
   try {
-    // In GitHub Actions environment, need to use different URL format
-    const healthURL = isGitHubActions 
-      ? `http://0.0.0.0:${BRIDGE_PORT}/health` 
-      : `${BRIDGE_URL}/health`;
-    
+    // Check if we have a PID file and process is running
+    if (fs.existsSync(BRIDGE_PID_FILE)) {
+      const pid = parseInt(fs.readFileSync(BRIDGE_PID_FILE, 'utf8').trim());
+      try {
+        // Check if process is running - doesn't actually send a signal
+        process.kill(pid, 0);
+        // Process exists, but also verify API is responding
+      } catch (e) {
+        // Process doesn't exist
+        return false;
+      }
+    }
+
+    // Always check API response regardless of PID file
+    const healthURL = `${BRIDGE_URL}/health`;
     logger.debug(`Checking bridge status at ${healthURL}`);
-    const response = await axios.get(healthURL, { timeout: 2000 });
+    
+    const response = await axios.get(healthURL, { 
+      timeout: 3000,
+      validateStatus: false
+    });
+    
     return response.status === 200;
   } catch (error) {
     logger.debug(`Bridge status check failed: ${error.message}`);
@@ -51,153 +68,126 @@ async function start() {
     // Check if bridge is already running
     if (await isRunning()) {
       logger.info('JobSpy bridge is already running');
+      // Reset startup attempts on success
+      startupAttempts = 0;
       return true;
     }
     
-    logger.info('Starting JobSpy bridge...');
-    
-    // Install Python dependencies
-    logger.info('Installing Python dependencies...');
-    const pythonBridgeDir = path.join(process.cwd(), 'python-bridge');
-    const requirementsPath = path.join(pythonBridgeDir, 'requirements.txt');
-    
-    // Check if requirements file exists
-    if (!fs.existsSync(requirementsPath)) {
-      logger.error(`Requirements file not found at ${requirementsPath}`);
+    // Increment startup attempts
+    startupAttempts++;
+    if (startupAttempts > MAX_STARTUP_ATTEMPTS) {
+      logger.error(`Exceeded maximum bridge startup attempts (${MAX_STARTUP_ATTEMPTS})`);
+      startupAttempts = 0;
       return false;
     }
     
-    // Install dependencies with pip
-    try {
-      const pipProcess = spawn('pip', ['install', '-r', requirementsPath], {
-        stdio: 'pipe'
-      });
-      
-      // Wait for pip to finish
-      await new Promise((resolve, reject) => {
-        pipProcess.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else {
-            reject(new Error(`pip exited with code ${code}`));
-          }
-        });
-        
-        pipProcess.on('error', reject);
-      });
-      
-      logger.info('Python dependencies installed successfully');
-    } catch (error) {
-      logger.error(`Failed to install Python dependencies: ${error.message}`);
-      // Continue anyway - dependencies might already be installed
+    logger.info(`Starting JobSpy bridge (attempt ${startupAttempts}/${MAX_STARTUP_ATTEMPTS})...`);
+    
+    // Path to the bridge starter script
+    const starterScriptPath = path.join(process.cwd(), 'python-bridge', 'start-bridge.js');
+    
+    // Ensure script exists
+    if (!fs.existsSync(starterScriptPath)) {
+      logger.error(`Bridge starter script not found at ${starterScriptPath}`);
+      return false;
     }
     
-    // Start the bridge
-    const startBridgePath = path.join(pythonBridgeDir, 'start-bridge.js');
-    
-    // If start-bridge.js doesn't exist or can't be accessed, create a simple version
-    if (!fs.existsSync(startBridgePath)) {
-      logger.warn(`Bridge starter not found at ${startBridgePath}, using direct start method`);
-      
-      // Use uvicorn directly if in GitHub Actions environment
-      if (isGitHubActions) {
-        const bridgeFile = path.join(pythonBridgeDir, 'jobspy_bridge.py');
-        
-        // Ensure bridge file exists
-        if (!fs.existsSync(bridgeFile)) {
-          logger.error(`Bridge file not found at ${bridgeFile}`);
-          return false;
-        }
-        
-        // Start uvicorn directly
-        bridgeProcess = spawn('python', [
-          '-m', 'uvicorn',
-          'jobspy_bridge:app',
-          '--host', '0.0.0.0',
-          '--port', BRIDGE_PORT.toString()
-        ], {
-          cwd: pythonBridgeDir,
-          env: {
-            ...process.env,
-            PYTHONUNBUFFERED: '1',
-            DISABLE_PYDANTIC_VALIDATION_WARNINGS: 'true'
-          },
-          stdio: 'pipe'
-        });
-      } else {
-        // Start the bridge using Node's spawn
-        bridgeProcess = spawn('node', [path.join(__dirname, '../../python-bridge/start-bridge.js')], {
-          detached: true,
-          stdio: 'pipe'
-        });
+    // Start the bridge using the dedicated starter script
+    logger.info(`Running bridge starter: ${starterScriptPath}`);
+    bridgeProcess = spawn('node', [starterScriptPath], {
+      detached: true,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        JOBSPY_BRIDGE_HOST: BRIDGE_HOST,
+        JOBSPY_BRIDGE_PORT: BRIDGE_PORT
       }
-    } else {
-      // Use the start-bridge.js script
-      bridgeProcess = spawn('node', [startBridgePath], {
-        detached: true,
-        stdio: 'pipe'
-      });
-    }
-    
-    // Handle bridge output
-    bridgeProcess.stdout.on('data', (data) => {
-      const output = data.toString().trim();
-      logger.debug(`Bridge output: ${output}`);
     });
     
-    bridgeProcess.stderr.on('data', (data) => {
-      const output = data.toString().trim();
-      logger.error(`JobSpy bridge error: ${output}`);
-    });
+    // Detach the process so it keeps running independently
+    bridgeProcess.unref();
     
-    // Handle bridge exit
-    bridgeProcess.on('close', (code) => {
-      logger.warn(`Bridge process exited with code ${code}`);
-      bridgeProcess = null;
-    });
+    // Wait for bridge to start (up to 20 seconds)
+    logger.info('Waiting up to 20 seconds for bridge to start...');
+    const startTime = Date.now();
+    const timeout = 20000; // 20 seconds
     
-    // Wait for bridge to start (up to 30 seconds)
-    logger.info('Waiting up to 30 seconds for bridge to start...');
-    const start = Date.now();
-    const timeout = 30000; // 30 seconds
-    
-    while (Date.now() - start < timeout) {
+    while (Date.now() - startTime < timeout) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       if (await isRunning()) {
         logger.info('JobSpy bridge started successfully');
+        // Reset startup attempts on success
+        startupAttempts = 0;
         return true;
       }
-      
-      // Wait a bit before checking again
-      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
-    logger.error('Failed to start JobSpy bridge');
+    logger.error('Failed to start JobSpy bridge - timed out waiting for it to respond');
+    
+    // Try again recursively if within attempt limits
+    if (startupAttempts < MAX_STARTUP_ATTEMPTS) {
+      logger.info(`Retrying bridge startup (attempt ${startupAttempts}/${MAX_STARTUP_ATTEMPTS})...`);
+      return await start();
+    }
+    
+    startupAttempts = 0;
     return false;
   } catch (error) {
     logger.error(`Error starting JobSpy bridge: ${error.message}`);
+    
+    // Try again recursively if within attempt limits
+    if (startupAttempts < MAX_STARTUP_ATTEMPTS) {
+      logger.info(`Retrying bridge startup after error (attempt ${startupAttempts}/${MAX_STARTUP_ATTEMPTS})...`);
+      return await start();
+    }
+    
+    startupAttempts = 0;
     return false;
   }
 }
 
 /**
  * Stop the JobSpy bridge
+ * @returns {Promise<boolean>} True if successfully stopped, false otherwise
  */
 async function stop() {
-  if (bridgeProcess) {
-    logger.info('Stopping JobSpy bridge...');
-    bridgeProcess.kill();
-    bridgeProcess = null;
+  try {
+    // Check if we have a PID file
+    if (fs.existsSync(BRIDGE_PID_FILE)) {
+      const pid = parseInt(fs.readFileSync(BRIDGE_PID_FILE, 'utf8').trim());
+      
+      try {
+        // Try to kill the process
+        process.kill(pid);
+        logger.info(`Sent termination signal to bridge process with PID ${pid}`);
+        
+        // Remove PID file
+        fs.unlinkSync(BRIDGE_PID_FILE);
+        return true;
+      } catch (error) {
+        logger.warn(`Failed to kill bridge process with PID ${pid}: ${error.message}`);
+        // Remove PID file if it exists but process doesn't
+        if (error.code === 'ESRCH') {
+          fs.unlinkSync(BRIDGE_PID_FILE);
+        }
+      }
+    }
+    
+    // If we have a reference to the process, try to kill it
+    if (bridgeProcess) {
+      bridgeProcess.kill();
+      bridgeProcess = null;
+      logger.info('Stopped bridge process');
+      return true;
+    }
+    
+    logger.warn('No running bridge process found to stop');
+    return false;
+  } catch (error) {
+    logger.error(`Error stopping bridge: ${error.message}`);
+    return false;
   }
-}
-
-/**
- * Legacy function stub for startMonitoring
- * @deprecated This function is deprecated and does nothing.
- */
-function startMonitoring() {
-  logger.warn('bridgeManager.startMonitoring() was called, but this function is deprecated and does nothing.');
-  logger.warn('The monitoring functionality is now built into the bridge manager.');
-  return true;
 }
 
 /**
@@ -213,6 +203,5 @@ module.exports = {
   isRunning,
   start,
   stop,
-  startMonitoring,
   checkStatus
 }; 

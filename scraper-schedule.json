@@ -2,59 +2,114 @@
   "schedule": {
     "weekday": [
       {
-        "name": "morning-scrape",
-        "time": "07:00",
+        "name": "early-morning-scrape",
+        "time": "06:00",
         "sites": ["indeed", "linkedin"],
         "search_terms": [
           "remote data entry",
-          "remote administrative assistant",
+          "remote administrative assistant"
+        ],
+        "max_results_per_query": 20
+      },
+      {
+        "name": "mid-morning-scrape",
+        "time": "10:00",
+        "sites": ["weworkremotely"],
+        "search_terms": [
+          "data entry",
+          "administrative assistant",
           "virtual assistant"
         ],
         "max_results_per_query": 30
       },
       {
+        "name": "mid-day-scrape",
+        "time": "14:00",
+        "sites": ["indeed"],
+        "search_terms": [
+          "remote virtual assistant",
+          "work from home data entry",
+          "remote customer service representative"
+        ],
+        "max_results_per_query": 20
+      },
+      {
         "name": "evening-scrape",
         "time": "18:00",
-        "sites": ["indeed", "linkedin", "weworkremotely"],
+        "sites": ["linkedin", "weworkremotely"],
         "search_terms": [
-          "remote data entry",
-          "remote administrative assistant",
+          "remote administrative",
           "virtual assistant",
-          "work from home administrative"
+          "remote data clerk", 
+          "remote transcriptionist"
         ],
-        "max_results_per_query": 30
+        "max_results_per_query": 20
+      },
+      {
+        "name": "night-scrape",
+        "time": "22:00",
+        "sites": ["indeed"],
+        "search_terms": [
+          "remote office assistant",
+          "work from home administrative",
+          "remote data processor",
+          "remote customer service"
+        ],
+        "max_results_per_query": 20
       }
     ],
     "weekend": [
       {
-        "name": "weekend-scrape",
-        "time": "12:00",
-        "sites": ["indeed", "linkedin", "weworkremotely"],
+        "name": "weekend-morning-scrape",
+        "time": "09:00",
+        "sites": ["indeed", "linkedin"],
         "search_terms": [
           "remote data entry",
           "remote administrative assistant",
           "virtual assistant",
-          "work from home clerical"
+          "remote secretary"
         ],
-        "max_results_per_query": 50
+        "max_results_per_query": 30
+      },
+      {
+        "name": "weekend-afternoon-scrape",
+        "time": "15:00",
+        "sites": ["weworkremotely", "indeed"],
+        "search_terms": [
+          "remote office assistant",
+          "work from home clerical",
+          "remote receptionist",
+          "remote data processor"
+        ],
+        "max_results_per_query": 30
       }
     ]
   },
   "limits": {
     "max_requests_per_hour": {
-      "indeed": 10,
-      "linkedin": 8,
-      "weworkremotely": 15
+      "indeed": 8,
+      "linkedin": 6,
+      "weworkremotely": 10
     },
     "delay_between_queries_ms": {
-      "indeed": 5000,
-      "linkedin": 7000,
-      "weworkremotely": 3000
+      "indeed": 8000,
+      "linkedin": 10000,
+      "weworkremotely": 5000
     }
   },
   "error_handling": {
     "max_retries": 3,
     "backoff_multiplier": 2,
-    "initial_retry_delay_ms": 30000
+    "initial_retry_delay_ms": 60000
+  },
+  "proxy_rotation": {
+    "enabled": true,
+    "sites_requiring_proxies": ["indeed", "linkedin"],
+    "proxy_change_frequency": "per_query"
+  },
+  "job_type_distribution": {
+    "data_entry": 0.4,
+    "administrative": 0.4,
+    "customer_service": 0.2
   }
 } 

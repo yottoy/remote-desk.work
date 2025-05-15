@@ -8,12 +8,18 @@
     "scrape-indeed": "node scrape-indeed.js",
     "scrape-all": "node scrape-all-jobs.js",
     "scrape-alt": "node scrape-alt-sites.js",
-    "scrape-wwr": "node scrape-weworkremotely.js"
+    "scrape-wwr": "node scrape-weworkremotely.js",
+    "test-integration": "node test-scraper-integration.js",
+    "diagnostic": "node run-diagnostic.js",
+    "test-bridge": "node test-bridge.js",
+    "setup-python": "pip install pandas uvicorn fastapi jobspy python-dotenv"
   },
   "dependencies": {
-    "axios": "^1.6.2",
-    "fast-xml-parser": "^4.3.2",
-    "dotenv": "^16.3.1"
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.3",
+    "fast-xml-parser": "^4.0.12",
+    "https-proxy-agent": "^5.0.1",
+    "socks-proxy-agent": "^7.0.0"
   },
   "engines": {
     "node": ">=16.0.0"

@@ -1,3 +1,85 @@
+#!/usr/bin/env python3
+import os
+import sys
+import socket
+import logging
+import random
+import time
+from typing import Optional, List
+from dotenv import load_dotenv
+import pandas as pd
+from fastapi import FastAPI, HTTPException
+from jobspy import scrape_jobs
+from enum import Enum
+import uvicorn
+from pydantic import BaseModel
+
+# Create FastAPI app
+app = FastAPI(
+    title="JobSpy Bridge API",
+    description="Simple API bridge for the JobSpy library",
+    version="1.0.0"
+)
+
+# Define site enum
+class Site(str, Enum):
+    INDEED = "indeed"
+    LINKEDIN = "linkedin"
+    GLASSDOOR = "glassdoor"
+    ZIPRECRUITER = "ziprecruiter"
+    DICE = "dice"
+    SIMPLYHIRED = "simplyhired"
+    REMOTECO = "remoteco"
+    WEWORKREMOTELY = "weworkremotely"
+
+# Request models
+class ScrapeRequest(BaseModel):
+    site_name: Site
+    search_term: str
+    location: str
+    results_wanted: int = 10
+    hours_old: int = 24
+    country_indeed: str = "USA"
+    job_type: Optional[str] = None
+    is_remote: bool = False
+    distance: int = 30
+    easy_apply: Optional[bool] = None
+    exclude_keywords: Optional[List[str]] = None
+
+# Dictionary to track last request times for rate limiting
+last_request_times = {}
+
+def apply_rate_limiting(site_name):
+    """Apply rate limiting per site to avoid getting blocked"""
+    global last_request_times
+    current_time = time.time()
+    
+    if site_name in last_request_times:
+        last_request = last_request_times[site_name]
+        time_diff = current_time - last_request
+        
+        # If the time difference is less than MIN_REQUEST_INTERVAL, wait
+        if time_diff < MIN_REQUEST_INTERVAL:
+            sleep_time = MIN_REQUEST_INTERVAL - time_diff
+            logging.info(f"Rate limiting: waiting {sleep_time:.2f}s for {site_name}")
+            time.sleep(sleep_time)
+    
+    # Update the last request time
+    last_request_times[site_name] = time.time()
+
+def get_random_user_agent():
+    """Get a random user agent if enabled"""
+    if not USE_RANDOM_USER_AGENTS:
+        return None
+        
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
+    ]
+    return random.choice(user_agents)
+
 # Load environment variables
 load_dotenv()
 
@@ -36,6 +118,108 @@ def getaddrinfo_ipv4_only(*args, **kwargs):
 
 # Override the getaddrinfo function
 socket.getaddrinfo = getaddrinfo_ipv4_only 
+
+# Define API endpoints
+@app.get("/health")
+def health_check():
+    """Health check endpoint to verify the bridge is running"""
+    return {"status": "ok", "message": "JobSpy bridge is running"}
+
+@app.get("/sites")
+def get_available_sites():
+    """Get a list of available job sites"""
+    return [site.value for site in Site]
+
+@app.post("/scrape-jobs")
+async def scrape_jobs_endpoint(request: ScrapeRequest):
+    """Scrape jobs based on the request parameters"""
+    try:
+        logger.info(f"Scraping jobs from [{request.site_name}] with search terms: ['{request.search_term}']")
+        
+        # Convert to JobSpy Site enum
+        site_enum = Site(request.site_name)
+        
+        # Apply rate limiting
+        apply_rate_limiting(site_enum.value)
+        
+        # Get user agent if enabled
+        user_agent = get_random_user_agent()
+        
+        # Scrape jobs
+        jobs_df = scrape_jobs(
+            site_name=[site_enum],
+            search_term=request.search_term,
+            location=request.location,
+            results_wanted=request.results_wanted,
+            hours_old=request.hours_old,
+            country_indeed=request.country_indeed,
+            job_type=request.job_type,
+            is_remote=request.is_remote,
+            distance=request.distance,
+            easy_apply=request.easy_apply,
+            verbose=True,
+            user_agent=user_agent
+        )
+        
+        # Filter out jobs with excluded keywords if provided
+        if request.exclude_keywords and not jobs_df.empty:
+            for keyword in request.exclude_keywords:
+                keyword_lower = keyword.lower()
+                jobs_df = jobs_df[
+                    ~jobs_df['title'].str.lower().str.contains(keyword_lower, na=False) & 
+                    ~jobs_df['description'].str.lower().str.contains(keyword_lower, na=False)
+                ]
+        
+        # Convert to list of dictionaries
+        if not jobs_df.empty:
+            jobs = jobs_df.to_dict(orient='records')
+            logger.info(f"Found {len(jobs)} jobs for search term: {request.search_term}")
+            return jobs
+        else:
+            logger.warning(f"No jobs found for search term: {request.search_term}")
+            return []
+            
+    except Exception as e:
+        logger.error(f"Error scraping jobs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error scraping jobs: {str(e)}")
+
+@app.post("/check-config")
+def check_config(request: ScrapeRequest):
+    """Check if the configuration is valid without actually scraping"""
+    return {
+        "valid": True,
+        "config": request.dict(),
+        "message": "Configuration is valid"
+    }
+
+@app.get("/dependencies")
+def get_dependencies():
+    """Get the installed Python dependencies"""
+    try:
+        import pkg_resources
+        
+        # Get all installed packages
+        installed_packages = pkg_resources.working_set
+        packages = {pkg.key: pkg.version for pkg in installed_packages}
+        
+        # Filter to just the ones we care about
+        relevant_packages = {
+            "jobspy": packages.get("jobspy", "Not installed"),
+            "fastapi": packages.get("fastapi", "Not installed"),
+            "uvicorn": packages.get("uvicorn", "Not installed"),
+            "pandas": packages.get("pandas", "Not installed")
+        }
+        
+        return {
+            "python_version": sys.version,
+            "packages": relevant_packages
+        }
+    except Exception as e:
+        logger.error(f"Error getting dependencies: {str(e)}")
+        return {
+            "python_version": sys.version,
+            "error": str(e)
+        }
 
 # Run the API server if executed directly
 if __name__ == "__main__":

@@ -6,6 +6,10 @@ const { promisify } = require('util');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
+// Import our custom utils
+const ProxyRotator = require('./src/utils/ProxyRotator');
+const JobFilter = require('./src/utils/JobFilter');
+
 // Configuration
 const API_HOST = process.env.JOBSPY_BRIDGE_URL || 'http://127.0.0.1:8000'; // Always use explicit IPv4
 const DELAY_BETWEEN_REQUESTS = process.env.DELAY_BETWEEN_REQUESTS ? parseInt(process.env.DELAY_BETWEEN_REQUESTS) : 3000; // ms
@@ -16,7 +20,7 @@ const BRIDGE_CHECK_DELAY = 3000; // ms
 const RESULTS_FILE = path.join(__dirname, 'scrape-results.json');
 const PROXIES_FILE = path.join(__dirname, 'proxies.txt');
 const KEYWORDS_FILE = path.join(__dirname, 'admin-data-entry-keywords.json');
-const USE_PROXIES = process.env.USE_PROXIES === 'true' || false;
+const USE_PROXIES = process.env.USE_PROXIES === 'true' || true; // Default to using proxies
 
 // Configure logger
 const logger = {
@@ -25,6 +29,45 @@ const logger = {
   warn: (...args) => console.warn(`WARNING: ${args.join(' ')}`),
   error: (...args) => console.error(`ERROR: ${args.join(' ')}`)
 };
+
+// Initialize our utilities
+const proxyRotator = new ProxyRotator({
+  proxyFile: PROXIES_FILE,
+  enabled: USE_PROXIES,
+  strategy: 'per_query',
+  logger: logger
+});
+
+const jobFilter = new JobFilter({
+  keywordsFile: KEYWORDS_FILE,
+  strictMode: true,
+  minDescriptionWords: 50,
+  logger: logger
+});
+
+// Load scraper schedule configuration
+let scraperSchedule = {};
+try {
+  const schedulePath = path.join(__dirname, 'scraper-schedule.json');
+  scraperSchedule = JSON.parse(fs.readFileSync(schedulePath, 'utf8'));
+  logger.info(`Loaded scraper schedule configuration`);
+} catch (error) {
+  logger.error(`Failed to load scraper schedule file: ${error.message}`);
+  scraperSchedule = { 
+    limits: {
+      max_requests_per_hour: {
+        indeed: 8,
+        linkedin: 6,
+        weworkremotely: 10
+      },
+      delay_between_queries_ms: {
+        indeed: 8000,
+        linkedin: 10000,
+        weworkremotely: 5000
+      }
+    }
+  };
+}
 
 // Load keywords configuration
 let keywordsConfig = {};
@@ -191,6 +234,15 @@ async function checkBridgeStatus(retryCount = 0) {
   }
 }
 
+// Get site-specific delay based on configuration
+function getSiteDelay(site) {
+  // Use site-specific delay if available in config, otherwise use default
+  if (scraperSchedule?.limits?.delay_between_queries_ms?.[site]) {
+    return scraperSchedule.limits.delay_between_queries_ms[site];
+  }
+  return DELAY_BETWEEN_REQUESTS;
+}
+
 // Scrape jobs function
 async function scrapeJobs(site, searchTerm, location = 'any', resultsWanted = 20, retryCount = 0) {
   try {
@@ -199,184 +251,167 @@ async function scrapeJobs(site, searchTerm, location = 'any', resultsWanted = 20
     const url = `${API_HOST}/scrape-jobs`;
     logger.debug(`Sending request to ${url}`);
     
-    // Load proxies if enabled
-    let proxies = [];
-    if (USE_PROXIES) {
-      try {
-        if (fs.existsSync(PROXIES_FILE)) {
-          const proxyText = fs.readFileSync(PROXIES_FILE, 'utf8');
-          proxies = proxyText.split('\n')
-            .map(line => line.trim())
-            .filter(line => line && !line.startsWith('#'));
-          logger.info(`Loaded ${proxies.length} proxies from ${PROXIES_FILE}`);
-        }
-      } catch (error) {
-        logger.warn(`Failed to load proxies: ${error.message}`);
-      }
+    // Get a proxy for this request if enabled
+    const proxy = proxyRotator.getProxy(site, `${site}-${searchTerm}`);
+    if (proxy) {
+      logger.info(`Using proxy: ${proxy} for ${site}`);
     }
     
-    const requestBody = {
-      site_names: [site],
-      search_terms: [searchTerm],
+    const payload = {
+      site_name: site,
+      search_term: searchTerm,
       location: location,
       results_wanted: resultsWanted,
-      hours_old: 72,
-      is_remote: true,
-      distance: keywordsConfig.distance || 50,
-      description_format: 'markdown',
-      exclude_keywords: keywordsConfig.exclude_keywords || []
+      hours_old: 72, // Last 3 days
+      is_remote: true
     };
     
-    // Add proxies if available
-    if (USE_PROXIES && proxies.length > 0) {
-      requestBody.proxies = proxies;
+    // Add proxy if available
+    if (proxy) {
+      payload.proxies = [proxy];
     }
     
-    const response = await axiosClient.post(url, requestBody);
+    logger.debug(`Request payload: ${JSON.stringify(payload)}`);
     
-    if (response.data && response.data.jobs && Array.isArray(response.data.jobs)) {
-      logger.info(`Found ${response.data.jobs.length} jobs from ${site} for "${searchTerm}" in location "${location}"`);
-      return response.data.jobs;
+    const response = await axiosClient.post(url, payload, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.status === 200) {
+      const jobs = response.data || [];
+      logger.info(`Successfully scraped ${jobs.length} jobs from ${site} for "${searchTerm}"`);
+      
+      // Apply filtering to the jobs
+      const filteredJobs = jobFilter.filterJobs(jobs);
+      logger.info(`Filtered to ${filteredJobs.length} relevant jobs from ${site} for "${searchTerm}"`);
+      
+      return filteredJobs;
     } else {
-      logger.warn(`No jobs found or invalid response from ${site} for "${searchTerm}"`);
-      return [];
+      logger.warn(`Received non-200 status: ${response.status}`);
+      
+      if (proxy) {
+        // Mark proxy as failing
+        proxyRotator.markProxyFailure(proxy, site);
+      }
+      
+      // Retry logic
+      if (retryCount < MAX_RETRIES) {
+        const retryMs = RETRY_DELAY * Math.pow(2, retryCount);
+        logger.info(`Retrying ${site} scrape in ${retryMs/1000} seconds (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+        await delay(retryMs);
+        return scrapeJobs(site, searchTerm, location, resultsWanted, retryCount + 1);
+      } else {
+        logger.error(`Maximum retry attempts (${MAX_RETRIES}) reached for ${site} scrape.`);
+        return [];
+      }
     }
   } catch (error) {
-    logger.error(`Error scraping ${site} for "${searchTerm}": ${error.message}`);
+    logger.error(`Error scraping ${site}: ${error.message}`);
     
+    // Retry logic
     if (retryCount < MAX_RETRIES) {
-      logger.info(`Retrying in ${RETRY_DELAY/1000} seconds (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
-      await delay(RETRY_DELAY);
+      const retryMs = RETRY_DELAY * Math.pow(2, retryCount);
+      logger.info(`Retrying ${site} scrape in ${retryMs/1000} seconds (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+      await delay(retryMs);
       return scrapeJobs(site, searchTerm, location, resultsWanted, retryCount + 1);
+    } else {
+      logger.error(`Maximum retry attempts (${MAX_RETRIES}) reached for ${site} scrape.`);
+      return [];
     }
-    
-    return [];
   }
 }
 
 // Main function
 async function main() {
-  console.log(`Starting JobSpy scraper at ${new Date().toUTCString()}`);
-  logger.info('Starting mass job scraping operation');
-  logger.info(`Using bridge at: ${API_HOST}`);
-  logger.info(`Node.js version: ${process.version}`);
-  logger.info(`OS: ${process.platform} ${process.arch}`);
+  console.log(`Starting JobSpy Admin/Data Entry Scraper at ${new Date().toUTCString()}`);
   
-  // Test localhost resolution
-  logger.info('Testing localhost resolution:');
   try {
-    const { stdout } = await exec('getent hosts localhost');
-    logger.info(stdout.trim());
+    // Check if bridge is running
+    const bridgeRunning = await checkBridgeStatus();
+    if (!bridgeRunning) {
+      throw new Error('JobSpy bridge is not running. Make sure to start the bridge with "python3 jobspy_bridge.py"');
+    }
+    
+    // Get search combinations from keywords file
+    const searchCombinations = keywordsConfig.search_combinations || [];
+    if (searchCombinations.length === 0) {
+      logger.warn('No search combinations found in keywords file. Using default searches.');
+      searchCombinations.push(
+        { term: 'remote data entry', site: 'indeed', location: 'Remote' },
+        { term: 'remote administrative assistant', site: 'linkedin', location: 'Remote' },
+        { term: 'virtual assistant', site: 'weworkremotely', location: '' }
+      );
+    }
+    
+    // Arrays to store all jobs
+    const allJobs = [];
+    
+    // Track which sites we're using
+    const sitesUsed = new Set();
+    
+    // Execute searches sequentially to avoid overloading the bridge
+    for (const search of searchCombinations) {
+      const site = search.site || 'indeed';
+      sitesUsed.add(site);
+      
+      // Get site-specific delay
+      const siteDelay = getSiteDelay(site);
+      logger.debug(`Using ${siteDelay}ms delay for ${site}`);
+      
+      // Execute the search
+      const jobs = await scrapeJobs(
+        site,
+        search.term,
+        search.location || 'Remote',
+        search.results_wanted || 20
+      );
+      
+      // Add metadata
+      const jobsWithMeta = jobs.map(job => ({
+        ...job,
+        search_term: search.term,
+        site_source: site,
+        scraped_date: new Date().toISOString()
+      }));
+      
+      // Add to our collection
+      allJobs.push(...jobsWithMeta);
+      
+      // Delay between requests to avoid rate limiting
+      await delay(randomDelay(siteDelay));
+    }
+    
+    // Log search stats
+    logger.info(`Completed ${searchCombinations.length} searches across ${sitesUsed.size} sites`);
+    logger.info(`Total jobs found: ${allJobs.length}`);
+    
+    // Get filtering statistics
+    const filterStats = jobFilter.getStats();
+    logger.info(`Filtering stats: ${filterStats.accepted} accepted, ${filterStats.rejected} rejected (${Math.round(filterStats.passRate * 100)}% pass rate)`);
+    
+    // Log rejection reasons if available
+    if (filterStats.rejectionReasons) {
+      logger.info('Top rejection reasons:');
+      Object.entries(filterStats.rejectionReasons)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .forEach(([reason, count]) => {
+          logger.info(`  ${reason}: ${count} jobs`);
+        });
+    }
+    
+    // Write results to file
+    fs.writeFileSync(RESULTS_FILE, JSON.stringify(allJobs, null, 2));
+    logger.info(`Wrote ${allJobs.length} jobs to ${RESULTS_FILE}`);
+    
+    console.log(`JobSpy Scraper completed at ${new Date().toUTCString()}`);
   } catch (error) {
-    logger.warn(`Could not resolve localhost: ${error.message}`);
-  }
-  
-  // Check bridge connection
-  logger.info('Checking bridge connection...');
-  const isConnected = await checkBridgeStatus();
-  
-  if (!isConnected) {
-    logger.error('Failed to connect to JobSpy bridge. Make sure it is running.');
+    logger.error(`Error in main: ${error.message}`);
     process.exit(1);
   }
-  
-  logger.info('Bridge connection confirmed!');
-  
-  // Use search combinations from keywords file if available
-  let searchCombinations = keywordsConfig.search_combinations || [];
-  
-  // Fall back to default combinations if no valid ones were loaded
-  if (!searchCombinations.length) {
-    searchCombinations = [
-      { site: 'indeed', term: 'remote data entry', location: 'any' },
-      { site: 'indeed', term: 'remote administrative assistant', location: 'any' },
-      { site: 'indeed', term: 'virtual assistant', location: 'any' },
-      { site: 'linkedin', term: 'remote data entry', location: 'any' },
-      { site: 'linkedin', term: 'remote administrative assistant', location: 'any' },
-      { site: 'linkedin', term: 'virtual assistant', location: 'any' }
-    ];
-    logger.warn('Using fallback search combinations as none were loaded from config file');
-  }
-  
-  logger.info(`Using ${searchCombinations.length} search combinations from config`);
-  
-  // Store all found jobs
-  const allJobs = [];
-  const stats = {};
-  
-  // Initialize statistics
-  for (const combo of searchCombinations) {
-    if (!stats[combo.site]) {
-      stats[combo.site] = { jobs: 0, errors: 0 };
-    }
-  }
-  
-  // Process each search combination
-  for (const { site, term, location } of searchCombinations) {
-    try {
-      const jobs = await scrapeJobs(site, term, location);
-      
-      // Apply additional filtering to ensure jobs match our requirements
-      const filteredJobs = jobs.filter(job => {
-        // Convert job fields to lowercase for case-insensitive matching
-        const title = (job.title || '').toLowerCase();
-        const description = (job.description || '').toLowerCase();
-        
-        // Check if job contains at least one required keyword
-        const hasRequiredKeyword = !keywordsConfig.required_keywords?.length || 
-          keywordsConfig.required_keywords.some(keyword => 
-            title.includes(keyword.toLowerCase()) || 
-            description.includes(keyword.toLowerCase())
-          );
-        
-        // Verify remote status in description if we have required terms
-        const isRemoteVerified = !keywordsConfig.description_required_terms?.length ||
-          keywordsConfig.description_required_terms.some(term => 
-            description.includes(term.toLowerCase())
-          );
-        
-        return hasRequiredKeyword && isRemoteVerified;
-      });
-      
-      logger.info(`After filtering: ${filteredJobs.length}/${jobs.length} jobs from ${site} matched criteria`);
-      
-      allJobs.push(...filteredJobs);
-      
-      if (stats[site]) {
-        stats[site].jobs += filteredJobs.length;
-      }
-      
-      // Add random delay before next request
-      const waitTime = randomDelay(DELAY_BETWEEN_REQUESTS);
-      logger.info(`Waiting ${waitTime.toFixed(3)} seconds before next request...`);
-      await delay(waitTime);
-    } catch (error) {
-      logger.error(`Error processing combination (${site}, ${term}, ${location}): ${error.message}`);
-      if (stats[site]) {
-        stats[site].errors += 1;
-      }
-    }
-  }
-  
-  // Save results to file
-  try {
-    fs.writeFileSync(RESULTS_FILE, JSON.stringify(allJobs, null, 2));
-    logger.info(`Results saved to ${RESULTS_FILE}`);
-  } catch (error) {
-    logger.error(`Failed to save results: ${error.message}`);
-  }
-  
-  // Summary
-  logger.info(`Scraping complete! Total jobs found: ${allJobs.length}`);
-  for (const [site, data] of Object.entries(stats)) {
-    logger.info(`Source: ${site} - Jobs found: ${data.jobs}, Errors: ${data.errors}`);
-  }
-  
-  console.log(`JobSpy scraper completed at ${new Date().toUTCString()}`);
 }
 
 // Run the main function
-main().catch(error => {
-  logger.error(`Unhandled error in main: ${error.message}`);
-  process.exit(1);
-}); 
+main(); 
