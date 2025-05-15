@@ -4,6 +4,7 @@ import json
 import logging
 import random
 import time
+import socket
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
 
@@ -30,33 +31,51 @@ logging.basicConfig(
 logger = logging.getLogger("jobspy_bridge")
 
 # Get environment variables
-GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
-HOST = os.environ.get('JOBSPY_BRIDGE_HOST', '0.0.0.0' if GITHUB_ACTIONS else '127.0.0.1')
-PORT = int(os.environ.get('JOBSPY_BRIDGE_PORT', '8000'))
-MAX_RETRY_ATTEMPTS = int(os.environ.get('MAX_RETRY_ATTEMPTS', '3'))
-RETRY_DELAY = int(os.environ.get('RETRY_DELAY', '5'))
-MIN_REQUEST_INTERVAL = float(os.environ.get('MIN_REQUEST_INTERVAL', '2.0'))  # Minimum seconds between requests
-USE_RANDOM_USER_AGENTS = os.environ.get('USE_RANDOM_USER_AGENTS', 'true').lower() in ('true', '1', 'yes')
+HOST = os.getenv("JOBSPY_BRIDGE_HOST", "127.0.0.1")
+PORT = int(os.getenv("JOBSPY_BRIDGE_PORT", "8000"))
+MAX_RETRY_ATTEMPTS = int(os.getenv("MAX_RETRY_ATTEMPTS", "3"))
+RETRY_DELAY = float(os.getenv("RETRY_DELAY", "5"))
+MIN_REQUEST_INTERVAL = float(os.getenv("MIN_REQUEST_INTERVAL", "2.0"))
+USE_RANDOM_USER_AGENTS = os.getenv("USE_RANDOM_USER_AGENTS", "false").lower() == "true"
 
-# Track last request time per site to implement rate limiting
-last_request_time = {}
+# Force IPv4
+if ":" in HOST:
+    logger.warning(f"IPv6 address detected: {HOST}. Forcing IPv4 only.")
+    HOST = "127.0.0.1"
 
-# Random User-Agent list for rotation
+# Configure socket to use IPv4 only
+socket.setdefaulttimeout(30)  # 30 second timeout
+original_getaddrinfo = socket.getaddrinfo
+
+def getaddrinfo_ipv4_only(*args, **kwargs):
+    """Force IPv4 only for all socket connections"""
+    family = kwargs.get('family', socket.AF_UNSPEC)
+    if family == socket.AF_UNSPEC:
+        kwargs['family'] = socket.AF_INET  # Force IPv4
+    return original_getaddrinfo(*args, **kwargs)
+
+# Override the getaddrinfo function
+socket.getaddrinfo = getaddrinfo_ipv4_only
+
+# Common user agents for rotating
 USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Safari/605.1.15',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.164 Safari/537.36 Edg/91.0.864.71'
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36 Edg/91.0.864.54',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
 ]
 
-# Disable pydantic validation warnings if requested
-if os.environ.get('DISABLE_PYDANTIC_VALIDATION_WARNINGS', 'false').lower() in ('true', '1', 'yes'):
-    import warnings
-    from pydantic import PydanticDeprecatedSince20
-    warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
+# Rate limiting state tracking
+last_request_time = {}
 
-app = FastAPI(title="JobSpy Bridge API", description="Bridge API for JobSpy job scrapers")
+# Create FastAPI app
+app = FastAPI(title="JobSpy Bridge API", version="1.0")
 
 # Add CORS middleware
 app.add_middleware(
@@ -67,6 +86,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Define request models
 class JobRequest(BaseModel):
     site_names: List[str] = ["indeed"]
     search_terms: List[str]
@@ -81,7 +101,8 @@ class JobRequest(BaseModel):
     linkedin_fetch_description: Optional[bool] = False
     easy_apply: Optional[bool] = None
     description_format: str = "markdown"
-    
+    exclude_keywords: Optional[List[str]] = None
+
     @validator('search_terms')
     def validate_search_terms(cls, v):
         if not v or len(v) == 0:
@@ -91,8 +112,8 @@ class JobRequest(BaseModel):
     @validator('results_wanted')
     def validate_results_wanted(cls, v):
         if v <= 0:
-            raise ValueError("results_wanted must be a positive integer")
-        return min(v, 100)  # Cap at 100 to avoid excessive requests
+            raise ValueError("results_wanted must be greater than 0")
+        return v
 
 class JobResponse(BaseModel):
     jobs: List[Dict[str, Any]]
@@ -101,23 +122,39 @@ class JobResponse(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "JobSpy Bridge API is running", "status": "ok", "version": "1.1.0"}
+    return {"message": "JobSpy Bridge API", "status": "running", "routes": ["/scrape-jobs", "/scrape-indeed", "/health", "/supported-sites"]}
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    # Check system information
+    import platform
+    import sys
+    
+    system_info = {
+        "status": "ok",
+        "api_version": "1.0",
+        "python_version": sys.version,
+        "platform": platform.platform(),
+        "host": HOST,
+        "port": PORT,
+        "socket_family": "IPv4 only",
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    # Test socket binding
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind((HOST, 0))  # Bind to an available port
+        system_info["socket_test"] = "passed"
+        s.close()
+    except Exception as e:
+        system_info["socket_test"] = f"failed: {str(e)}"
+    
+    return system_info
 
 @app.get("/supported-sites")
 async def supported_sites():
-    try:
-        sites = [site.name.lower() for site in Site]
-        return {"supported_sites": sites}
-    except Exception as e:
-        logger.exception(f"Error getting supported sites: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting supported sites: {str(e)}"
-        )
+    return {"supported_sites": [s.name.lower() for s in Site]}
 
 def get_random_user_agent():
     """Get a random user agent for requests"""
@@ -149,7 +186,8 @@ async def scrape_with_retry(
     proxies: Optional[List[str]],
     linkedin_fetch_description: bool,
     easy_apply: Optional[bool],
-    description_format: str
+    description_format: str,
+    exclude_keywords: Optional[List[str]] = None
 ) -> pd.DataFrame:
     """Scrape jobs with retry logic"""
     attempt = 0
@@ -181,6 +219,27 @@ async def scrape_with_retry(
                 verbose=2,  # Full logging
                 user_agent=user_agent
             )
+            
+            # Filter out jobs with excluded keywords
+            if exclude_keywords and not jobs_df.empty:
+                original_count = len(jobs_df)
+                
+                # Create a filter based on excluded keywords in title and description
+                def contains_excluded_keyword(row):
+                    title = str(row.get('title', '')).lower()
+                    description = str(row.get('description', '')).lower()
+                    
+                    for keyword in exclude_keywords:
+                        if keyword.lower() in title or keyword.lower() in description:
+                            return True
+                    return False
+                
+                # Apply the filter
+                jobs_df = jobs_df[~jobs_df.apply(contains_excluded_keyword, axis=1)]
+                
+                filtered_count = original_count - len(jobs_df)
+                if filtered_count > 0:
+                    logger.info(f"Filtered out {filtered_count} jobs containing excluded keywords")
             
             return jobs_df
             
@@ -224,6 +283,10 @@ async def scrape_all_jobs(request: JobRequest, background_tasks: BackgroundTasks
         all_jobs = []
         start_time = datetime.now()
         
+        # Log exclusion keywords if present
+        if request.exclude_keywords:
+            logger.info(f"Will exclude jobs containing keywords: {request.exclude_keywords}")
+        
         # Scrape each search term
         for search_term in request.search_terms:
             # Scrape each site
@@ -243,7 +306,8 @@ async def scrape_all_jobs(request: JobRequest, background_tasks: BackgroundTasks
                         proxies=request.proxies,
                         linkedin_fetch_description=request.linkedin_fetch_description,
                         easy_apply=request.easy_apply,
-                        description_format=request.description_format
+                        description_format=request.description_format,
+                        exclude_keywords=request.exclude_keywords
                     )
                     
                     if not jobs_df.empty:
@@ -289,6 +353,8 @@ async def scrape_all_jobs(request: JobRequest, background_tasks: BackgroundTasks
             "jobs_per_site": {site: len([j for j in all_jobs if j.get("site_source") == site.lower()]) for site in request.site_names}
         }
         
+        logger.info(f"Scraping complete. Found {len(all_jobs)} total jobs.")
+        
         return {
             "jobs": all_jobs,
             "count": len(all_jobs),
@@ -313,8 +379,32 @@ async def scrape_indeed(request: JobRequest, background_tasks: BackgroundTasks):
 
 # Run the API server if executed directly
 if __name__ == "__main__":
-    logger.info(f"Starting JobSpy bridge on http://{HOST}:{PORT}")
+    logger.info(f"Starting JobSpy bridge on http://{HOST}:{PORT} (IPv4 only)")
     try:
-        uvicorn.run("jobspy_bridge:app", host=HOST, port=PORT, reload=True)
+        # Get socket info for localhost to verify it's resolving to IPv4
+        try:
+            addr_info = socket.getaddrinfo("localhost", PORT, socket.AF_INET, socket.SOCK_STREAM)
+            logger.info(f"localhost resolves to: {addr_info[0][4][0]}")
+        except Exception as e:
+            logger.warning(f"Could not resolve localhost: {e}")
+        
+        try:
+            addr_info = socket.getaddrinfo("127.0.0.1", PORT, socket.AF_INET, socket.SOCK_STREAM)
+            logger.info(f"127.0.0.1 resolves to: {addr_info[0][4][0]}")
+        except Exception as e:
+            logger.warning(f"Could not resolve 127.0.0.1: {e}")
+            
+        # Create server with IPv4 binding
+        import socket
+        config = uvicorn.Config(app="jobspy_bridge:app", host=HOST, port=PORT, log_level="info")
+        server = uvicorn.Server(config)
+        server.run()
     except Exception as e:
-        logger.error(f"Failed to start JobSpy bridge: {str(e)}") 
+        logger.error(f"Failed to start JobSpy bridge: {str(e)}")
+        # Try alternative approaches if the server won't start
+        try:
+            logger.info("Trying alternative server configuration...")
+            uvicorn.run(app, host=HOST, port=PORT, log_level="info")
+        except Exception as e2:
+            logger.error(f"Alternative server configuration also failed: {str(e2)}")
+            logger.error("Unable to start the JobSpy bridge server.") 

@@ -14,7 +14,7 @@ const logger = {
 };
 
 // Configuration
-const API_HOST = process.env.JOBSPY_BRIDGE_URL || 'http://localhost:8000';
+const API_HOST = process.env.JOBSPY_BRIDGE_URL || 'http://127.0.0.1:8000';
 const DELAY_BETWEEN_REQUESTS = process.env.DELAY_BETWEEN_REQUESTS ? parseInt(process.env.DELAY_BETWEEN_REQUESTS) : 3000; // ms
 const RETRY_DELAY = process.env.RETRY_DELAY ? parseInt(process.env.RETRY_DELAY) : 30000; // ms
 const MAX_RETRIES = process.env.MAX_RETRIES ? parseInt(process.env.MAX_RETRIES) : 3;
@@ -44,6 +44,21 @@ let LOCATIONS = [
   '',  // No location for fully remote
   'USA'
 ];
+
+// Configure axios to use IPv4
+const originalCreate = axios.create;
+axios.create = function(config) {
+  config = config || {};
+  // Force IPv4
+  config.family = 4;
+  return originalCreate.call(this, config);
+};
+
+// Create a properly configured axios instance
+const axiosClient = axios.create({
+  family: 4, // Force IPv4
+  timeout: 120000 // 2 minute timeout
+});
 
 // Global results tracking
 const results = {
@@ -176,9 +191,15 @@ async function scrapeJobs(source, searchTerm, location, proxies, config, retryCo
     }
     
     logger.debug(`Sending request to ${API_HOST}/scrape-jobs`);
-    const response = await axios.post(`${API_HOST}/scrape-jobs`, payload, {
-      timeout: 120000 // 2 minute timeout
-    });
+    
+    // Ensure bridge is still running
+    const bridgeRunning = await checkBridgeStatus();
+    if (!bridgeRunning) {
+      throw new Error('Bridge is not running before making request');
+    }
+    
+    // Use the configured axios client
+    const response = await axiosClient.post(`${API_HOST}/scrape-jobs`, payload);
     
     // Check for actual jobs array in response
     if (!response.data || !response.data.jobs || !Array.isArray(response.data.jobs)) {
@@ -247,8 +268,24 @@ async function saveResults() {
 // Check if the bridge is running
 async function checkBridgeStatus(retryCount = 0) {
   try {
-    logger.debug(`Checking bridge status at ${API_HOST}/health`);
-    const response = await axios.get(`${API_HOST}/health`, { timeout: 5000 });
+    const url = `${API_HOST}/health`;
+    logger.debug(`Checking bridge status at ${url}`);
+    
+    // Get hostname from URL for DNS resolution test
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+    
+    // First try to understand why DNS resolution might be failing
+    try {
+      const { execSync } = require('child_process');
+      const dnsResult = execSync(`getent hosts ${hostname}`, { encoding: 'utf8' });
+      logger.debug(`DNS resolution for ${hostname}: ${dnsResult.trim()}`);
+    } catch (e) {
+      logger.debug(`Could not resolve DNS for ${hostname}: ${e.message}`);
+    }
+    
+    // Use the configured axios client
+    const response = await axiosClient.get(url);
     logger.debug(`Bridge health check response: ${response.status}`);
     return response.status === 200;
   } catch (error) {
@@ -269,8 +306,40 @@ async function scrapeAllJobs() {
   logger.info('Starting mass job scraping operation');
   logger.info(`Using bridge at: ${API_HOST}`);
   
-  // Check if bridge is running
-  const bridgeRunning = await checkBridgeStatus();
+  // Print node version for debugging
+  logger.info(`Node.js version: ${process.version}`);
+  // Print OS info
+  logger.info(`OS: ${process.platform} ${process.arch}`);
+  
+  // Test DNS resolution for localhost
+  try {
+    const { execSync } = require('child_process');
+    logger.info("Testing localhost resolution:");
+    logger.info(execSync('getent hosts localhost', { encoding: 'utf8' }));
+  } catch (e) {
+    logger.warn(`Failed to test localhost resolution: ${e.message}`);
+  }
+  
+  // Verify that we can connect to the bridge
+  logger.info("Checking bridge connection...");
+  let bridgeRunning = false;
+  
+  // Try IPv4 explicitly first
+  try {
+    const { execSync } = require('child_process');
+    logger.info("Testing direct connection to 127.0.0.1:8000");
+    const curlResult = execSync('curl -s -v http://127.0.0.1:8000/health', { encoding: 'utf8' });
+    logger.info(`Direct curl result: ${curlResult.substring(0, 100)}`);
+    bridgeRunning = true;
+  } catch (e) {
+    logger.warn(`Direct connection test failed: ${e.message}`);
+    // Continue to the regular check
+  }
+  
+  if (!bridgeRunning) {
+    bridgeRunning = await checkBridgeStatus();
+  }
+  
   if (!bridgeRunning) {
     logger.error('JobSpy bridge is not running. Please start it first.');
     process.exit(1);
@@ -284,10 +353,20 @@ async function scrapeAllJobs() {
   // Load proxies if enabled
   const proxies = await loadProxies();
   
+  // Run minimal search for testing purposes
+  if (process.env.MINIMAL_TEST === 'true') {
+    logger.info('Running in minimal test mode with a single query');
+    await scrapeJobs('indeed', 'remote data entry', '', proxies, config);
+    await saveResults();
+    logger.info('Minimal test completed');
+    return;
+  }
+  
   // If we have search combinations in config, use those instead
   if (config && config.search_combinations && config.search_combinations.length > 0) {
     logger.info(`Using ${config.search_combinations.length} predefined search combinations`);
     
+    let processedCombos = 0;
     for (const combo of config.search_combinations) {
       const { term, site, location = '' } = combo;
       await scrapeJobs(site, term, location, proxies, config);
@@ -296,6 +375,13 @@ async function scrapeAllJobs() {
       const delayTime = DELAY_BETWEEN_REQUESTS + Math.floor(Math.random() * 2000); // Add jitter
       logger.info(`Waiting ${delayTime/1000} seconds before next request...`);
       await delay(delayTime);
+      
+      // Break early for testing if LIMIT_SEARCH_RESULTS is set
+      processedCombos++;
+      if (process.env.LIMIT_SEARCH_RESULTS && processedCombos >= parseInt(process.env.LIMIT_SEARCH_RESULTS)) {
+        logger.info(`Reached limit of ${process.env.LIMIT_SEARCH_RESULTS} search combinations, stopping`);
+        break;
+      }
     }
   } else {
     // Otherwise run through the standard combinations
@@ -312,7 +398,21 @@ async function scrapeAllJobs() {
           const delayTime = DELAY_BETWEEN_REQUESTS + Math.floor(Math.random() * 2000); // Add jitter
           logger.info(`Waiting ${delayTime/1000} seconds before next request...`);
           await delay(delayTime);
+          
+          // Break early for testing if LIMIT_SEARCH_RESULTS is set
+          if (process.env.LIMIT_SEARCH_RESULTS && results.totalJobs >= parseInt(process.env.LIMIT_SEARCH_RESULTS)) {
+            logger.info(`Reached limit of ${process.env.LIMIT_SEARCH_RESULTS} results, stopping`);
+            break;
+          }
         }
+        
+        if (process.env.LIMIT_SEARCH_RESULTS && results.totalJobs >= parseInt(process.env.LIMIT_SEARCH_RESULTS)) {
+          break;
+        }
+      }
+      
+      if (process.env.LIMIT_SEARCH_RESULTS && results.totalJobs >= parseInt(process.env.LIMIT_SEARCH_RESULTS)) {
+        break;
       }
     }
   }

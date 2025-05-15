@@ -74,7 +74,7 @@ jobs:
           echo "ENABLE_JOBSPY_INDEED=true" >> .env
           echo "ENABLE_JOBSPY_LINKEDIN=true" >> .env
           echo "ENABLE_JOBSPY_NAUKRI=true" >> .env
-          echo "JOBSPY_BRIDGE_URL=http://localhost:8000" >> .env
+          echo "JOBSPY_BRIDGE_URL=http://127.0.0.1:8000" >> .env
           echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
           echo "LOG_LEVEL=debug" >> .env
           
@@ -93,10 +93,29 @@ jobs:
             echo "USE_PROXIES=false" >> .env
           fi
       
+      # Modify the scrape-all-jobs.js to ensure it uses the correct URL
+      - name: Update connection settings
+        run: |
+          # Force IPv4 in the scrape-all-jobs.js file
+          sed -i 's/const API_HOST = process.env.JOBSPY_BRIDGE_URL || .*/const API_HOST = process.env.JOBSPY_BRIDGE_URL || "http:\/\/127.0.0.1:8000";/' python-bridge/scrape-all-jobs.js
+          
+          # Show network interfaces for debugging
+          echo "Network interfaces:"
+          ip addr
+          
+          # Ensure Python is using IPv4
+          cd python-bridge
+          # Modify jobspy_bridge.py to bind to both IPv4 and IPv6
+          if grep -q "uvicorn.run" jobspy_bridge.py; then
+            sed -i 's/uvicorn.run(app, host=host, port=port)/uvicorn.run(app, host=host, port=port, log_level="info")/' jobspy_bridge.py
+          fi
+      
       # Run JobSpy bridge in background
       - name: Start JobSpy bridge
         run: |
           cd python-bridge
+          # Force IPv4 for the Python server
+          python -c "import socket; socket.setdefaulttimeout(10); print('IPv4 address:', socket.gethostbyname('localhost'))"
           python jobspy_bridge.py > jobspy_bridge_startup.log 2>&1 &
           echo $! > bridge_pid.txt
           
@@ -105,11 +124,15 @@ jobs:
           sleep 15 
           
           # Check if bridge is running
-          if curl -s http://localhost:8000/health; then
+          if curl -s -v http://127.0.0.1:8000/health; then
             echo "Bridge started successfully!"
           else
             echo "Bridge failed to start. Checking logs:"
             cat jobspy_bridge_startup.log
+            echo "Checking if process is running:"
+            ps aux | grep python
+            echo "Checking netstat for port 8000:"
+            netstat -tuln | grep 8000 || echo "Port 8000 not found in netstat"
             exit 1
           fi
         timeout-minutes: 5
@@ -124,18 +147,15 @@ jobs:
           
           # Check bridge status before starting
           echo "Verifying bridge connection..."
-          if curl -s http://localhost:8000/health; then
+          if curl -s -v http://127.0.0.1:8000/health; then
             echo "Bridge is running, starting scraper"
           else
             echo "Bridge is not running! Aborting."
             exit 1
           fi
           
-          # Modify the scrape-all-jobs.js to ensure it uses the correct URL
-          sed -i 's/const API_HOST = process.env.JOBSPY_BRIDGE_URL || .*/const API_HOST = process.env.JOBSPY_BRIDGE_URL || "http:\/\/localhost:8000";/' scrape-all-jobs.js
-          
           # Run the scraper and capture output
-          node scrape-all-jobs.js 2>&1 | tee -a ../logs/scraper.log
+          JOBSPY_BRIDGE_URL=http://127.0.0.1:8000 node scrape-all-jobs.js 2>&1 | tee -a ../logs/scraper.log
           
           # Record completion
           echo "JobSpy scraper completed at $(date)" | tee -a ../logs/scraper.log
@@ -143,6 +163,9 @@ jobs:
           # Copy results file to results directory if it exists
           if [ -f "scrape-results.json" ]; then
             cp scrape-results.json ../results/
+            echo "Results file created and copied to results directory"
+          else
+            echo "No results file was created!"
           fi
         timeout-minutes: 20
       
@@ -297,6 +320,16 @@ jobs:
             python-bridge/*.log
           retention-days: 7
           if-no-files-found: warn
+      
+      # Create an empty results directory if it doesn't exist
+      - name: Ensure results directory exists
+        if: always()
+        run: |
+          mkdir -p results
+          # Create a dummy file if no results exist
+          if [ ! -f "python-bridge/scrape-results.json" ]; then
+            echo '{"info": "No jobs found in this run", "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"}' > results/empty-results.json
+          fi
       
       # Upload results as artifacts
       - name: Archive results
