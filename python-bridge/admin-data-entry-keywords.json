@@ -1,0 +1,78 @@
+{
+  "job_types": [
+    "data entry",
+    "administrative assistant", 
+    "admin assistant",
+    "virtual assistant",
+    "executive assistant",
+    "office assistant",
+    "administrative support",
+    "data entry clerk",
+    "office coordinator",
+    "receptionist",
+    "secretary",
+    "office manager",
+    "clerical",
+    "customer service representative",
+    "transcriptionist"
+  ],
+  "keywords": [
+    "remote",
+    "work from home",
+    "wfh",
+    "virtual",
+    "telecommute",
+    "hybrid",
+    "remote-first",
+    "remotely"
+  ],
+  "exclude_keywords": [
+    "on-site only",
+    "in-office",
+    "no remote",
+    "local candidates only"
+  ],
+  "locations": [
+    "United States",
+    "Canada",
+    "UK",
+    "Australia",
+    "remote"
+  ],
+  "distance": 25,
+  "required_skills": [
+    "Microsoft Office",
+    "Excel",
+    "Word",
+    "typing",
+    "data management",
+    "communication",
+    "organization"
+  ],
+  "search_combinations": [
+    {
+      "term": "remote data entry",
+      "site": "indeed"
+    },
+    {
+      "term": "remote administrative assistant",
+      "site": "indeed"
+    },
+    {
+      "term": "virtual assistant",
+      "site": "indeed"
+    },
+    {
+      "term": "remote data entry",
+      "site": "linkedin"
+    },
+    {
+      "term": "remote administrative assistant",
+      "site": "linkedin"
+    },
+    {
+      "term": "virtual assistant",
+      "site": "linkedin"
+    }
+  ]
+} 

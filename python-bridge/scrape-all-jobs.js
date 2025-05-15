@@ -20,53 +20,27 @@ const RETRY_DELAY = process.env.RETRY_DELAY ? parseInt(process.env.RETRY_DELAY) 
 const MAX_RETRIES = process.env.MAX_RETRIES ? parseInt(process.env.MAX_RETRIES) : 3;
 const RESULTS_FILE = path.join(__dirname, 'scrape-results.json');
 const PROXIES_FILE = path.join(__dirname, 'proxies.txt');
+const KEYWORDS_FILE = path.join(__dirname, 'admin-data-entry-keywords.json');
 const USE_PROXIES = process.env.USE_PROXIES === 'true' || false;
 
-// Search terms focused on admin/data entry jobs
-const SEARCH_TERMS = [
+// Default search parameters (will be overridden by keywords file if available)
+let SEARCH_TERMS = [
   'remote data entry',
   'remote administrative assistant',
-  'virtual assistant remote',
-  'remote customer service',
-  'work from home data entry',
-  'remote transcription',
-  'remote administrative support',
-  'remote office assistant',
-  'remote data processing',
-  'remote clerk',
-  'data entry work from home',
-  'remote admin assistant',
-  'remote receptionist',
-  'remote secretary',
-  'remote bookkeeping',
-  'work from home customer service',
-  'remote executive assistant',
-  'remote project assistant',
-  'remote office admin',
-  'remote administrative coordinator',
-  'remote data specialist',
-  'remote data analyst',
-  'remote office manager',
-  'remote personal assistant'
+  'virtual assistant remote'
 ];
 
-// Define multiple locations to search in
-const LOCATIONS = [
-  '',  // No location for fully remote
-  'USA',
-  'UK',
-  'Canada',
-  'Australia'
-];
-
-// Sources to scrape - focusing on working ones based on logs
-const SOURCES = [
+// Default sources to search
+let SOURCES = [
   'indeed',
   'linkedin',
   'naukri'
-  // 'glassdoor',  // Enable if needed with proxies
-  // 'zip_recruiter',  // Enable if needed with proxies
-  // 'bayt'  // Enable if needed with proxies
+];
+
+// Default locations
+let LOCATIONS = [
+  '',  // No location for fully remote
+  'USA'
 ];
 
 // Global results tracking
@@ -80,6 +54,49 @@ const results = {
 
 // Helper function to delay execution
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Load keywords configuration from file
+async function loadKeywordConfig() {
+  try {
+    if (!fs.existsSync(KEYWORDS_FILE)) {
+      logger.warn(`Keywords file not found at ${KEYWORDS_FILE}. Using defaults.`);
+      return false;
+    }
+    
+    const data = await readFileAsync(KEYWORDS_FILE, 'utf8');
+    const config = JSON.parse(data);
+    
+    // Generate search terms from job types and keywords
+    if (config.search_combinations && config.search_combinations.length > 0) {
+      // Use pre-defined search combinations
+      logger.info(`Using ${config.search_combinations.length} predefined search combinations from config`);
+      return config;
+    } else if (config.job_types && config.keywords) {
+      // Generate combinations from job types and keywords
+      const combinedTerms = [];
+      
+      for (const jobType of config.job_types) {
+        for (const keyword of config.keywords) {
+          combinedTerms.push(`${keyword} ${jobType}`);
+        }
+      }
+      
+      SEARCH_TERMS = combinedTerms;
+      logger.info(`Generated ${SEARCH_TERMS.length} search terms from keywords combination`);
+    }
+    
+    // Update locations if provided
+    if (config.locations && config.locations.length > 0) {
+      LOCATIONS = config.locations;
+      logger.info(`Using ${LOCATIONS.length} locations from config`);
+    }
+    
+    return config;
+  } catch (error) {
+    logger.error(`Failed to load keywords config: ${error.message}`);
+    return false;
+  }
+}
 
 // Load proxies from file if they exist
 async function loadProxies() {
@@ -111,7 +128,7 @@ async function loadProxies() {
 }
 
 // Function to scrape a single source with a single search term
-async function scrapeJobs(source, searchTerm, location, proxies, retryCount = 0) {
+async function scrapeJobs(source, searchTerm, location, proxies, config, retryCount = 0) {
   // Add source to stats if not exists
   if (!results.sourceStats[source]) {
     results.sourceStats[source] = { jobsFound: 0, searchTerms: {}, errors: 0 };
@@ -133,9 +150,14 @@ async function scrapeJobs(source, searchTerm, location, proxies, retryCount = 0)
       results_wanted: 50,  // Request more results
       hours_old: 168,  // 7 days
       is_remote: true,
-      country_indeed: "USA",
-      distance: 100
+      country_indeed: location || "USA",
+      distance: config?.distance || 100
     };
+    
+    // Add exclude keywords if available in config
+    if (config?.exclude_keywords && config.exclude_keywords.length > 0) {
+      payload.exclude_keywords = config.exclude_keywords;
+    }
     
     // Add proxies if available
     if (proxies && proxies.length > 0) {
@@ -191,7 +213,7 @@ async function scrapeJobs(source, searchTerm, location, proxies, retryCount = 0)
       const retryDelayMs = RETRY_DELAY * Math.pow(2, retryCount);
       logger.warn(`Retrying in ${retryDelayMs/1000} seconds (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
       await delay(retryDelayMs);
-      return scrapeJobs(source, searchTerm, location, proxies, retryCount + 1);
+      return scrapeJobs(source, searchTerm, location, proxies, config, retryCount + 1);
     }
     
     return 0;
@@ -214,7 +236,7 @@ async function saveResults() {
 // Check if the bridge is running
 async function checkBridgeStatus() {
   try {
-    const response = await axios.get(API_HOST, { timeout: 5000 });
+    const response = await axios.get(`${API_HOST}/health`, { timeout: 5000 });
     return response.status === 200;
   } catch (error) {
     logger.error(`Bridge is not running: ${error.message}`);
@@ -229,26 +251,45 @@ async function scrapeAllJobs() {
   // Check if bridge is running
   const bridgeRunning = await checkBridgeStatus();
   if (!bridgeRunning) {
-    logger.error('JobSpy bridge is not running. Please start it with "npm run bridge" first.');
+    logger.error('JobSpy bridge is not running. Please start it first.');
     process.exit(1);
   }
+  
+  // Load keywords configuration
+  const config = await loadKeywordConfig();
   
   // Load proxies if enabled
   const proxies = await loadProxies();
   
-  // Go through each source
-  for (const source of SOURCES) {
-    logger.info(`Starting scraping with source: ${source}`);
+  // If we have search combinations in config, use those instead
+  if (config && config.search_combinations && config.search_combinations.length > 0) {
+    logger.info(`Using ${config.search_combinations.length} predefined search combinations`);
     
-    // Go through each search term and location combination
-    for (const searchTerm of SEARCH_TERMS) {
-      for (const location of LOCATIONS) {
-        await scrapeJobs(source, searchTerm, location, proxies);
-        
-        // Delay between requests to avoid rate limiting
-        const delayTime = DELAY_BETWEEN_REQUESTS + Math.floor(Math.random() * 2000); // Add jitter
-        logger.info(`Waiting ${delayTime/1000} seconds before next request...`);
-        await delay(delayTime);
+    for (const combo of config.search_combinations) {
+      const { term, site, location = '' } = combo;
+      await scrapeJobs(site, term, location, proxies, config);
+      
+      // Delay between requests
+      const delayTime = DELAY_BETWEEN_REQUESTS + Math.floor(Math.random() * 2000); // Add jitter
+      logger.info(`Waiting ${delayTime/1000} seconds before next request...`);
+      await delay(delayTime);
+    }
+  } else {
+    // Otherwise run through the standard combinations
+    // Go through each source
+    for (const source of SOURCES) {
+      logger.info(`Starting scraping with source: ${source}`);
+      
+      // Go through each search term and location combination
+      for (const searchTerm of SEARCH_TERMS) {
+        for (const location of LOCATIONS) {
+          await scrapeJobs(source, searchTerm, location, proxies, config);
+          
+          // Delay between requests to avoid rate limiting
+          const delayTime = DELAY_BETWEEN_REQUESTS + Math.floor(Math.random() * 2000); // Add jitter
+          logger.info(`Waiting ${delayTime/1000} seconds before next request...`);
+          await delay(delayTime);
+        }
       }
     }
   }
