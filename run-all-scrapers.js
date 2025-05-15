@@ -80,9 +80,10 @@ function combineResults() {
     
     // List of result files to combine
     const resultFiles = [
-      path.join(__dirname, 'scrape-results.json'),         // Original JobSpy results
-      path.join(__dirname, 'alt-sites-results.json'),      // Alternative sites results
-      path.join(__dirname, 'weworkremotely-results.json')  // WeWorkRemotely results
+      path.join(__dirname, 'indeed-results.json'),        // Indeed-specific results
+      path.join(__dirname, 'scrape-results.json'),        // Original JobSpy results
+      path.join(__dirname, 'alt-sites-results.json'),     // Alternative sites results
+      path.join(__dirname, 'weworkremotely-results.json') // WeWorkRemotely results
     ];
     
     // Aggregate all jobs
@@ -294,9 +295,10 @@ async function main() {
     // List of scripts to run with absolute paths
     const scriptsDir = __dirname;
     const scripts = [
-      path.join(scriptsDir, 'scrape-all-jobs.js'),       // Original JobSpy script
-      path.join(scriptsDir, 'scrape-alt-sites.js'),      // Alternative sites script
-      path.join(scriptsDir, 'scrape-weworkremotely.js')  // WeWorkRemotely script
+      path.join(scriptsDir, 'scrape-indeed.js'),      // Indeed-specific script
+      path.join(scriptsDir, 'scrape-all-jobs.js'),    // Original JobSpy script
+      path.join(scriptsDir, 'scrape-alt-sites.js'),   // Alternative sites script
+      path.join(scriptsDir, 'scrape-weworkremotely.js') // WeWorkRemotely script
     ];
     
     // Run each script sequentially
