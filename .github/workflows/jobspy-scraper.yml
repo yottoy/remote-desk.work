@@ -12,6 +12,10 @@ on:
         description: 'Run in debug mode'
         required: false
         default: 'false'
+      use_proxies:
+        description: 'Use proxies from secrets'
+        required: false
+        default: 'false'
 
 jobs:
   scrape-indeed:
@@ -49,59 +53,194 @@ jobs:
         run: |
           cd python-bridge
           pip install -r requirements.txt
-          
-          # Rename the bridge file if it exists with the old name
-          if [ -f "indeed_bridge.py" ] && [ ! -f "jobspy_bridge.py" ]; then
-            cp indeed_bridge.py jobspy_bridge.py
-          fi
       
       # Install Node.js dependencies
       - name: Install Node.js dependencies
         run: npm ci
       
-      # Add a debug step to analyze the src/index.js file
-      - name: Debug src/index.js
+      # Configure proxies if enabled
+      - name: Configure proxies
+        if: github.event.inputs.use_proxies == 'true'
         run: |
-          npm install acorn acorn-walk
-          node -e "const fs = require('fs'); const path = require('path'); const acorn = require('acorn'); const walk = require('acorn-walk'); try { const indexPath = path.join(process.cwd(), 'src', 'index.js'); const indexContent = fs.readFileSync(indexPath, 'utf8'); console.log('=== ANALYSIS OF src/index.js ==='); const ast = acorn.parse(indexContent, { ecmaVersion: 2022, sourceType: 'module', locations: true }); console.log('\n=== BRIDGE MANAGER CALLS ==='); walk.simple(ast, { CallExpression(node) { if (node.callee.type === 'MemberExpression' && node.callee.object.name === 'bridgeManager') { const method = node.callee.property.name || '[computed]'; const location = node.loc ? `Line ${node.loc.start.line}:${node.loc.start.column}` : 'Unknown location'; console.log(`${location}: bridgeManager.${method}()`); } } }); const lines = indexContent.split('\n'); console.log('\n=== LINE 32 ==='); console.log(`Line 32: ${lines[31]}`); } catch (error) { console.error('Error analyzing file:', error); }" | tee -a logs/debug.log
+          cd python-bridge
+          echo "${{ secrets.PROXY_LIST }}" > proxies.txt
+          echo "USE_PROXIES=true" >> .env
+          echo "Proxies configured successfully"
       
       # Configure environment
       - name: Setup environment variables
         run: |
+          # Global env vars
           echo "ENABLE_JOBSPY_INDEED=true" >> .env
           echo "ENABLE_JOBSPY_LINKEDIN=true" >> .env
-          echo "ENABLE_JOBSPY_GLASSDOOR=true" >> .env
-          echo "ENABLE_JOBSPY_GOOGLE=true" >> .env
-          echo "ENABLE_JOBSPY_ZIPRECRUITER=true" >> .env
-          echo "ENABLE_JOBSPY_BAYT=true" >> .env
           echo "ENABLE_JOBSPY_NAUKRI=true" >> .env
           echo "JOBSPY_BRIDGE_URL=http://0.0.0.0:8000" >> .env
-          echo "JOBSPY_BRIDGE_HOST=0.0.0.0" >> .env
-          echo "JOBSPY_BRIDGE_PORT=8000" >> .env
           echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
           echo "LOG_LEVEL=debug" >> .env
+          
+          # Create .env file for Python bridge
+          cd python-bridge
+          echo "JOBSPY_BRIDGE_HOST=0.0.0.0" >> .env
+          echo "JOBSPY_BRIDGE_PORT=8000" >> .env
+          echo "MAX_RETRY_ATTEMPTS=3" >> .env
+          echo "RETRY_DELAY=5" >> .env 
+          echo "MIN_REQUEST_INTERVAL=2.5" >> .env
+          echo "USE_RANDOM_USER_AGENTS=true" >> .env
+          echo "DISABLE_PYDANTIC_VALIDATION_WARNINGS=true" >> .env
+          
+          # If not using proxies, explicitly set to false
+          if [ "${{ github.event.inputs.use_proxies }}" != "true" ]; then
+            echo "USE_PROXIES=false" >> .env
+          fi
       
-      # Run JobSpy Indeed scraper
+      # Run JobSpy bridge in background
+      - name: Start JobSpy bridge
+        run: |
+          cd python-bridge
+          python jobspy_bridge.py &
+          sleep 10 # Give bridge time to start up
+          
+          # Check if bridge is running
+          curl -s http://0.0.0.0:8000/health || echo "Bridge failed to start"
+        timeout-minutes: 5
+      
+      # Run the main scraper
       - name: Run JobSpy scraper
         run: |
+          cd python-bridge
+          
           # Record start time
-          echo "Starting JobSpy scraper at $(date)" | tee -a logs/scraper.log
+          echo "Starting JobSpy scraper at $(date)" | tee -a ../logs/scraper.log
           
           # Run the scraper and capture output
-          node src/index.js 2>&1 | tee -a logs/scraper.log
+          node scrape-all-jobs.js 2>&1 | tee -a ../logs/scraper.log
           
           # Record completion
-          echo "JobSpy scraper completed at $(date)" | tee -a logs/scraper.log
+          echo "JobSpy scraper completed at $(date)" | tee -a ../logs/scraper.log
           
+          # Copy results file to results directory if it exists
+          if [ -f "scrape-results.json" ]; then
+            cp scrape-results.json ../results/
+          fi
+        timeout-minutes: 20
+      
+      # Update MongoDB with job results
+      - name: Update MongoDB with results
+        run: |
+          echo "Importing jobs to MongoDB..."
+          
+          # Check if results file exists
+          if [ -f "python-bridge/scrape-results.json" ]; then
+            # Import jobs to MongoDB using a Node.js script
+            node -e "
+              const fs = require('fs');
+              const { MongoClient } = require('mongodb');
+              require('dotenv').config();
+              
+              async function importJobs() {
+                try {
+                  const results = JSON.parse(fs.readFileSync('python-bridge/scrape-results.json', 'utf8'));
+                  const client = new MongoClient(process.env.MONGODB_URI);
+                  await client.connect();
+                  const db = client.db();
+                  
+                  let jobsImported = 0;
+                  if (results && results.totalJobs > 0) {
+                    // Collect all jobs from the results
+                    const allJobs = [];
+                    for (const source in results.sourceStats) {
+                      for (const searchTerm in results.sourceStats[source].searchTerms) {
+                        // Add jobs to the array
+                        // We're not actually retrieving individual jobs from the results file here
+                        // as they're not stored in the current format. This would need to be updated.
+                        console.log(`Found ${results.sourceStats[source].searchTerms[searchTerm]} jobs for term: ${searchTerm} from ${source}`);
+                      }
+                    }
+                    
+                    console.log(`Total jobs found: ${results.totalJobs}`);
+                    console.log('Please update MongoDB import logic to store individual jobs');
+                  } else {
+                    console.log('No jobs found in results');
+                  }
+                  
+                  // Show current job count in database
+                  const count = await db.collection('jobs').countDocuments();
+                  console.log('Total jobs in database: ' + count);
+                  
+                  await client.close();
+                } catch(e) {
+                  console.error('Error importing jobs:', e.message);
+                }
+              }
+              
+              importJobs().catch(console.error);
+            " 2>&1 | tee -a logs/mongodb-import.log
+          else
+            echo "No results file found. Skipping MongoDB import." | tee -a logs/mongodb-import.log
+          fi
+      
+      # Create summary
+      - name: Create summary
+        if: always()
+        run: |
           # Create a results summary
           echo "=== SCRAPING RESULTS SUMMARY ===" > logs/summary.log
           echo "Scraper run completed at: $(date)" >> logs/summary.log
           
-          # Try to get job count from MongoDB if possible
-          echo "Checking MongoDB for job count..." >> logs/summary.log
-          node -e "require('dotenv').config(); const { MongoClient } = require('mongodb'); async function checkCount() { try { const client = new MongoClient(process.env.MONGODB_URI); await client.connect(); const db = client.db(); const count = await db.collection('jobs').countDocuments(); console.log('Total jobs in database: ' + count); } catch(e) { console.error('Error checking job count:', e.message); } finally { process.exit(0); } }; checkCount();" 2>&1 | tee -a logs/summary.log
+          # Include JobSpy logs in summary
+          if [ -f "python-bridge/jobspy_bridge.log" ]; then
+            echo "" >> logs/summary.log
+            echo "=== JOBSPY BRIDGE LOG EXCERPTS ===" >> logs/summary.log
+            tail -n 50 python-bridge/jobspy_bridge.log >> logs/summary.log
+          fi
+          
+          # Include scraper results in summary if available
+          if [ -f "python-bridge/scrape-results.json" ]; then
+            echo "" >> logs/summary.log
+            echo "=== SCRAPER RESULTS SUMMARY ===" >> logs/summary.log
+            node -e "
+              const fs = require('fs');
+              try {
+                const results = JSON.parse(fs.readFileSync('python-bridge/scrape-results.json', 'utf8'));
+                console.log('Total jobs found: ' + results.totalJobs);
+                console.log('Duration: ' + results.duration + ' seconds');
+                console.log('\\nSource statistics:');
+                for (const source in results.sourceStats) {
+                  console.log('- ' + source + ': ' + results.sourceStats[source].jobsFound + ' jobs, ' + 
+                              results.sourceStats[source].errors + ' errors');
+                }
+                console.log('\\nErrors: ' + results.errors.length);
+              } catch(e) {
+                console.error('Error parsing results:', e.message);
+              }
+            " >> logs/summary.log
+          fi
+          
+          # Try to get job count from MongoDB
+          echo "" >> logs/summary.log
+          echo "=== MONGODB STATUS ===" >> logs/summary.log
+          node -e "
+            require('dotenv').config();
+            const { MongoClient } = require('mongodb');
+            async function checkCount() {
+              try {
+                const client = new MongoClient(process.env.MONGODB_URI);
+                await client.connect();
+                const db = client.db();
+                const count = await db.collection('jobs').countDocuments();
+                console.log('Total jobs in database: ' + count);
+                await client.close();
+              } catch(e) {
+                console.error('Error checking job count:', e.message);
+              }
+            }
+            checkCount().catch(console.error);
+          " 2>&1 >> logs/summary.log
+          
+          # Output summary to console
+          cat logs/summary.log
       
-      # Upload logs as artifacts - Updated to v4
+      # Upload logs as artifacts
       - name: Archive logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -113,7 +252,7 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
       
-      # Upload results as artifacts (if in debug mode) - Updated to v4
+      # Upload results as artifacts
       - name: Archive results
         if: always()
         uses: actions/upload-artifact@v4
