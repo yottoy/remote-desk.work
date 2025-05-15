@@ -11,6 +11,8 @@ const nextConfig = {
     // Environment variables that will be available on the client side
     API_URL: process.env.API_URL || 'http://localhost:3001/api',
     SITE_NAME: 'ClickClickJob.com',
+    MONGODB_URI: process.env.MONGODB_URI,
+    MONGODB_DB: process.env.MONGODB_DB || 'clickclickjob'
   },
   // Remove custom distDir to use Next.js default (.next)
   // distDir: 'build',
@@ -24,6 +26,10 @@ const nextConfig = {
     // Remove console logs in production
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  output: 'standalone',
+  
+  // Add trailing slash configuration to fix routing issues
+  trailingSlash: false
 };
 
 module.exports = nextConfig; 
