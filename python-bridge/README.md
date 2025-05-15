@@ -1,200 +1,130 @@
 # JobSpy Bridge for Remote Admin/Data Entry Jobs
 
-This module provides a bridge between your JavaScript application and the [JobSpy](https://github.com/speedyapply/JobSpy) Python library to scrape remote admin and data entry jobs from various job boards.
+This module provides an integration between our application and the [JobSpy](https://github.com/speedyapply/JobSpy) Python library to scrape remote admin and data entry jobs from various job boards.
 
-## Key Features
+## Features
 
-- Scrapes multiple job sites using JobSpy
-- Implements rate limiting to avoid blocks
-- Supports proxy rotation
-- Provides robust error handling and retries
-- Handles browser fingerprinting with rotating User-Agents
-- Optimized search terms for admin/data entry roles
+- **Optimized for Admin/Data Entry Jobs**: Pre-configured to search for remote admin, data entry, and virtual assistant positions
+- **Rate Limiting and Anti-Ban Measures**: Smart request throttling, proxy rotation, and user-agent rotation
+- **Multiple Job Sources**: Scrapes from Indeed, LinkedIn, and other job sites
+- **Configurable Search Keywords**: Easy-to-customize keywords and job types
+- **Proxy Support**: Optional proxy usage to avoid IP bans
+- **Robust Error Handling**: Automatic retries with exponential backoff
+- **GitHub Workflow Integration**: Automated scraping on a schedule
 
-## Setup Instructions
+## Requirements
 
-### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- Python libraries as specified in `requirements.txt`
+- Node.js libraries as specified in project's `package.json`
 
-- Python 3.9+ with pip
-- Node.js 16+
-- npm
-
-### Installation
+## Local Setup
 
 1. Install Python dependencies:
+   ```bash
+   cd python-bridge
+   pip install -r requirements.txt
+   ```
+
+2. Configure environment variables by creating a `.env` file in the python-bridge directory:
+   ```
+   JOBSPY_BRIDGE_HOST=0.0.0.0
+   JOBSPY_BRIDGE_PORT=8000
+   MAX_RETRY_ATTEMPTS=3
+   RETRY_DELAY=5
+   MIN_REQUEST_INTERVAL=2.5
+   USE_RANDOM_USER_AGENTS=true
+   USE_PROXIES=false
+   ```
+
+3. (Optional) Add proxies to `proxies.txt` if you need to avoid rate limiting
+
+## Run the Bridge Locally
+
+1. Start the JobSpy bridge:
+   ```bash
+   cd python-bridge
+   python jobspy_bridge.py
+   ```
+
+2. In a separate terminal, run the scraper:
+   ```bash
+   cd python-bridge
+   node scrape-all-jobs.js
+   ```
+
+## Running on GitHub
+
+For a more reliable operation that's not dependent on your local machine, the bridge is configured to run on GitHub Actions:
+
+1. Navigate to [https://github.com/yottoy/remote-desk.work/actions/workflows/jobspy-scraper.yml](https://github.com/yottoy/remote-desk.work/actions/workflows/jobspy-scraper.yml)
+2. Click "Run workflow" to manually trigger a scraping job
+3. Select options (enable debug mode or proxy usage) as needed
+4. Monitor the job execution log for any issues
+5. The workflow will automatically run every 6 hours
+
+For more detailed instructions, see `MANUAL_TRIGGER_INSTRUCTIONS.md`.
+
+## Customizing Keywords and Job Types
+
+The bridge can be customized to search for specific types of admin and data entry jobs:
+
+1. Edit `admin-data-entry-keywords.json` to add or modify:
+   - Job types (administrative assistant, data entry, etc.)
+   - Search keywords (remote, work from home, etc.)
+   - Locations to search in
+   - Keywords to exclude
+   - Specific search combinations
+
+2. Changes to this file will be automatically picked up by the scraper on the next run
+
+## Managing the JobSpy Bridge
+
+We've provided a helpful management script to make common tasks easier:
 
 ```bash
-pip install -r requirements.txt
+# Make the script executable
+chmod +x manage-jobspy.sh
+
+# Check GitHub workflow status
+./manage-jobspy.sh status
+
+# Open the manual trigger page
+./manage-jobspy.sh trigger
+
+# View local logs
+./manage-jobspy.sh logs
+
+# Update code from GitHub
+./manage-jobspy.sh update
+
+# Push local changes to GitHub
+./manage-jobspy.sh push
+
+# Show help
+./manage-jobspy.sh help
 ```
-
-2. Configure environment variables (optional):
-
-```bash
-# Create a .env file in the python-bridge directory
-JOBSPY_BRIDGE_HOST=127.0.0.1  # Host to bind to
-JOBSPY_BRIDGE_PORT=8000       # Port for the bridge
-MAX_RETRY_ATTEMPTS=3          # Max retries per scraping job
-RETRY_DELAY=5                 # Base retry delay in seconds
-MIN_REQUEST_INTERVAL=2.0      # Minimum seconds between requests
-USE_RANDOM_USER_AGENTS=true   # Enable User-Agent rotation
-```
-
-3. Configure proxies (recommended to avoid rate limiting):
-
-Edit the `proxies.txt` file to add your proxies, one per line:
-
-```
-ip:port
-ip:port:username:password
-```
-
-You can obtain proxies from services like Bright Data, Oxylabs, SmartProxy, etc.
-
-## Usage
-
-### Starting the Bridge
-
-Run the Python FastAPI bridge:
-
-```bash
-cd python-bridge
-python jobspy_bridge.py
-```
-
-Or use the provided npm script:
-
-```bash
-npm run bridge
-```
-
-### Running the Scraper
-
-Run the job scraper with:
-
-```bash
-cd python-bridge
-node scrape-all-jobs.js
-```
-
-Or:
-
-```bash
-npm run scrape
-```
-
-### Running Both Together
-
-To start both the bridge and the scraper:
-
-```bash
-cd python-bridge
-node run-scrape.js
-```
-
-Or:
-
-```bash
-npm run full-scrape
-```
-
-## Optimizing for Admin/Data Entry Roles
-
-The scraper is configured with the following search terms optimized for admin/data entry roles:
-
-- 'remote data entry'
-- 'remote administrative assistant'
-- 'virtual assistant remote'
-- 'remote customer service'
-- 'work from home data entry'
-- 'remote transcription'
-- 'remote administrative support'
-- 'remote office assistant'
-- 'remote data processing'
-- 'remote clerk'
-- 'data entry work from home'
-- 'remote admin assistant'
-- 'remote receptionist'
-- 'remote secretary'
-- 'remote bookkeeping'
-- 'work from home customer service'
-- 'remote executive assistant'
-- 'remote project assistant'
-- 'remote office admin'
-- 'remote administrative coordinator'
-- 'remote data specialist'
-- 'remote data analyst'
-- 'remote office manager'
-- 'remote personal assistant'
-
-You can edit the `SEARCH_TERMS` array in `scrape-all-jobs.js` to customize these.
-
-## Configuration Options
-
-### Job Search Settings
-
-Edit `scrape-all-jobs.js` to customize these parameters:
-
-- `SEARCH_TERMS`: Array of search terms to use
-- `LOCATIONS`: Array of locations to search in
-- `SOURCES`: Array of job sites to scrape
-- `DELAY_BETWEEN_REQUESTS`: Delay between requests in ms
-- `RETRY_DELAY`: Delay before retrying failed requests
-- `MAX_RETRIES`: Maximum number of retry attempts
-- `USE_PROXIES`: Whether to use proxies
-
-### Proxy Configuration
-
-To enable proxy usage:
-
-1. Set `USE_PROXIES=true` in your environment
-2. Add proxies to `proxies.txt`
 
 ## Troubleshooting
 
-### Rate Limiting Issues
+- **Rate Limiting Issues**: If you encounter rate limiting, consider:
+  - Increasing the delay between requests
+  - Using proxies by setting `USE_PROXIES=true` and adding proxies to the proxies.txt file
+  - Reducing the number of search combinations
 
-If you're experiencing rate limiting:
+- **Missing Results**: Ensure that your search keywords are appropriate for the type of admin and data entry jobs you're looking for
 
-1. Increase `MIN_REQUEST_INTERVAL` to add more delay between requests
-2. Enable and configure proxies
-3. Reduce the number of search terms or job sites
-4. Use `USER_AGENTS` rotation (enabled by default)
+- **Bridge Not Starting**: Check if the port 8000 is already in use by another application
 
-### Bridge Connection Issues
+## GitHub Workflow Output
 
-If the bridge isn't connecting:
+After a GitHub workflow run, you can:
 
-1. Check that the bridge is running on the correct port
-2. Verify no firewall is blocking connections
-3. Ensure the JOBSPY_BRIDGE_URL environment variable is set correctly
+1. Download log files to check for any errors
+2. Access scraped job data in the workflow artifacts
+3. Check the MongoDB update status (if connected to a MongoDB database)
 
-### No Jobs Found
+## Need Help?
 
-If no jobs are found:
-
-1. Check the job site is working by visiting it in a browser
-2. Try different search terms
-3. Verify JobSpy version is compatible
-4. Check the logs for specific errors
-
-## Logs
-
-Logs are written to:
-
-- Console output
-- `jobspy_bridge.log` for the Python bridge
-- `scrape-results.json` for scraper results
-
-## API Reference
-
-The bridge exposes these endpoints:
-
-- `GET /`: Check if the API is running
-- `GET /health`: Health check endpoint
-- `GET /supported-sites`: Get supported job sites
-- `POST /scrape-jobs`: Main endpoint to scrape jobs
-- `POST /scrape-indeed`: Legacy endpoint for Indeed only
-
-## License
-
-This software is provided under the same license as [JobSpy](https://github.com/speedyapply/JobSpy). 
+For any issues or questions about the JobSpy bridge, please contact the development team or create an issue on GitHub. 
