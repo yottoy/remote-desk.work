@@ -6,6 +6,9 @@ const { promisify } = require('util');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
+// Debug mode for easier troubleshooting
+const DEBUG_MODE = true;
+
 // Configuration
 const API_HOST = process.env.JOBSPY_BRIDGE_URL || 'http://127.0.0.1:8000';
 const DELAY_BETWEEN_REQUESTS = process.env.DELAY_BETWEEN_REQUESTS ? parseInt(process.env.DELAY_BETWEEN_REQUESTS) : 5000; // ms
@@ -16,7 +19,7 @@ const PROXIES_FILE = path.join(__dirname, 'proxies.txt');
 const KEYWORDS_FILE = path.join(__dirname, 'admin-data-entry-keywords.json');
 const USE_PROXIES = process.env.USE_PROXIES === 'true' || false;
 
-// Configure logger
+// Configure logger with more verbose debugging
 const logger = {
   debug: (...args) => console.debug(`DEBUG: ${args.join(' ')}`),
   info: (...args) => console.log(`INFO: ${args.join(' ')}`),
@@ -178,100 +181,120 @@ async function scrapeIndeedJobs(searchTerm, location = 'any', resultsWanted = 30
   }
 }
 
-// Main function
-async function main() {
-  console.log(`Starting Indeed Job Scraper at ${new Date().toUTCString()}`);
-  logger.info('Starting Indeed-specific job scraping operation');
-  logger.info(`Using bridge at: ${API_HOST}`);
-  logger.info(`Node.js version: ${process.version}`);
-  logger.info(`OS: ${process.platform} ${process.arch}`);
-  
-  // Define Indeed-specific search combinations
-  const searchCombinations = [
-    { term: 'remote data entry', location: 'remote' },
-    { term: 'remote administrative assistant', location: 'remote' },
-    { term: 'virtual assistant', location: 'remote' },
-    { term: 'remote customer service', location: 'remote' },
-    { term: 'work from home data entry', location: 'USA' },
-    { term: 'work from home administrative', location: 'USA' }
-  ];
-  
-  // Load custom search combinations if available
-  if (keywordsConfig.search_combinations && keywordsConfig.search_combinations.length > 0) {
-    const indeedCombos = keywordsConfig.search_combinations.filter(combo => 
-      combo.site === 'indeed' || !combo.site
-    );
+// Print detailed environment information
+function debugEnvironment() {
+  try {
+    // Print current directory and file list
+    logger.info(`Current directory: ${process.cwd()}`);
+    logger.info(`Script file: ${__filename}`);
     
-    if (indeedCombos.length > 0) {
-      logger.info(`Using ${indeedCombos.length} Indeed-specific search combinations from config`);
-      searchCombinations.splice(0, searchCombinations.length, ...indeedCombos);
+    // Print environment variables
+    logger.info('Environment variables:');
+    for (const [key, value] of Object.entries(process.env)) {
+      if (key.includes('PATH') || key.includes('NODE') || key.includes('JOBSPY') || key.includes('PROXY')) {
+        logger.info(`  ${key}=${value}`);
+      }
     }
+    
+    // List files in current directory
+    const files = fs.readdirSync(process.cwd());
+    logger.info(`Files in current directory: ${files.join(', ')}`);
+    
+    // Check for critical dependencies
+    try {
+      require('axios');
+      logger.info('axios module loaded successfully');
+    } catch (err) {
+      logger.error(`Failed to load axios: ${err.message}`);
+    }
+    
+    // Node.js version
+    logger.info(`Node.js version: ${process.version}`);
+    logger.info(`Platform: ${process.platform} ${process.arch}`);
+    
+    // Check for critical files
+    const criticalFiles = [
+      'admin-data-entry-keywords.json',
+      'proxies.txt',
+      'jobspy_bridge.py'
+    ];
+    
+    for (const file of criticalFiles) {
+      const exists = fs.existsSync(path.join(process.cwd(), file));
+      logger.info(`File ${file} exists: ${exists}`);
+    }
+  } catch (error) {
+    logger.error(`Error in debug environment: ${error.message}`);
+  }
+}
+
+// Simple script to verify bridge connection
+async function main() {
+  console.log('=== INDEED SCRAPER DIAGNOSTIC MODE ===');
+  console.log(`Starting diagnostic check at ${new Date().toUTCString()}`);
+  
+  if (DEBUG_MODE) {
+    debugEnvironment();
   }
   
-  logger.info(`Using ${searchCombinations.length} search combinations for Indeed`);
-  
-  // Store all found jobs
-  const allJobs = [];
-  
-  // Process each search combination
-  for (const { term, location } of searchCombinations) {
+  try {
+    // Configuration
+    const API_HOST = process.env.JOBSPY_BRIDGE_URL || 'http://127.0.0.1:8000';
+    logger.info(`API Host: ${API_HOST}`);
+    
+    // Try to make simple health check request
     try {
-      const jobs = await scrapeIndeedJobs(term, location);
-      
-      // Apply additional filtering to ensure jobs match our requirements
-      const filteredJobs = jobs.filter(job => {
-        // Convert job fields to lowercase for case-insensitive matching
-        const title = (job.title || '').toLowerCase();
-        const description = (job.description || '').toLowerCase();
-        
-        // Check if job contains at least one required keyword
-        const hasRequiredKeyword = !keywordsConfig.required_keywords?.length || 
-          keywordsConfig.required_keywords.some(keyword => 
-            title.includes(keyword.toLowerCase()) || 
-            description.includes(keyword.toLowerCase())
-          );
-        
-        // Verify remote status in description if we have required terms
-        const isRemoteVerified = !keywordsConfig.description_required_terms?.length ||
-          keywordsConfig.description_required_terms.some(term => 
-            description.includes(term.toLowerCase())
-          );
-        
-        return hasRequiredKeyword && isRemoteVerified;
+      logger.info('Attempting health check...');
+      const response = await axios.get(`${API_HOST}/health`, { 
+        timeout: 10000,
+        validateStatus: () => true
       });
       
-      // If filtering was applied, log the results
-      if (filteredJobs.length !== jobs.length) {
-        logger.info(`Filtered from ${jobs.length} to ${filteredJobs.length} matching jobs from Indeed`);
-      }
-      
-      allJobs.push(...filteredJobs);
-      
-      // Add random delay before next request
-      const waitTime = randomDelay(DELAY_BETWEEN_REQUESTS);
-      logger.info(`Waiting ${waitTime.toFixed(3)} seconds before next request...`);
-      await delay(waitTime);
+      logger.info(`Health check status: ${response.status}`);
+      logger.info(`Health check response: ${JSON.stringify(response.data)}`);
     } catch (error) {
-      logger.error(`Error processing search term "${term}" in location "${location}": ${error.message}`);
+      logger.error(`Health check failed: ${error.message}`);
+      if (error.code) {
+        logger.error(`Error code: ${error.code}`);
+      }
+      if (error.response) {
+        logger.error(`Response status: ${error.response.status}`);
+      }
     }
-  }
-  
-  // Save results to file
-  try {
-    fs.writeFileSync(RESULTS_FILE, JSON.stringify(allJobs, null, 2));
-    logger.info(`Results saved to ${RESULTS_FILE}`);
+    
+    // Check for keywords file
+    try {
+      const keywordsPath = path.join(process.cwd(), 'admin-data-entry-keywords.json');
+      logger.info(`Keywords file path: ${keywordsPath}`);
+      
+      if (fs.existsSync(keywordsPath)) {
+        const keywordsContent = fs.readFileSync(keywordsPath, 'utf8');
+        try {
+          const keywordsData = JSON.parse(keywordsContent);
+          logger.info(`Keywords file parsed successfully, contains ${keywordsData.job_types?.length || 0} job types`);
+        } catch (parseError) {
+          logger.error(`Failed to parse keywords file: ${parseError.message}`);
+        }
+      } else {
+        logger.error(`Keywords file not found at ${keywordsPath}`);
+      }
+    } catch (error) {
+      logger.error(`Error checking keywords file: ${error.message}`);
+    }
+    
+    logger.info('Basic diagnostics completed');
+    console.log(`Diagnostic check completed at ${new Date().toUTCString()}`);
+    
   } catch (error) {
-    logger.error(`Failed to save results: ${error.message}`);
+    logger.error(`Fatal error in diagnostic: ${error.message}`);
+    logger.error(error.stack);
+    process.exit(1);
   }
-  
-  // Summary
-  logger.info(`Scraping complete! Total Indeed jobs found: ${allJobs.length}`);
-  
-  console.log(`Indeed Job Scraper completed at ${new Date().toUTCString()}`);
 }
 
 // Run the main function
 main().catch(error => {
   logger.error(`Unhandled error in main: ${error.message}`);
+  logger.error(error.stack);
   process.exit(1);
 }); 
