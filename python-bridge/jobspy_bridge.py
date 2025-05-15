@@ -161,14 +161,21 @@ def get_random_user_agent():
     return random.choice(USER_AGENTS) if USE_RANDOM_USER_AGENTS else None
 
 def apply_rate_limiting(site_name: str):
-    """Apply rate limiting for specific sites"""
+    """Apply rate limiting for specific sites with more randomization"""
     now = time.time()
     if site_name in last_request_time:
         elapsed = now - last_request_time[site_name]
-        if elapsed < MIN_REQUEST_INTERVAL:
-            sleep_time = MIN_REQUEST_INTERVAL - elapsed + random.uniform(0.5, 2.0)  # Add randomness
+        # Add more randomness to bypass rate limiting detection
+        min_delay = MIN_REQUEST_INTERVAL + random.uniform(1.0, 8.0)  # Higher random component
+        if elapsed < min_delay:
+            # Longer sleep with much more variation
+            sleep_time = min_delay - elapsed + random.uniform(1.5, 10.0)
             logger.info(f"Rate limiting for {site_name}, sleeping for {sleep_time:.2f} seconds")
             time.sleep(sleep_time)
+    
+    # Add additional random delay before updating the timestamp
+    # This helps avoid patterns in request timing
+    time.sleep(random.uniform(0.2, 2.0))
     
     # Update the last request time
     last_request_time[site_name] = time.time()

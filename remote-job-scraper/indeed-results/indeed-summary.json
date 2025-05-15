@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-05-12T23:35:34.830Z",
+  "totalJobs": 0,
+  "filteredJobs": 0,
+  "rejectionStats": {
+    "total": 0,
+    "byReason": {
+      "exclusionKeywords": 0,
+      "tooOld": 0,
+      "lowQualityScore": 0,
+      "insufficientDescription": 0,
+      "missingPrimaryKeywords": 0
+    }
+  }
+}

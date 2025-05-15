@@ -1,150 +1,88 @@
 /**
- * Test MongoDB connection
- * 
- * This script tests the MongoDB connection using the configuration from config.js.
+ * Test MongoDB connection and verify job data access
+ * Run with: node test-mongodb-connection.js
  */
-
 require('dotenv').config();
-const mongoose = require('mongoose');
-const config = require('./config/config');
 const { MongoClient } = require('mongodb');
 
-async function testMongooseConnection() {
-  try {
-    console.log('Testing MongoDB connection with Mongoose...');
-    console.log(`MongoDB URI: ${config.mongodb.uri}`);
-    
-    await mongoose.connect(config.mongodb.uri, config.mongodb.options);
-    console.log('✅ Successfully connected to MongoDB with Mongoose!');
-    
-    // Display database information
-    const db = mongoose.connection.db;
-    console.log('Connected to database:', db.databaseName);
-    
-    // List collections
-    const collections = await db.listCollections().toArray();
-    console.log('Collections:', collections.map(c => c.name).join(', ') || 'No collections found');
-    
-    return true;
-  } catch (error) {
-    console.error(`❌ Mongoose connection error: ${error.message}`);
-    return false;
-  } finally {
-    try {
-      await mongoose.disconnect();
-      console.log('Mongoose connection closed');
-    } catch (err) {
-      // Ignore disconnect errors
-    }
-  }
-}
+// Connection URI from environment
+const uri = process.env.MONGODB_URI;
+const dbName = process.env.MONGODB_DB || 'clickclickjob';
 
-async function testMongoClientConnection() {
-  try {
-    console.log('\nTesting MongoDB connection with MongoClient...');
-    
-    const client = new MongoClient(config.mongodb.uri, config.mongodb.options);
-    await client.connect();
-    console.log('✅ Successfully connected to MongoDB with MongoClient!');
-    
-    // Display database information
-    const db = client.db();
-    console.log('Connected to database:', db.databaseName);
-    
-    // Get database stats
-    const stats = await db.stats();
-    console.log('Database stats:', {
-      collections: stats.collections,
-      documents: stats.objects,
-      dataSize: `${Math.round(stats.dataSize / 1024 / 1024 * 100) / 100} MB`,
-      storageSize: `${Math.round(stats.storageSize / 1024 / 1024 * 100) / 100} MB`
-    });
-    
-    return true;
-  } catch (error) {
-    console.error(`❌ MongoClient connection error: ${error.message}`);
-    return false;
-  } finally {
-    try {
-      await client.close();
-      console.log('MongoClient connection closed');
-    } catch (err) {
-      // Ignore disconnect errors
-    }
-  }
-}
-
-async function testMongoDBConnection() {
-  console.log('Checking environment variables...');
-  
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    console.error('ERROR: MONGODB_URI not found in environment variables');
-    console.log('Available environment variables:', Object.keys(process.env).filter(key => 
-      !key.includes('SECRET') && 
-      !key.includes('TOKEN') && 
-      !key.includes('PASSWORD')).join(', '));
-    return;
-  }
-
-  console.log('MongoDB URI exists:', true);
-  console.log('URI begins with:', uri.substring(0, 10) + '...');
-
-  try {
-    console.log('Attempting to connect to MongoDB...');
-    const client = new MongoClient(uri);
-    await client.connect();
-    console.log('✅ Successfully connected to MongoDB!');
-    
-    const db = client.db();
-    const collections = await db.listCollections().toArray();
-    console.log('Available collections:', collections.map(c => c.name).join(', ') || 'No collections found');
-    
-    if (collections.some(c => c.name === 'jobs')) {
-      const jobsCollection = db.collection('jobs');
-      const count = await jobsCollection.countDocuments();
-      console.log('Number of jobs in the database:', count);
-    } else {
-      console.log('No jobs collection found.');
-    }
-    
-    await client.close();
-    console.log('MongoDB connection closed');
-  } catch (error) {
-    console.error('ERROR connecting to MongoDB:', error.message);
-    console.log('Check if MongoDB server is running and URI is correct.');
-  }
+// Exit if missing URI
+if (!uri) {
+  console.error('Error: MONGODB_URI environment variable is not set');
+  process.exit(1);
 }
 
 async function main() {
-  console.log('=== MongoDB Connection Test ===');
-  
-  // Test with both methods
-  const mongooseSuccess = await testMongooseConnection();
-  const mongoClientSuccess = await testMongoClientConnection();
-  
-  // Check overall success
-  if (mongooseSuccess && mongoClientSuccess) {
-    console.log('\n✅ MongoDB connection tests passed!');
-    process.exit(0);
-  } else {
-    console.error('\n❌ MongoDB connection tests failed!');
+  console.log('Testing MongoDB connection...');
+  console.log(`Using database: ${dbName}`);
+
+  // Create a new MongoClient
+  const client = new MongoClient(uri);
+
+  try {
+    // Connect to the MongoDB server
+    await client.connect();
+    console.log('✅ Successfully connected to MongoDB!');
+
+    // Get database reference
+    const db = client.db(dbName);
     
-    // Provide troubleshooting help
-    console.log('\nTroubleshooting Tips:');
-    console.log('1. Ensure MongoDB is running locally (if using localhost)');
-    console.log('2. Check if MongoDB connection URI is correct in .env file or config.js');
-    console.log('3. Verify MongoDB credentials if using Atlas or other cloud service');
-    console.log('4. Check network settings and firewall rules if connecting to remote database');
+    // Get list of collections
+    const collections = await db.listCollections().toArray();
+    console.log('\nAvailable collections:');
+    collections.forEach(collection => {
+      console.log(`- ${collection.name}`);
+    });
     
-    process.exit(1);
+    // Count jobs in the "jobs" collection
+    const jobsCollection = db.collection('jobs');
+    const totalJobs = await jobsCollection.countDocuments();
+    console.log(`\nTotal jobs in collection: ${totalJobs}`);
+    
+    // Check for remote jobs
+    const remoteJobs = await jobsCollection.countDocuments({ remote: true });
+    console.log(`Remote jobs: ${remoteJobs}`);
+    
+    // Check for admin-related jobs
+    const adminJobs = await jobsCollection.countDocuments({
+      $or: [
+        { title: { $regex: 'admin|administrative|data entry|virtual assistant', $options: 'i' } },
+        { jobType: { $in: ['Administrative', 'Data Entry', 'Virtual Assistant', 'Customer Service'] } }
+      ]
+    });
+    console.log(`Admin-related jobs: ${adminJobs}`);
+    
+    // Sample a few jobs to display
+    console.log('\nSample jobs:');
+    const sampleJobs = await jobsCollection.find().limit(3).toArray();
+    sampleJobs.forEach((job, index) => {
+      console.log(`\nJob ${index + 1}:`);
+      console.log(`- Title: ${job.title}`);
+      console.log(`- Company: ${job.company}`);
+      console.log(`- Type: ${job.jobType || 'Not specified'}`);
+      console.log(`- Remote: ${job.remote ? 'Yes' : 'No'}`);
+    });
+
+    console.log('\n✅ MongoDB connection test completed successfully!');
+
+  } catch (err) {
+    console.error('❌ Error connecting to MongoDB:', err.message);
+    if (err.name === 'MongoServerSelectionError') {
+      console.error('\nThis error typically occurs when:');
+      console.error('1. Your connection string is incorrect');
+      console.error('2. The MongoDB server is not running');
+      console.error('3. Network firewall or security group is blocking the connection');
+      console.error('4. IP access list restrictions are preventing connection (Atlas)');
+    }
+  } finally {
+    // Close the connection
+    await client.close();
+    console.log('MongoDB connection closed');
   }
 }
 
 // Run the main function
-main().catch(error => {
-  console.error('Unexpected error:', error);
-  process.exit(1);
-});
-
-testMongoDBConnection(); 
+main().catch(console.error); 

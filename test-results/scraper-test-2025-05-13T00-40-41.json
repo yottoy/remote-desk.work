@@ -1,0 +1,44 @@
+{
+  "timestamp": "2025-05-13T00:40:41.683Z",
+  "results": [
+    {
+      "name": "JobSpyIndeed",
+      "success": true,
+      "jobCount": 5
+    },
+    {
+      "name": "JobSpyLinkedIn",
+      "success": true,
+      "jobCount": 5
+    },
+    {
+      "name": "JobSpyGlassdoor",
+      "success": false,
+      "jobCount": 0,
+      "error": "No jobs found"
+    },
+    {
+      "name": "JobSpyGoogle",
+      "success": false,
+      "jobCount": 0,
+      "error": "No jobs found"
+    },
+    {
+      "name": "JobSpyZipRecruiter",
+      "success": false,
+      "jobCount": 0,
+      "error": "No jobs found"
+    },
+    {
+      "name": "JobSpyBayt",
+      "success": false,
+      "jobCount": 0,
+      "error": "No jobs found"
+    },
+    {
+      "name": "JobSpyNaukri",
+      "success": true,
+      "jobCount": 5
+    }
+  ]
+}

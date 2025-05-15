@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-05-12T23:29:05.286Z",
+  "totalJobsFound": 0,
+  "totalJobsAfterFiltering": 0,
+  "scraperStats": {
+    "WeWorkRemotelyRss": {
+      "totalJobs": 0,
+      "error": null
+    },
+    "RemoteCo": {
+      "totalJobs": 0,
+      "error": null
+    },
+    "Workew": {
+      "totalJobs": 0,
+      "error": null
+    },
+    "VirtualVocations": {
+      "totalJobs": 0,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "scrape": {
+    "totalScraped": 123,
+    "filteredOut": 7,
+    "saved": 116
+  },
+  "database": {
+    "totalJobs": 116,
+    "featuredJobs": 116,
+    "isConnected": false,
+    "usingInMemory": true
+  }
+}

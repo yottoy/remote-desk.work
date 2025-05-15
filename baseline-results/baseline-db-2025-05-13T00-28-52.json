@@ -1,0 +1,11 @@
+{
+  "scrape": {
+    "totalScraped": 0,
+    "filteredOut": 0,
+    "saved": 0
+  },
+  "database": {
+    "totalJobs": 0,
+    "featuredJobs": 0
+  }
+}
