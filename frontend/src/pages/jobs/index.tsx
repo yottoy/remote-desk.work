@@ -5,6 +5,7 @@ import SearchBar from '../../components/common/SearchBar';
 import EnhancedJobCard from '../../components/common/EnhancedJobCard';
 import JobList from '../../components/common/JobList';
 import AdvancedFilters from '../../components/common/AdvancedFilters';
+import AdBanner from '../../components/ads/AdBanner';
 
 // Mock data for jobs (in a real app, these would come from an API)
 const mockJobs = [
@@ -443,11 +444,8 @@ const JobListingsPage = () => {
             )}
             
             {/* Ad Placement */}
-            <div className="mt-8 bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <p className="text-xs text-gray-500 text-center mb-2">ADVERTISEMENT</p>
-              <div className="h-[120px] flex items-center justify-center bg-gray-100 rounded">
-                <p className="text-gray-400 text-sm">Unobtrusive Ad Placement</p>
-              </div>
+            <div className="mt-8">
+              <AdBanner adSlotId="your-ad-slot-id-here" />
             </div>
           </div>
         </div>
