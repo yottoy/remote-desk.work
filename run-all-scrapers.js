@@ -30,25 +30,33 @@ function runScript(scriptPath) {
     
     logger.info(`Running script: ${absolutePath}`);
     
-    const process = spawn('node', [absolutePath], {
-      stdio: 'inherit',
-      shell: true
-    });
-    
-    process.on('close', (code) => {
-      if (code === 0) {
-        logger.info(`Script ${scriptPath} completed successfully`);
+    try {
+      const process = spawn('node', [absolutePath], {
+        stdio: 'inherit',
+        shell: true
+      });
+      
+      process.on('close', (code) => {
+        if (code === 0) {
+          logger.info(`Script ${scriptPath} completed successfully`);
+          resolve();
+        } else {
+          logger.warn(`Script ${scriptPath} exited with code ${code}`);
+          // Continue execution even if script fails
+          resolve();
+        }
+      });
+      
+      process.on('error', (err) => {
+        logger.error(`Failed to start script ${scriptPath}: ${err.message}`);
+        // Continue execution even if script fails
         resolve();
-      } else {
-        logger.warn(`Script ${scriptPath} exited with code ${code}`);
-        resolve(); // Still continue even if script fails
-      }
-    });
-    
-    process.on('error', (err) => {
-      logger.error(`Failed to start script ${scriptPath}: ${err.message}`);
-      resolve(); // Still continue even if script fails
-    });
+      });
+    } catch (error) {
+      logger.error(`Error running script ${scriptPath}: ${error.message}`);
+      // Continue execution even if script fails
+      resolve();
+    }
   });
 }
 
