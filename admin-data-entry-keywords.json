@@ -1,0 +1,159 @@
+{
+  "job_types": [
+    "data entry",
+    "administrative assistant",
+    "virtual assistant",
+    "admin assistant",
+    "executive assistant",
+    "office assistant",
+    "receptionist",
+    "secretary",
+    "clerical",
+    "customer service",
+    "office manager",
+    "document processor",
+    "data entry clerk",
+    "data processor",
+    "typist",
+    "transcriptionist"
+  ],
+  "keywords": [
+    "remote",
+    "work from home",
+    "virtual",
+    "wfh",
+    "telecommute",
+    "home-based",
+    "distributed team",
+    "fully remote",
+    "100% remote",
+    "remote work",
+    "virtual position",
+    "remote position"
+  ],
+  "locations": [
+    "",
+    "USA",
+    "United States",
+    "remote",
+    "anywhere",
+    "nationwide"
+  ],
+  "search_combinations": [
+    {
+      "term": "remote data entry",
+      "site": "indeed",
+      "location": ""
+    },
+    {
+      "term": "remote data entry clerk",
+      "site": "indeed",
+      "location": "USA"
+    },
+    {
+      "term": "remote administrative assistant",
+      "site": "indeed",
+      "location": ""
+    },
+    {
+      "term": "virtual assistant remote",
+      "site": "indeed",
+      "location": ""
+    },
+    {
+      "term": "work from home data entry",
+      "site": "indeed",
+      "location": ""
+    },
+    {
+      "term": "remote virtual assistant",
+      "site": "indeed",
+      "location": ""
+    },
+    {
+      "term": "remote data entry",
+      "site": "linkedin",
+      "location": "USA"
+    },
+    {
+      "term": "remote administrative assistant",
+      "site": "linkedin",
+      "location": ""
+    },
+    {
+      "term": "remote virtual assistant",
+      "site": "linkedin",
+      "location": ""
+    },
+    {
+      "term": "work from home data processor",
+      "site": "linkedin",
+      "location": ""
+    },
+    {
+      "term": "remote data entry clerk",
+      "site": "linkedin",
+      "location": ""
+    }
+  ],
+  "exclude_keywords": [
+    "manager",
+    "director",
+    "supervisor",
+    "lead",
+    "senior",
+    "sr.",
+    "clinical",
+    "pharmacy",
+    "healthcare",
+    "medical",
+    "nursing",
+    "hybrid",
+    "onsite",
+    "on-site",
+    "part time",
+    "part-time",
+    "temporary",
+    "temp",
+    "seasonal",
+    "intern",
+    "internship",
+    "coding",
+    "coder",
+    "programmer",
+    "developer",
+    "engineer",
+    "accountant",
+    "accounting manager",
+    "sales manager",
+    "project manager",
+    "financial",
+    "finance",
+    "recruiting",
+    "recruiter",
+    "analyst",
+    "required experience 5+ years"
+  ],
+  "required_keywords": [
+    "data entry",
+    "administrative",
+    "admin",
+    "virtual assistant",
+    "assistant",
+    "clerical",
+    "typing",
+    "processor",
+    "customer service"
+  ],
+  "salary_minimum": 30000,
+  "salary_maximum": 80000,
+  "distance": 100,
+  "description_required_terms": [
+    "remote",
+    "work from home",
+    "virtual",
+    "telecommute",
+    "wfh",
+    "home-based"
+  ]
+} 
