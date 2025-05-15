@@ -25,6 +25,16 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
       
+      - name: Environment diagnostics
+        run: |
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+          echo "Python version: $(python --version)"
+          echo "Pip version: $(pip --version)"
+          echo "Current directory: $(pwd)"
+          echo "Directory contents: $(ls -la)"
+          echo "Networking: $(ip addr || ifconfig || echo 'Network commands not available')"
+          
       - name: Install Node.js dependencies
         run: npm ci
       
@@ -32,25 +42,78 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pandas uvicorn fastapi jobspy python-dotenv
+          pip list | grep -E "pandas|uvicorn|fastapi|jobspy|python-dotenv"
       
       - name: Test GitHub environment
         run: node test-github-environment.js
       
+      - name: Prepare for bridge
+        run: |
+          # Make sure we have the needed directories
+          mkdir -p logs
+          touch jobspy_bridge.log
+          # Create a simple .env file
+          echo "JOBSPY_BRIDGE_URL=http://127.0.0.1:8000" > .env
+          echo "JOBSPY_BRIDGE_HOST=127.0.0.1" >> .env
+          echo "JOBSPY_BRIDGE_PORT=8000" >> .env
+      
       - name: Start JobSpy bridge in background
         run: |
-          python jobspy_bridge.py &
-          sleep 5  # Give bridge time to start
+          echo "Starting JobSpy bridge..."
+          # Force IPv4 for the Python server
+          python -c "import socket; socket.setdefaulttimeout(10); print('IPv4 address:', socket.gethostbyname('localhost'))"
+          
+          # Start bridge with detailed logging
+          python jobspy_bridge.py > jobspy_bridge_output.log 2>&1 &
+          echo $! > bridge_pid.txt
+          
+          # Wait for bridge to start
+          echo "Waiting for bridge to start..."
+          sleep 10  # Give more time to start
+          
+          # Check if bridge process is running
+          if ps -p $(cat bridge_pid.txt) > /dev/null; then
+            echo "Bridge process is running"
+          else
+            echo "Bridge process is NOT running!"
+            cat jobspy_bridge_output.log
+            exit 1
+          fi
+          
+          # Check if bridge is listening on port
+          if netstat -tuln | grep 8000; then
+            echo "Port 8000 is open"
+          else
+            echo "Port 8000 is NOT open!"
+            cat jobspy_bridge_output.log
+            exit 1
+          fi
       
       - name: Test bridge connection
         run: node test-bridge.js
       
-      - name: Run Indeed scraper
-        run: node scrape-indeed.js
+      - name: Run Indeed scraper with debug
+        run: |
+          echo "Starting Indeed scraper..."
+          node --trace-warnings scrape-indeed.js 2>&1 | tee indeed-scraper-debug.log
+          if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+            echo "Indeed scraper failed with non-zero exit code"
+            cat indeed-scraper-debug.log
+            exit 1
+          fi
       
       - name: Run all scrapers
-        run: node run-all-scrapers.js
+        run: |
+          echo "Starting all scrapers..."
+          node --trace-warnings run-all-scrapers.js 2>&1 | tee all-scrapers-debug.log
+          if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+            echo "All scrapers run failed with non-zero exit code"
+            cat all-scrapers-debug.log
+            exit 1
+          fi
       
       - name: Upload job results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: job-results
@@ -59,4 +122,15 @@ jobs:
             scrape-results.json
             alt-sites-results.json
             combined-results.json
-            github-test-result.json 
+            github-test-result.json
+      
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-logs
+          path: |
+            *.log
+            jobspy_bridge_output.log
+            indeed-scraper-debug.log
+            all-scrapers-debug.log 
