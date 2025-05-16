@@ -291,7 +291,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
               <div 
                 ref={descriptionRef} 
                 className="prose max-w-none bg-white p-6 rounded-lg shadow-sm border border-gray-200 max-h-[70vh] overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: job.description }}
+                dangerouslySetInnerHTML={{ __html: job.description || '' }}
               />
 
               <div className="mt-8">
