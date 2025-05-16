@@ -32,7 +32,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       page = '1',
       limit = '20',
       sortBy = 'date',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
+      includeHidden = 'false'  // Default to excluding hidden jobs
     } = req.query;
 
     // Build the query filter
@@ -110,6 +111,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (postedAfter) {
       const postedDate = new Date(postedAfter as string);
       filter.postedDate = { $gte: postedDate };
+    }
+    
+    // Filter out hidden jobs (unless explicitly requested)
+    if (includeHidden !== 'true') {
+      // We need to combine this with our existing $or/$and logic
+      if (filter.$and) {
+        // If we already have $and, add hidden filter to it
+        filter.$and.push({ hidden: { $ne: true } });
+      } else if (filter.$or) {
+        // If we have just $or, convert to $and with $or and hidden filter
+        filter.$and = [
+          { $or: filter.$or },
+          { hidden: { $ne: true } }
+        ];
+        delete filter.$or;
+      } else {
+        // Simple case - just add the hidden filter
+        filter.hidden = { $ne: true };
+      }
     }
 
     // Pagination

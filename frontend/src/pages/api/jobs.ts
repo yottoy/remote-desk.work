@@ -25,7 +25,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       page = '1',
       limit = '20',
       sortBy = 'date',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
+      includeHidden = 'false'  // Default to excluding hidden jobs
     } = req.query;
 
     // Build the query filter
@@ -85,6 +86,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Make sure we only return remote jobs
     filter.remote = true;
+    
+    // Filter out hidden jobs (unless explicitly requested)
+    if (includeHidden !== 'true') {
+      filter.hidden = { $ne: true };
+    }
 
     // Pagination
     const pageNum = parseInt(page as string);
