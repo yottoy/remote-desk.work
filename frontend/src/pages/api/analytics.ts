@@ -1,13 +1,32 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { connectToDatabase } from '../../utils/mongodb';
+
+// Types of events our analytics system can track
+type EventType = 
+  | 'page_view'
+  | 'job_view' 
+  | 'job_click' 
+  | 'search' 
+  | 'filter_change'
+  | 'job_apply_click'
+  | 'external_navigation';
 
 interface AnalyticsPayload {
-  eventType: string;
-  payload: {
-    userId: string;
-    sessionId: string;
-    timestamp: string;
-    [key: string]: any;
-  };
+  event: EventType;
+  timestamp?: string;
+  sessionId?: string;
+  userId?: string;
+  page?: string;
+  referrer?: string;
+  searchQuery?: string;
+  filterName?: string;
+  filterValue?: string;
+  jobId?: string;
+  jobTitle?: string;
+  company?: string;
+  source?: string;
+  destinationUrl?: string;
+  [key: string]: any; // Allow additional properties
 }
 
 /**
@@ -22,29 +41,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const data = req.body as AnalyticsPayload;
     
-    // Validate required fields
-    if (!data.eventType || !data.payload || !data.payload.userId) {
-      return res.status(400).json({ error: 'Invalid analytics data format' });
+    // Basic validation
+    if (!data.event) {
+      return res.status(400).json({ error: 'Event type is required' });
     }
     
-    // Add server timestamp to compare with client timestamp (helps detect timing issues)
-    const eventWithServerTimestamp = {
+    // Enrich the event data
+    const enrichedData = {
       ...data,
+      timestamp: data.timestamp || new Date().toISOString(),
       serverTimestamp: new Date().toISOString(),
       clientIp: getClientIp(req),
+      userAgent: req.headers['user-agent'],
+      path: req.headers.referer || null,
+      sessionId: data.sessionId || generateSessionId(req)
     };
     
-    // In a real implementation, we would:
-    // 1. Store in database (MongoDB, BigQuery, etc.)
-    // 2. Send to analytics service (Segment, Mixpanel, etc.)
-    // 3. Log to file or stream
-    
-    // For this demo, we'll just log to console in development
+    // In development, log to console for debugging
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[Analytics] ${data.eventType}:`, data.payload);
+      console.log(`[Analytics] ${data.event}:`, enrichedData);
     } else {
-      // In production we would store this data
-      await storeAnalyticsData(eventWithServerTimestamp);
+      // In production, store the analytics data
+      await storeAnalyticsData(enrichedData);
+    }
+    
+    // If this is a job view, update the job document with view metrics
+    if (data.event === 'job_view' && data.jobId) {
+      try {
+        await updateJobViewMetrics(data.jobId);
+      } catch (error) {
+        console.error('Failed to update job view metrics:', error);
+        // Don't fail the request if job metrics update fails
+      }
     }
     
     return res.status(200).json({ success: true });
@@ -68,30 +96,58 @@ function getClientIp(req: NextApiRequest): string | null {
 }
 
 /**
- * Store analytics data
- * In a real implementation, this would save to a database
+ * Generate a consistent session ID based on user properties
  */
-async function storeAnalyticsData(data: AnalyticsPayload & { serverTimestamp: string, clientIp: string | null }): Promise<void> {
-  // This is where you would implement your actual storage
-  // For example, with MongoDB:
-  /*
-  const { MongoClient } = require('mongodb');
-  const client = new MongoClient(process.env.MONGODB_URI);
-  await client.connect();
-  const db = client.db(process.env.MONGODB_DB);
-  await db.collection('analytics_events').insertOne(data);
-  await client.close();
-  */
+function generateSessionId(req: NextApiRequest): string {
+  const ip = getClientIp(req) || '';
+  const userAgent = req.headers['user-agent'] || '';
+  const date = new Date().toISOString().split('T')[0]; // Daily session reset
   
-  // Or with a third-party analytics service
-  /*
-  await fetch('https://your-analytics-service.com/api/events', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'API-Key': process.env.ANALYTICS_API_KEY },
-    body: JSON.stringify(data)
-  });
-  */
+  // Create a simple hash (in production use a proper hashing library)
+  let hash = 0;
+  const str = `${ip}-${userAgent}-${date}`;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
   
-  // For now, we'll just write to console
-  console.log(`[Analytics Storage] ${data.eventType} event saved`);
+  return `session_${Math.abs(hash).toString(36)}`;
+}
+
+/**
+ * Store analytics data
+ */
+async function storeAnalyticsData(data: AnalyticsPayload & { 
+  serverTimestamp: string, 
+  clientIp: string | null,
+  userAgent?: string,
+  path?: string | null
+}): Promise<void> {
+  try {
+    const { db } = await connectToDatabase();
+    await db.collection('analytics_events').insertOne(data);
+  } catch (error) {
+    console.error('Failed to store analytics data:', error);
+  }
+}
+
+/**
+ * Update job view metrics
+ */
+async function updateJobViewMetrics(jobId: string): Promise<void> {
+  try {
+    const { db } = await connectToDatabase();
+    
+    await db.collection('jobs').updateOne(
+      { _id: jobId },
+      { 
+        $inc: { 'engagementMetrics.viewCount': 1 },
+        $set: { 'engagementMetrics.lastViewed': new Date() }
+      },
+      { upsert: false }
+    );
+  } catch (error) {
+    console.error('Failed to update job view metrics:', error);
+  }
 } 
