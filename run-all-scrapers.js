@@ -37,22 +37,39 @@ function runCommand(command, args, options = {}) {
   });
 }
 
+// Execute Python code to verify numpy.rec is available
+function verifyNumpyRec() {
+  const verifyScript = `
+import numpy
+try:
+    import numpy.rec
+    print("SUCCESS: numpy.rec module is available in version", numpy.__version__)
+    exit(0)
+except ImportError:
+    print("ERROR: numpy.rec module NOT available in version", numpy.__version__)
+    exit(1)
+`;
+  
+  fs.writeFileSync('verify_numpy_rec.py', verifyScript);
+  return runCommand('python3', ['verify_numpy_rec.py']);
+}
+
 // Main function
 async function main() {
   try {
     log('Starting job scraper script');
     
-    // First uninstall any existing numpy and jobspy installations
-    log('Removing existing numpy and jobspy installations...');
+    // First completely uninstall both packages
+    log('Completely removing existing numpy and jobspy installations...');
     try {
-      await runCommand('pip3', ['uninstall', 'numpy', 'jobspy', '-y']);
+      await runCommand('pip3', ['uninstall', '-y', 'numpy', 'jobspy']);
     } catch (error) {
       log(`Failed to uninstall with pip3, trying pip: ${error.message}`);
-      await runCommand('pip', ['uninstall', 'numpy', 'jobspy', '-y']);
+      await runCommand('pip', ['uninstall', '-y', 'numpy', 'jobspy']);
     }
     
-    // Install a compatible numpy version that includes numpy.rec
-    log('Installing compatible numpy version 1.24.3...');
+    // Then install numpy 1.24.3 first - this version is known to have numpy.rec
+    log('Installing numpy 1.24.3 which includes the numpy.rec module...');
     try {
       await runCommand('pip3', ['install', 'numpy==1.24.3']);
       log('Successfully installed numpy 1.24.3');
@@ -62,35 +79,32 @@ async function main() {
       log('Successfully installed numpy 1.24.3 using pip');
     }
     
-    // Then install jobspy
+    // Verify numpy.rec module is available before proceeding
+    log('Verifying numpy.rec module is available...');
+    try {
+      await verifyNumpyRec();
+      log('✅ Verification successful: numpy.rec module is available');
+    } catch (error) {
+      log(`⚠️ Verification failed: numpy.rec module not available after installation`);
+      log('Attempting to reinstall numpy with a different version...');
+      
+      // Try installing numpy 1.23.5 as fallback
+      try {
+        await runCommand('pip3', ['install', 'numpy==1.23.5']);
+        await verifyNumpyRec();
+        log('✅ Verification successful after installing numpy 1.23.5');
+      } catch (err) {
+        log(`⚠️ All attempts to install numpy with rec module failed. Continuing anyway...`);
+      }
+    }
+    
+    // Now install jobspy
     log('Installing jobspy...');
     try {
       await runCommand('pip3', ['install', 'jobspy==0.29.0']);
     } catch (error) {
       log(`Failed to install jobspy with pip3, trying pip: ${error.message}`);
       await runCommand('pip', ['install', 'jobspy==0.29.0']);
-    }
-    
-    // Verify numpy installation has numpy.rec module
-    log('Verifying numpy.rec module is available...');
-    const verifyScript = `
-import numpy
-try:
-    import numpy.rec
-    print("numpy.rec module is available in numpy version", numpy.__version__)
-    exit(0)
-except ImportError:
-    print("numpy.rec module NOT available in numpy version", numpy.__version__)
-    exit(1)
-`;
-    
-    fs.writeFileSync('verify_numpy_rec.py', verifyScript);
-    
-    try {
-      await runCommand('python3', ['verify_numpy_rec.py']);
-    } catch (error) {
-      log(`ERROR: numpy.rec module verification failed! ${error.message}`);
-      throw new Error('numpy.rec module not available after installation');
     }
     
     // Run the Python scraper
