@@ -25,50 +25,86 @@ jobs:
           echo "Pip version: $(pip --version)"
           echo "Current directory: $(pwd)"
           echo "Directory contents: $(ls -la)"
+          echo "GitHub runner: $RUNNER_OS"
+          echo "Current user: $(whoami)"
+          echo "Write permissions test: $(touch test_write_perm.txt && echo 'Success' || echo 'Failed')"
       
       - name: Create directories
         run: |
           mkdir -p results
           mkdir -p logs
+          touch results/.gitkeep
+          chmod -R 777 results
+          chmod -R 777 logs
+          echo "Created directories with permissions: $(ls -la | grep 'results\|logs')"
       
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install jobspy pandas
+          pip install jobspy pandas pytest
+      
+      - name: Create test file
+        run: |
+          echo '{"test": "test file", "timestamp": "'$(date -u)'"}' > results/pre-run.json
+          echo "Test file created: $(ls -la results/)"
       
       - name: Run direct scraper
         run: |
           python direct_scraper.py 2>&1 | tee logs/direct_scraper.log
           echo "Scraper exit code: $?"
       
+      - name: Force create results if missing
+        if: always()
+        run: |
+          mkdir -p results
+          if [ "$(ls -A results 2>/dev/null)" == "" ]; then
+            echo "Results directory is empty, creating test files"
+            echo '{"error": "No results were generated", "timestamp": "'$(date -u)'"}' > results/fallback-result.json
+          else
+            echo "Results directory contains: $(ls -la results/)"
+          fi
+      
       - name: List results
+        if: always()
         run: |
           echo "=== Results files ==="
-          ls -la results/
-          for file in results/*.json; do
+          find . -type f -name "*.json" | sort
+          for file in results/*.json logs/*.log; do
             if [ -f "$file" ]; then
-              echo "Content overview of $file:"
-              # Show job count from the files
-              jobs_count=$(grep -o '"jobs_count":[^,]*' "$file" || echo "No jobs_count found")
-              echo "$jobs_count"
-              # Show error if present
-              error=$(grep -o '"error":"[^"]*"' "$file" || echo "No error found")
-              if [ "$error" != "No error found" ]; then
-                echo "$error"
-              fi
+              echo "$file exists ($(stat -c%s "$file" || echo 'unknown') bytes)"
+            else
+              echo "$file does not exist"
+            fi
+          done
+          
+          # Show job counts from result files
+          find results -name "*.json" -type f -exec grep -l "jobs_count" {} \; | while read file; do
+            echo "Content overview of $file:"
+            jobs_count=$(grep -o '"jobs_count":[^,]*' "$file" || echo "No jobs_count found")
+            echo "$jobs_count"
+            # Show error if present
+            error=$(grep -o '"error":"[^"]*"' "$file" || echo "No error found")
+            if [ "$error" != "No error found" ]; then
+              echo "$error"
             fi
           done
       
       - name: Upload job results
+        if: always()  # Always attempt to upload
         uses: actions/upload-artifact@v4
         with:
           name: job-results
-          path: results/*.json
+          path: |
+            results/
+            *.json
           if-no-files-found: warn
       
       - name: Upload logs
+        if: always()  # Always attempt to upload
         uses: actions/upload-artifact@v4
         with:
           name: logs
-          path: logs/*.log
+          path: |
+            logs/
+            *.log
           if-no-files-found: warn 
