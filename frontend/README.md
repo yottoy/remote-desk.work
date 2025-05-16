@@ -2,6 +2,13 @@
 
 This is the frontend application for ClickClickJob.com, a platform for finding verified remote jobs.
 
+## Features
+- Server-side rendering for initial job listings
+- Error boundaries for graceful error handling
+- Skeleton loading states for improved UX
+- Comprehensive analytics tracking
+- Vercel Analytics integration
+
 ## Tech Stack
 
 - Next.js
