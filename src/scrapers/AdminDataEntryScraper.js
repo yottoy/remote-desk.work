@@ -254,7 +254,19 @@ class AdminDataEntryScraper extends BaseScraper {
       // Get URL from either job.url or job.job_url field
       const jobUrl = job.url || job.job_url || null;
       
-      if (!jobUrl || uniqueUrls.has(jobUrl)) {
+      // Skip jobs without valid URLs
+      if (!jobUrl) {
+        logger.debug(`Skipping job without URL: ${job.title || 'Unknown'} at ${job.company || 'Unknown'}`);
+        return false;
+      }
+      
+      // Skip jobs with example.com URLs
+      if (jobUrl.includes('example.com')) {
+        logger.debug(`Skipping job with example.com URL: ${jobUrl}`);
+        return false;
+      }
+      
+      if (uniqueUrls.has(jobUrl)) {
         return false;
       }
       uniqueUrls.add(jobUrl);
@@ -262,7 +274,7 @@ class AdminDataEntryScraper extends BaseScraper {
       return true;
     });
     
-    logger.info(`Removed ${jobs.length - urlDeduped.length} duplicate URLs`);
+    logger.info(`Removed ${jobs.length - urlDeduped.length} jobs with duplicate or invalid URLs`);
     
     // Process each job
     const processedJobs = [];
@@ -271,6 +283,13 @@ class AdminDataEntryScraper extends BaseScraper {
       try {
         // Basic data cleanup and field normalization
         const processedJob = this._cleanJobData(job);
+        
+        // Skip jobs that failed URL validation
+        if (processedJob.urlValidationFailed) {
+          logger.debug(`Skipping job that failed URL validation: ${processedJob.title}`);
+          this.results.filteredOut++;
+          continue;
+        }
         
         // Check if job is relevant to our categories using enhanced patterns
         const categoryInfo = this._categorizeJob(processedJob);
@@ -337,6 +356,26 @@ class AdminDataEntryScraper extends BaseScraper {
     
     // Normalize URL field - JobSpy returns URLs in job_url and job_url_direct fields
     cleaned.url = cleaned.url || cleaned.job_url || cleaned.job_url_direct || null;
+    
+    // Validate URL - reject example.com and ensure URL exists and is valid
+    if (cleaned.url) {
+      try {
+        const url = new URL(cleaned.url);
+        // Only allow http/https URLs and filter out example.com URLs
+        if (!(url.protocol === 'http:' || url.protocol === 'https:') || 
+            url.hostname.includes('example.com')) {
+          logger.warn(`Invalid URL protocol or example.com domain: ${cleaned.url}`);
+          cleaned.url = null;
+          cleaned.urlValidationFailed = true;
+        }
+      } catch (err) {
+        logger.warn(`Invalid URL format: ${cleaned.url}`);
+        cleaned.url = null;
+        cleaned.urlValidationFailed = true;
+      }
+    } else {
+      cleaned.urlValidationFailed = true;
+    }
     
     // Construct salary string from JobSpy components if not already present
     if (!cleaned.salary && (cleaned.min_amount || cleaned.max_amount)) {
@@ -852,39 +891,75 @@ class AdminDataEntryScraper extends BaseScraper {
    */
   async _saveJobsToDatabase(jobs) {
     try {
-      if (!jobs || jobs.length === 0) {
-        logger.warn('No jobs to save to database');
-        return { saved: 0, duplicates: 0, errors: 0 };
+      // Filter out jobs with invalid URLs before saving
+      const validJobs = jobs.filter(job => {
+        if (!job.url || job.url.includes('example.com') || job.is_mock_data === true) {
+          logger.warn(`Skipping job with invalid URL or mock data: ${job.title} at ${job.company}`);
+          return false;
+        }
+        
+        try {
+          // Perform one final URL validation
+          new URL(job.url);
+          return true;
+        } catch (e) {
+          logger.warn(`Skipping job with malformed URL: ${job.url}`);
+          return false;
+        }
+      });
+      
+      logger.info(`Filtered out ${jobs.length - validJobs.length} jobs with invalid URLs before database insertion`);
+      
+      if (validJobs.length === 0) {
+        logger.warn('No valid jobs to save to database');
+        return { saved: 0, duplicates: 0 };
       }
       
-      // Format jobs for database
-      const dbJobs = jobs.map(job => ({
-        title: job.title,
-        company: job.company,
-        location: job.location || 'Remote',
-        description: job.description,
-        descriptionText: job.descriptionText,
-        url: job.url,
-        salary: job.salary,
-        postedDate: job.postedDate,
-        scrapedDate: job.scrapedDate,
-        source: job.source,
-        sourceId: job.id || job.jobId || null,
-        qualityScore: job.qualityScore,
-        relevanceScore: job.relevanceScore,
-        qualityIndicatorScore: job.qualityIndicatorScore,
-        credibilityScore: job.credibilityScore,
-        recencyScore: job.recencyScore,
-        featured: job.featured,
-        tags: job.tags
-      }));
+      // Get collection reference
+      const db = await database.getConnection();
+      const collection = db.collection('jobs');
       
-      // Save to database
-      const stats = await database.saveJobs(dbJobs, true);
-      return stats;
+      // Check for existing URLs to avoid duplicates
+      const existingUrls = new Set();
+      const urlCursor = await collection.find({}, { projection: { url: 1 } });
+      const existingDocuments = await urlCursor.toArray();
+      
+      existingDocuments.forEach(doc => {
+        if (doc.url) {
+          existingUrls.add(doc.url);
+        }
+      });
+      
+      // Filter out duplicates
+      const newJobs = validJobs.filter(job => !existingUrls.has(job.url));
+      
+      // Insert new jobs
+      if (newJobs.length > 0) {
+        // Add timestamps and IDs
+        const jobsToInsert = newJobs.map(job => ({
+          ...job,
+          created_at: new Date(),
+          updated_at: new Date()
+        }));
+        
+        // Insert the jobs
+        const result = await collection.insertMany(jobsToInsert);
+        
+        logger.info(`Saved ${result.insertedCount} new jobs to database`);
+        return {
+          saved: result.insertedCount,
+          duplicates: validJobs.length - newJobs.length
+        };
+      } else {
+        logger.info(`No new jobs to save, all ${validJobs.length} jobs were duplicates`);
+        return {
+          saved: 0,
+          duplicates: validJobs.length
+        };
+      }
     } catch (error) {
       logger.error(`Error saving jobs to database: ${error.message}`);
-      return { saved: 0, duplicates: 0, errors: jobs.length };
+      throw error;
     }
   }
   

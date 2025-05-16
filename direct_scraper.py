@@ -219,7 +219,9 @@ def create_mock_job(site, title, company, location):
         "date_posted": datetime.now().isoformat(),
         "job_url": f"https://example.com/{site}/{company.lower().replace(' ', '-')}/{title.lower().replace(' ', '-')}",
         "description": f"This is a mock job for {title} at {company} in {location}. Created for testing when actual scraping fails.",
-        "is_remote": "remote" in location.lower()
+        "is_remote": "remote" in location.lower(),
+        "is_mock_data": True,  # Flag to identify mock data
+        "mock_reason": "Created as fallback when scraping failed"
     }
 
 # Create fallback results with mock data to ensure we have something to show
@@ -238,13 +240,14 @@ def create_fallback_results():
         create_mock_job("simplyhired", "Virtual Office Assistant", "Admin Pros", "Remote")
     ]
     
-    # Create a results file
-    filename = f"results/mock-fallback-results.json"
+    # Create a results file with clear MOCK indicator in filename
+    filename = f"results/MOCK-fallback-results.json"
     with open(filename, "w") as f:
         results = {
             "source": "mock_data",
             "scrape_date": datetime.now().isoformat(),
             "note": "These are mock job listings created when scraping failed",
+            "is_mock_data": True,  # Flag to identify mock data
             "jobs_count": len(mock_jobs),
             "jobs": mock_jobs
         }
