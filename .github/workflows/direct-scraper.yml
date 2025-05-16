@@ -1,0 +1,74 @@
+name: Direct JobSpy Scraper
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */12 * * *'  # Run every 12 hours
+
+jobs:
+  direct-scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Environment diagnostics
+        run: |
+          echo "Python version: $(python --version)"
+          echo "Pip version: $(pip --version)"
+          echo "Current directory: $(pwd)"
+          echo "Directory contents: $(ls -la)"
+      
+      - name: Create directories
+        run: |
+          mkdir -p results
+          mkdir -p logs
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jobspy pandas
+      
+      - name: Run direct scraper
+        run: |
+          python direct_scraper.py 2>&1 | tee logs/direct_scraper.log
+          echo "Scraper exit code: $?"
+      
+      - name: List results
+        run: |
+          echo "=== Results files ==="
+          ls -la results/
+          for file in results/*.json; do
+            if [ -f "$file" ]; then
+              echo "Content overview of $file:"
+              # Show job count from the files
+              jobs_count=$(grep -o '"jobs_count":[^,]*' "$file" || echo "No jobs_count found")
+              echo "$jobs_count"
+              # Show error if present
+              error=$(grep -o '"error":"[^"]*"' "$file" || echo "No error found")
+              if [ "$error" != "No error found" ]; then
+                echo "$error"
+              fi
+            fi
+          done
+      
+      - name: Upload job results
+        uses: actions/upload-artifact@v4
+        with:
+          name: job-results
+          path: results/*.json
+          if-no-files-found: warn
+      
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: logs/*.log
+          if-no-files-found: warn 
