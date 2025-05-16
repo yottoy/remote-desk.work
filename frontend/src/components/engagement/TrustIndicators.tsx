@@ -83,7 +83,7 @@ export const RedFlagWarning: React.FC<{ job: AnyJobListing }> = ({ job }) => {
         <li>Low quality score ({job.qualityScore}/10)</li>
         {job.salary === 'Undisclosed' && <li>No salary information provided</li>}
         {!job.company && <li>Missing company information</li>}
-        {job.description?.length < 200 && <li>Very limited job description</li>}
+        {job.description && job.description.length < 200 && <li>Very limited job description</li>}
       </ul>
     </TrustIndicator>
   );
