@@ -99,172 +99,100 @@ def setup_dependencies():
     # Define scrape_jobs globally so it can be used throughout the module
     global scrape_jobs
     
-    # First check if any packages are missing
-    missing_modules = []
+    # First completely remove any existing conflicting packages
     try:
-        # Try importing jobspy
-        import jobspy
-        logger.info(f"Found jobspy package: {jobspy.__file__ if hasattr(jobspy, '__file__') else 'unknown'}")
-    except ImportError:
-        missing_modules.append("jobspy")
+        logger.info("Removing any existing job scraping packages to avoid conflicts")
+        subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "jobspy", "python-jobspy"], check=False)
+    except Exception as e:
+        logger.error(f"Error removing existing packages: {e}")
     
     try:
-        # Try importing pandas
-        import pandas
-        logger.info(f"Found pandas package: {pandas.__version__ if hasattr(pandas, '__version__') else 'unknown'}")
-    except ImportError:
-        missing_modules.append("pandas")
-    
-    # Fix the numpy.rec module issue by ensuring we have a compatible numpy version
-    try:
-        # First uninstall any existing numpy and jobspy to avoid conflicts
-        logger.info("Ensuring numpy compatibility by reinstalling with a compatible version")
-        subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "numpy", "jobspy", "python-jobspy"], check=False)
+        # Install python-jobspy with all dependencies
+        logger.info("Installing python-jobspy with all required dependencies")
         
-        # Install numpy 1.26.3 which is known to include numpy.rec module
+        # First install numpy 1.26.3 which is required by python-jobspy
         numpy_install = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "numpy==1.26.3"],
+            [sys.executable, "-m", "pip", "install", "numpy==1.26.3", "--force-reinstall"],
             capture_output=True,
             text=True,
             check=False
         )
         logger.info(f"Installed numpy 1.26.3: {numpy_install.returncode == 0}")
         
-        # Verify numpy.rec is available
+        # Check if numpy.rec is available in this version
         try:
             import numpy
-            try:
-                import numpy.rec
-                logger.info(f"numpy.rec module is available in numpy {numpy.__version__}")
-            except ImportError:
-                logger.warning(f"numpy.rec module not available in numpy {numpy.__version__}, trying alternative version")
-                
-                # Try alternative versions if 1.26.3 doesn't work
-                for version in ["1.24.3", "1.22.4"]:
-                    subprocess.run([sys.executable, "-m", "pip", "install", f"numpy=={version}", "--force-reinstall"], check=False)
-                    try:
-                        # Clear the import cache to reload numpy
-                        import importlib
-                        importlib.reload(numpy)
-                        import numpy.rec
-                        logger.info(f"numpy.rec module is available in numpy {numpy.__version__}")
-                        break
-                    except ImportError:
-                        logger.warning(f"numpy.rec module not available in numpy {version}")
-        except Exception as e:
-            logger.error(f"Error verifying numpy.rec: {str(e)}")
-    except Exception as e:
-        logger.error(f"Error setting up numpy compatibility: {str(e)}")
-    
-    # Log any missing modules
-    if missing_modules:
-        logger.warning(f"Missing dependencies: {', '.join([f'No module named {m!r}' for m in missing_modules])}")
-        logger.info("Attempting to install required packages...")
-        
-        # Show pip version and installed packages
-        subprocess.run([sys.executable, "-m", "pip", "--version"], check=False)
-        process = subprocess.run([sys.executable, "-m", "pip", "list"], capture_output=True, text=True, check=False)
-        logger.info(f"Currently installed packages:\n{process.stdout}")
-        
-        # Try to install packages
-        subprocess.run([sys.executable, "-m", "pip", "install", "jobspy", "pandas"], check=False)
-        
-        # Try alternate package name
-        if "jobspy" in missing_modules:
-            subprocess.run([sys.executable, "-m", "pip", "install", "python-jobspy", "--no-dependencies"], check=False)
-            # Install additional dependencies that jobspy needs (but not numpy)
-            subprocess.run([sys.executable, "-m", "pip", "install", "redis>=3.0.0", "beautifulsoup4>=4.12.2", "pandas>=2.1.0"], check=False)
-    
-    # Try different import strategies
-    try:
-        # First try importing directly
-        try:
-            from jobspy import scrape_jobs
-            logger.info("Successfully imported scrape_jobs from jobspy")
-            return True
+            import numpy.rec
+            logger.info(f"numpy.rec module is available in numpy {numpy.__version__}")
         except ImportError:
-            logger.warning("Could not import from jobspy directly")
+            logger.warning(f"numpy.rec module not available in numpy {numpy.__version__}")
         
-        # Try importing from python-jobspy
-        try:
-            from python_jobspy import scrape_jobs
-            logger.info("Successfully imported scrape_jobs from python_jobspy")
-            return True
-        except ImportError:
-            logger.warning("Could not import from python_jobspy")
-        
-        # Try adding a fallback method to find the package location
-        pip_list = subprocess.run(
-            [sys.executable, "-m", "pip", "list"], 
-            capture_output=True, 
-            text=True, 
-            check=False
-        ).stdout.lower()
-        
-        if "jobspy" in pip_list:
-            package_info = subprocess.run(
-                [sys.executable, "-m", "pip", "show", "jobspy"],
-                capture_output=True,
-                text=True,
-                check=False
-            )
-            logger.info(f"JobSpy package info:\n{package_info.stdout}")
-            
-            # Try to determine the correct import name from the package info
-            location = None
-            for line in package_info.stdout.splitlines():
-                if line.startswith("Location:"):
-                    location = line.split(":", 1)[1].strip()
-            
-            if location:
-                logger.info(f"Package location: {location}")
-                # Add the location to the Python path
-                if location not in sys.path:
-                    sys.path.append(location)
-                    logger.info(f"Added {location} to Python path")
-                
-                # Look for the module file or directory
-                import os
-                for item in os.listdir(location):
-                    if item.startswith("jobspy") or item.startswith("python_jobspy"):
-                        logger.info(f"Found potential module: {item}")
-                        module_path = os.path.join(location, item)
-                        if os.path.isdir(module_path) and module_path not in sys.path:
-                            sys.path.append(module_path)
-                            logger.info(f"Added {module_path} to Python path")
-        
-        # Check if we have the module installed by the 'python-jobspy' package name
-        python_jobspy_info = subprocess.run(
-            [sys.executable, "-m", "pip", "show", "python-jobspy"],
+        # Now install python-jobspy with all its dependencies
+        jobspy_install = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "python-jobspy==1.1.80"],
             capture_output=True,
             text=True,
             check=False
         )
-        if python_jobspy_info.returncode == 0:
-            logger.info(f"python-jobspy package info:\n{python_jobspy_info.stdout}")
+        logger.info(f"Installed python-jobspy 1.1.80 with all dependencies: {jobspy_install.returncode == 0}")
+        logger.info(f"Install output: {jobspy_install.stdout}")
         
-        # Try to directly install with pip if still not found - without dependencies to preserve numpy
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--verbose", "python-jobspy==0.29.0", "--no-dependencies"],
+        # Make sure all required dependencies are installed
+        required_deps = [
+            "markdownify>=0.13.1",
+            "pydantic>=2.3.0",
+            "regex>=2024.4.28",
+            "requests>=2.31.0",
+            "tls-client>=1.0.1",
+            "beautifulsoup4>=4.12.2"
+        ]
+        subprocess.run([sys.executable, "-m", "pip", "install"] + required_deps, check=False)
+        
+        # List installed packages for debugging
+        packages = subprocess.run(
+            [sys.executable, "-m", "pip", "list"],
+            capture_output=True,
+            text=True,
             check=False
         )
+        logger.info(f"Installed packages:\n{packages.stdout}")
         
-        # Try importing one more time
+        # Now try to import from the correct package
         try:
-            # Try all possible module names
-            import importlib
-            for module_name in ["jobspy", "python_jobspy", "python-jobspy"]:
-                try:
-                    module = importlib.import_module(module_name)
-                    logger.info(f"Successfully imported {module_name}")
-                    # Try to get the scrape_jobs function
-                    if hasattr(module, "scrape_jobs"):
-                        logger.info(f"Found scrape_jobs in {module_name}")
-                        return True
-                except ImportError:
-                    continue
-        except Exception as e:
-            logger.error(f"Error during final import attempt: {str(e)}")
+            from python_jobspy import scrape_jobs
+            logger.info("Successfully imported scrape_jobs from python_jobspy")
+            return True
+        except ImportError as e:
+            logger.error(f"Error importing from python_jobspy: {e}")
+            
+            # Try adding more paths to Python path
+            site_packages = subprocess.run(
+                [sys.executable, "-c", "import site; print(site.getsitepackages()[0])"],
+                capture_output=True,
+                text=True,
+                check=False
+            ).stdout.strip()
+            
+            if site_packages and site_packages not in sys.path:
+                logger.info(f"Adding site-packages to path: {site_packages}")
+                sys.path.append(site_packages)
+            
+            # One more attempt with explicit imports
+            try:
+                import python_jobspy
+                logger.info(f"Successfully imported python_jobspy module: {python_jobspy.__file__}")
+                
+                # Check what's available in the module
+                for attr in dir(python_jobspy):
+                    if not attr.startswith('__'):
+                        logger.info(f"Found attribute in python_jobspy: {attr}")
+                
+                if hasattr(python_jobspy, 'scrape_jobs'):
+                    scrape_jobs = python_jobspy.scrape_jobs
+                    logger.info("Successfully found scrape_jobs in python_jobspy")
+                    return True
+            except Exception as e2:
+                logger.error(f"Final import attempt failed: {e2}")
         
         # Create mock functions for testing if real functions are not available
         def mock_scrape_jobs(*args, **kwargs):
