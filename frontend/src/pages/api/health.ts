@@ -6,37 +6,61 @@ import { connectToDatabase } from '../../utils/mongodb';
  * This helps verify that the API routes are working properly on Vercel
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Check MongoDB connection
-  let databaseStatus = {
-    connected: false,
-    collectionCounts: {} as Record<string, number>,
-    error: null as string | null
-  };
-
   try {
+    // Check MongoDB connection
+    const start = Date.now();
     const { db } = await connectToDatabase();
+    const dbConnectTime = Date.now() - start;
     
-    // Get collection names
-    const collections = await db.listCollections().toArray();
-    const collectionNames = collections.map((c: { name: string }) => c.name);
+    // If we got this far, the connection was successful
+    // Perform a simple query to ensure the database is working
+    const pingResult = await db.command({ ping: 1 });
+    const dbQueryTime = Date.now() - start - dbConnectTime;
     
-    // Count documents in each collection
-    for (const name of collectionNames) {
-      databaseStatus.collectionCounts[name] = await db.collection(name).countDocuments();
+    // Get basic database stats
+    let dbStats = null;
+    let jobsCount = 0;
+    
+    try {
+      dbStats = await db.stats();
+      jobsCount = await db.collection('jobs').countDocuments();
+    } catch (err) {
+      console.error('Error fetching database stats:', err);
     }
     
-    databaseStatus.connected = true;
-  } catch (error: any) {
-    databaseStatus.connected = false;
-    databaseStatus.error = error.message || 'Unknown MongoDB connection error';
+    // Return health information
+    return res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: {
+        connected: true,
+        connectionTime: `${dbConnectTime}ms`,
+        queryTime: `${dbQueryTime}ms`,
+        totalTime: `${Date.now() - start}ms`,
+        name: db.databaseName,
+        collections: dbStats?.collections || 'unknown',
+        jobsCount
+      },
+      env: {
+        nodeEnv: process.env.NODE_ENV,
+        nodeVersion: process.version
+      }
+    });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    return res.status(500).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: {
+        connected: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      },
+      env: {
+        nodeEnv: process.env.NODE_ENV,
+        nodeVersion: process.version
+      }
+    });
   }
-
-  // Return health status
-  res.status(200).json({
-    status: 'ok',
-    version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    database: databaseStatus
-  });
 } 
