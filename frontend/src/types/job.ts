@@ -102,16 +102,17 @@ export interface EnhancedJobListing extends Partial<JobListing> {
 }
 
 // Helper functions for user engagement badges
-export const isNew = (job: JobListing): boolean => {
+export const isNew = (job: JobListing | EnhancedJobListing): boolean => {
   return new Date().getTime() - new Date(job.postedDate).getTime() < 24 * 60 * 60 * 1000;
 };
 
-export const isExpiringSoon = (job: JobListing): boolean => {
+export const isExpiringSoon = (job: JobListing | EnhancedJobListing): boolean => {
+  if (!job.expiresAt) return false;
   return new Date(job.expiresAt).getTime() - new Date().getTime() < 3 * 24 * 60 * 60 * 1000;
 };
 
-export const isVerified = (job: JobListing): boolean => {
-  return job.qualityScore >= 8;
+export const isVerified = (job: JobListing | EnhancedJobListing): boolean => {
+  return (job.qualityScore || 0) >= 8;
 };
 
 export const isPopular = (job: EnhancedJobListing): boolean => {
