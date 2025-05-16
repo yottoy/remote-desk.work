@@ -4,9 +4,5 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "outputDirectory": ".next",
-  "framework": "nextjs",
-  "env": {
-    "MONGODB_URI": "@mongodb-uri",
-    "MONGODB_DB": "clickclickjob"
-  }
+  "framework": "nextjs"
 } 
