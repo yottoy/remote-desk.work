@@ -5,6 +5,11 @@
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "framework": "nextjs",
+  "regions": ["iad1"],
+  "github": {
+    "silent": true,
+    "autoAlias": true
+  },
   "env": {
     "MONGODB_URI": "@mongodb-uri",
     "MONGODB_DB": "clickclickjob"
