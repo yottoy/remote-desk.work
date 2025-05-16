@@ -103,12 +103,23 @@ jobs:
         run: |
           node test-bridge.js 2>&1 | tee logs/test-bridge.log || true
       
-      - name: Run Indeed scraper with debug
+      - name: Run WeWorkRemotely scraper
         continue-on-error: true  # Don't stop on error, collect logs first
         run: |
-          echo "Starting Indeed scraper..." | tee logs/indeed-scraper.log
-          node --trace-warnings scrape-indeed.js 2>&1 | tee -a logs/indeed-scraper.log
-          echo "Indeed scraper exit code: $?" | tee -a logs/indeed-scraper.log
+          echo "Starting WeWorkRemotely scraper..." | tee logs/wwr-scraper.log
+          node --trace-warnings scrape-weworkremotely.js 2>&1 | tee -a logs/wwr-scraper.log
+          echo "WeWorkRemotely scraper exit code: $?" | tee -a logs/wwr-scraper.log
+      
+      - name: Run Indeed scraper (if WeWorkRemotely worked)
+        continue-on-error: true  # Don't stop on error, collect logs first
+        run: |
+          if [ -f "weworkremotely-results.json" ] && [ "$(cat weworkremotely-results.json | grep -c 'jobs')" -gt 0 ]; then
+            echo "WeWorkRemotely scraper succeeded, trying Indeed..." | tee logs/indeed-scraper.log
+            node --trace-warnings scrape-indeed.js 2>&1 | tee -a logs/indeed-scraper.log
+            echo "Indeed scraper exit code: $?" | tee -a logs/indeed-scraper.log
+          else
+            echo "Skipping Indeed scraper since WeWorkRemotely failed" | tee logs/indeed-scraper.log
+          fi
       
       - name: Run all scrapers
         continue-on-error: true  # Don't stop on error, collect logs first
