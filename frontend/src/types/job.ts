@@ -19,6 +19,7 @@ export interface Job {
   recencyScore?: number;
   featured?: boolean;
   tags?: string[];
+  categories?: string[];
   uniqueIdentifier?: string;
   createdAt?: Date;
   updatedAt?: Date;

@@ -23,6 +23,7 @@ export const mockJobs: Job[] = [
     timezone: 'EST/CST preferred',
     datePosted: 'today',
     tags: ['data-entry', 'remote', 'entry-level'],
+    categories: ['data-entry', 'administrative'],
     url: 'https://example.com/jobs/remote-data-entry-specialist'
   },
   {
@@ -46,6 +47,7 @@ export const mockJobs: Job[] = [
     timezone: 'Flexible',
     datePosted: 'this-week',
     tags: ['administrative', 'remote', 'entry-level'],
+    categories: ['administrative', 'virtual-assistant'],
     url: 'https://example.com/jobs/virtual-administrative-assistant'
   },
   {
@@ -69,6 +71,7 @@ export const mockJobs: Job[] = [
     timezone: 'EST/PST',
     datePosted: 'this-week',
     tags: ['customer-service', 'remote', 'experienced'],
+    categories: ['customer-service', 'administrative'],
     url: 'https://example.com/jobs/customer-service-representative'
   },
   {
@@ -92,6 +95,7 @@ export const mockJobs: Job[] = [
     timezone: 'Flexible',
     datePosted: 'this-week',
     tags: ['data-entry', 'remote', 'no-experience'],
+    categories: ['data-entry', 'data-processing'],
     url: 'https://example.com/jobs/data-entry-clerk'
   },
   {
@@ -115,6 +119,7 @@ export const mockJobs: Job[] = [
     timezone: 'Flexible',
     datePosted: 'this-week',
     tags: ['transcription', 'remote', 'entry-level'],
+    categories: ['transcription', 'data-entry'],
     url: 'https://example.com/jobs/transcriptionist'
   },
   {
@@ -138,6 +143,7 @@ export const mockJobs: Job[] = [
     timezone: 'EST/CST',
     datePosted: 'this-week',
     tags: ['administrative', 'executive', 'remote', 'experienced'],
+    categories: ['administrative', 'virtual-assistant'],
     url: 'https://example.com/jobs/virtual-executive-assistant'
   },
   {
@@ -161,6 +167,7 @@ export const mockJobs: Job[] = [
     timezone: 'EST/CST',
     datePosted: 'this-week',
     tags: ['bookkeeping', 'finance', 'remote', 'experienced'],
+    categories: ['bookkeeping', 'administrative'],
     url: 'https://example.com/jobs/bookkeeping-assistant'
   },
   {
@@ -184,6 +191,7 @@ export const mockJobs: Job[] = [
     timezone: 'Flexible',
     datePosted: 'today',
     tags: ['data-entry', 'remote', 'no-experience'],
+    categories: ['data-entry', 'data-processing'],
     url: 'https://example.com/jobs/entry-level-data-processor'
   },
 ];
