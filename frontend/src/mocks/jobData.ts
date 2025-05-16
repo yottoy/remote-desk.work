@@ -207,6 +207,8 @@ export const getJobById = (id: string): EnhancedJobListing => {
   // Add enhanced properties for the job details page
   return {
     ...job,
+    qualityScore: job.qualityScore || 7.0,
+    featured: job.featured || false,
     qualityIndicatorScore: 8.0,
     credibilityScore: 9.0,
     recencyScore: 9.5,
@@ -292,15 +294,15 @@ export const getSimilarJobs = (jobId: string) => {
   
   return mockJobs
     .filter(j => j._id !== jobId && 
-      (j.categories.some(cat => job.categories.includes(cat)) || 
-       j.tags.some(tag => job.tags.includes(tag))))
+      ((j.categories?.some(cat => job.categories?.includes(cat)) || 
+       j.tags?.some(tag => job.tags?.includes(tag))) || false))
     .slice(0, 3);
 };
 
 // Mock function to get popular jobs
 export const getPopularJobs = () => {
   return mockJobs
-    .filter(job => job.qualityScore >= 8.0)
-    .sort((a, b) => b.qualityScore - a.qualityScore)
+    .filter(job => (job.qualityScore || 0) >= 8.0)
+    .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0))
     .slice(0, 4);
 }; 
