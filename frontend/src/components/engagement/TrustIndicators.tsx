@@ -1,5 +1,7 @@
 import React from 'react';
-import { JobListing } from '../../types/job';
+import { JobListing, EnhancedJobListing } from '../../types/job';
+
+type AnyJobListing = JobListing | EnhancedJobListing;
 
 interface TrustIndicatorProps {
   children: React.ReactNode;
@@ -31,7 +33,7 @@ const TrustIndicator: React.FC<TrustIndicatorProps> = ({
   );
 };
 
-export const CompanyVerification: React.FC<{ job: JobListing }> = ({ job }) => {
+export const CompanyVerification: React.FC<{ job: AnyJobListing }> = ({ job }) => {
   // Determine verification status based on the job's quality score
   const isVerified = job.qualityScore >= 8;
 
@@ -60,7 +62,7 @@ export const CompanyVerification: React.FC<{ job: JobListing }> = ({ job }) => {
   );
 };
 
-export const RedFlagWarning: React.FC<{ job: JobListing }> = ({ job }) => {
+export const RedFlagWarning: React.FC<{ job: AnyJobListing }> = ({ job }) => {
   // Check for potential red flags in the job
   const hasRedFlags = job.qualityScore < 6;
   
@@ -81,7 +83,7 @@ export const RedFlagWarning: React.FC<{ job: JobListing }> = ({ job }) => {
         <li>Low quality score ({job.qualityScore}/10)</li>
         {job.salary === 'Undisclosed' && <li>No salary information provided</li>}
         {!job.company && <li>Missing company information</li>}
-        {job.description.length < 200 && <li>Very limited job description</li>}
+        {job.description?.length < 200 && <li>Very limited job description</li>}
       </ul>
     </TrustIndicator>
   );
@@ -141,7 +143,7 @@ export const VerificationProcessExplanation: React.FC = () => {
 };
 
 interface TrustIndicatorsProps {
-  job: JobListing;
+  job: AnyJobListing;
   showAll?: boolean;
 }
 
