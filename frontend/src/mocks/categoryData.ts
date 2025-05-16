@@ -119,7 +119,7 @@ export const getCategoryBySlug = (slug: string) => {
 // Mock function to get jobs by category
 export const getJobsByCategory = (slug: string) => {
   const jobs = mockJobs.filter(job => 
-    job.categories.includes(slug)
+    job.categories?.includes(slug)
   );
   
   return {
