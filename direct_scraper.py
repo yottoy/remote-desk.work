@@ -115,6 +115,47 @@ def setup_dependencies():
     except ImportError:
         missing_modules.append("pandas")
     
+    # Fix the numpy.rec module issue by ensuring we have a compatible numpy version
+    try:
+        # First uninstall any existing numpy and jobspy to avoid conflicts
+        logger.info("Ensuring numpy compatibility by reinstalling with a compatible version")
+        subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "numpy", "jobspy", "python-jobspy"], check=False)
+        
+        # Install numpy 1.26.3 which is known to include numpy.rec module
+        numpy_install = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "numpy==1.26.3"],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        logger.info(f"Installed numpy 1.26.3: {numpy_install.returncode == 0}")
+        
+        # Verify numpy.rec is available
+        try:
+            import numpy
+            try:
+                import numpy.rec
+                logger.info(f"numpy.rec module is available in numpy {numpy.__version__}")
+            except ImportError:
+                logger.warning(f"numpy.rec module not available in numpy {numpy.__version__}, trying alternative version")
+                
+                # Try alternative versions if 1.26.3 doesn't work
+                for version in ["1.24.3", "1.22.4"]:
+                    subprocess.run([sys.executable, "-m", "pip", "install", f"numpy=={version}", "--force-reinstall"], check=False)
+                    try:
+                        # Clear the import cache to reload numpy
+                        import importlib
+                        importlib.reload(numpy)
+                        import numpy.rec
+                        logger.info(f"numpy.rec module is available in numpy {numpy.__version__}")
+                        break
+                    except ImportError:
+                        logger.warning(f"numpy.rec module not available in numpy {version}")
+        except Exception as e:
+            logger.error(f"Error verifying numpy.rec: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error setting up numpy compatibility: {str(e)}")
+    
     # Log any missing modules
     if missing_modules:
         logger.warning(f"Missing dependencies: {', '.join([f'No module named {m!r}' for m in missing_modules])}")
@@ -130,7 +171,9 @@ def setup_dependencies():
         
         # Try alternate package name
         if "jobspy" in missing_modules:
-            subprocess.run([sys.executable, "-m", "pip", "install", "python-jobspy"], check=False)
+            subprocess.run([sys.executable, "-m", "pip", "install", "python-jobspy", "--no-dependencies"], check=False)
+            # Install additional dependencies that jobspy needs (but not numpy)
+            subprocess.run([sys.executable, "-m", "pip", "install", "redis>=3.0.0", "beautifulsoup4>=4.12.2", "pandas>=2.1.0"], check=False)
     
     # Try different import strategies
     try:
@@ -200,9 +243,9 @@ def setup_dependencies():
         if python_jobspy_info.returncode == 0:
             logger.info(f"python-jobspy package info:\n{python_jobspy_info.stdout}")
         
-        # Try to directly install with pip if still not found
+        # Try to directly install with pip if still not found - without dependencies to preserve numpy
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--verbose", "python-jobspy==0.29.0"],
+            [sys.executable, "-m", "pip", "install", "--verbose", "python-jobspy==0.29.0", "--no-dependencies"],
             check=False
         )
         
