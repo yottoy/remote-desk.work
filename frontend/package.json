@@ -2,6 +2,9 @@
   "name": "remote-desk-frontend",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,6 +14,7 @@
     "verify-env": "node scripts/verify-build-env.js"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.2.2",
     "axios": "^1.6.5",
     "date-fns": "^2.30.0",
     "mongodb": "^6.3.0",
