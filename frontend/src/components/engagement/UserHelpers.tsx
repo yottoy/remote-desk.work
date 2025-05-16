@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { JobListing } from '../../types/job';
+import { JobListing, EnhancedJobListing } from '../../types/job';
 
 interface CopyButtonProps {
   textToCopy: string;
@@ -60,15 +60,15 @@ export const CopyToClipboard: React.FC<CopyButtonProps> = ({
 };
 
 interface ApplicationInstructionsProps {
-  job: JobListing;
+  job: JobListing | EnhancedJobListing;
   className?: string;
 }
 
 export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = ({ job, className = '' }) => {
   // Extract application instructions from job description if available
-  const hasSpecificInstructions = job.description.toLowerCase().includes('apply') || 
-                                 job.description.toLowerCase().includes('application') || 
-                                 job.description.toLowerCase().includes('submit');
+  const hasSpecificInstructions = job.description?.toLowerCase().includes('apply') || 
+                                 job.description?.toLowerCase().includes('application') || 
+                                 job.description?.toLowerCase().includes('submit');
 
   return (
     <div className={`bg-blue-50 rounded-lg p-4 ${className}`}>
@@ -79,7 +79,7 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
           <p>This job has specific application instructions. Please read the full job description carefully.</p>
           <div className="mt-2 flex">
             <a 
-              href={job.url} 
+              href={job.url || '#'} 
               target="_blank" 
               rel="noopener noreferrer"
               className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm leading-5 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -91,7 +91,7 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
               </svg>
             </a>
             <CopyToClipboard 
-              textToCopy={job.url} 
+              textToCopy={job.url || ''} 
               label="Copy URL" 
               className="ml-2" 
             />
@@ -108,7 +108,7 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
           </ol>
           <div className="mt-3 flex">
             <a 
-              href={job.url} 
+              href={job.url || '#'} 
               target="_blank" 
               rel="noopener noreferrer"
               className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm leading-5 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -120,7 +120,7 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
               </svg>
             </a>
             <CopyToClipboard 
-              textToCopy={job.url} 
+              textToCopy={job.url || ''} 
               label="Copy URL" 
               className="ml-2" 
             />
