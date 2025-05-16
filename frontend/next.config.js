@@ -9,7 +9,7 @@ const nextConfig = {
   },
   env: {
     // Environment variables that will be available on the client side
-    API_URL: process.env.API_URL || 'http://localhost:3001/api',
+    API_URL: process.env.API_URL || 'http://localhost:3000/api',
     SITE_NAME: 'ClickClickJob.com',
     MONGODB_URI: process.env.MONGODB_URI,
     MONGODB_DB: process.env.MONGODB_DB || 'clickclickjob'
@@ -17,9 +17,9 @@ const nextConfig = {
   // Remove custom distDir to use Next.js default (.next)
   // distDir: 'build',
   
-  // Add experimental config for monorepo support
+  // Remove the experimental config that's causing path duplication
   experimental: {
-    outputFileTracingRoot: path.join(__dirname, '../'),
+    // outputFileTracingRoot removed to fix deployment path issues
   },
   
   compiler: {

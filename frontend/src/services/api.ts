@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.API_URL || '/api';
 
 /**
  * Utility to parse ISO date strings in API responses
@@ -130,13 +130,7 @@ export const jobsAPI = {
       const response = await apiClient.get('/jobs', { params });
       return response.data;
     } catch (error) {
-      // In development mode, return mock data if API is not available
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Using mock data for jobs');
-        // Import mock data only in development
-        const { mockJobs } = await import('../mocks/jobData');
-        return { jobs: parseDates(mockJobs), total: mockJobs.length };
-      }
+      console.error('Failed to fetch jobs from API:', error);
       throw error;
     }
   },
@@ -146,14 +140,7 @@ export const jobsAPI = {
       const response = await apiClient.get(`/jobs/${id}`);
       return response.data;
     } catch (error) {
-      // In development mode, return mock data if API is not available
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Using mock data for job details');
-        // Import mock data only in development
-        const { getJobById } = await import('../mocks/jobData');
-        const job = getJobById(id);
-        return parseDates(job);
-      }
+      console.error('Failed to fetch job details from API:', error);
       throw error;
     }
   },
@@ -165,14 +152,7 @@ export const jobsAPI = {
       });
       return response.data;
     } catch (error) {
-      // In development mode, return mock data if API is not available
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Using mock data for job search');
-        // Import mock data only in development
-        const { searchJobs } = await import('../mocks/jobData');
-        const results = searchJobs(query, filters);
-        return parseDates(results);
-      }
+      console.error('Failed to search jobs from API:', error);
       throw error;
     }
   }
@@ -185,13 +165,7 @@ export const categoriesAPI = {
       const response = await apiClient.get('/categories');
       return response.data;
     } catch (error) {
-      // In development mode, return mock data if API is not available
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Using mock data for categories');
-        // Import mock data only in development
-        const { jobCategories } = await import('../mocks/categoryData');
-        return parseDates(jobCategories);
-      }
+      console.error('Failed to fetch categories from API:', error);
       throw error;
     }
   },
@@ -201,13 +175,7 @@ export const categoriesAPI = {
       const response = await apiClient.get(`/categories/${slug}`);
       return response.data;
     } catch (error) {
-      // In development mode, return mock data if API is not available
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Using mock data for category details');
-        // Import mock data only in development
-        const { getCategoryBySlug } = await import('../mocks/categoryData');
-        return parseDates(getCategoryBySlug(slug));
-      }
+      console.error('Failed to fetch category details from API:', error);
       throw error;
     }
   },
@@ -217,13 +185,7 @@ export const categoriesAPI = {
       const response = await apiClient.get(`/categories/${slug}/jobs`, { params });
       return response.data;
     } catch (error) {
-      // In development mode, return mock data if API is not available
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Using mock data for category jobs');
-        // Import mock data only in development
-        const { getJobsByCategory } = await import('../mocks/categoryData');
-        return parseDates(getJobsByCategory(slug));
-      }
+      console.error('Failed to fetch category jobs from API:', error);
       throw error;
     }
   }
