@@ -159,11 +159,11 @@ def setup_dependencies():
         
         # Now try to import from the correct package
         try:
-            from python_jobspy import scrape_jobs
-            logger.info("Successfully imported scrape_jobs from python_jobspy")
+            from jobspy import scrape_jobs
+            logger.info("Successfully imported scrape_jobs from jobspy")
             return True
         except ImportError as e:
-            logger.error(f"Error importing from python_jobspy: {e}")
+            logger.error(f"Error importing from jobspy: {e}")
             
             # Try adding more paths to Python path
             site_packages = subprocess.run(
@@ -179,17 +179,17 @@ def setup_dependencies():
             
             # One more attempt with explicit imports
             try:
-                import python_jobspy
-                logger.info(f"Successfully imported python_jobspy module: {python_jobspy.__file__}")
+                import jobspy
+                logger.info(f"Successfully imported jobspy module: {jobspy.__file__}")
                 
                 # Check what's available in the module
-                for attr in dir(python_jobspy):
+                for attr in dir(jobspy):
                     if not attr.startswith('__'):
-                        logger.info(f"Found attribute in python_jobspy: {attr}")
+                        logger.info(f"Found attribute in jobspy: {attr}")
                 
-                if hasattr(python_jobspy, 'scrape_jobs'):
-                    scrape_jobs = python_jobspy.scrape_jobs
-                    logger.info("Successfully found scrape_jobs in python_jobspy")
+                if hasattr(jobspy, 'scrape_jobs'):
+                    scrape_jobs = jobspy.scrape_jobs
+                    logger.info("Successfully found scrape_jobs in jobspy")
                     return True
             except Exception as e2:
                 logger.error(f"Final import attempt failed: {e2}")
