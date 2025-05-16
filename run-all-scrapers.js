@@ -59,24 +59,24 @@ async function main() {
   try {
     log('Starting job scraper script');
     
-    // First completely uninstall both packages
-    log('Completely removing existing numpy and jobspy installations...');
+    // First completely uninstall both packages to ensure a clean state
+    log('Completely removing existing packages...');
     try {
-      await runCommand('pip3', ['uninstall', '-y', 'numpy', 'jobspy']);
+      await runCommand('pip3', ['uninstall', '-y', 'numpy', 'jobspy', 'python-jobspy']);
     } catch (error) {
       log(`Failed to uninstall with pip3, trying pip: ${error.message}`);
-      await runCommand('pip', ['uninstall', '-y', 'numpy', 'jobspy']);
+      await runCommand('pip', ['uninstall', '-y', 'numpy', 'jobspy', 'python-jobspy']);
     }
     
-    // Then install numpy 1.24.3 first - this version is known to have numpy.rec
-    log('Installing numpy 1.24.3 which includes the numpy.rec module...');
+    // Then install numpy 1.26.3 which specifically includes the numpy.rec module
+    log('Installing numpy 1.26.3 which includes the numpy.rec module...');
     try {
-      await runCommand('pip3', ['install', 'numpy==1.24.3']);
-      log('Successfully installed numpy 1.24.3');
+      await runCommand('pip3', ['install', '--upgrade', 'numpy==1.26.3']);
+      log('Successfully installed numpy 1.26.3');
     } catch (error) {
       log(`Failed to install numpy with pip3, trying pip: ${error.message}`);
-      await runCommand('pip', ['install', 'numpy==1.24.3']);
-      log('Successfully installed numpy 1.24.3 using pip');
+      await runCommand('pip', ['install', '--upgrade', 'numpy==1.26.3']);
+      log('Successfully installed numpy 1.26.3 using pip');
     }
     
     // Verify numpy.rec module is available before proceeding
@@ -85,26 +85,38 @@ async function main() {
       await verifyNumpyRec();
       log('✅ Verification successful: numpy.rec module is available');
     } catch (error) {
-      log(`⚠️ Verification failed: numpy.rec module not available after installation`);
-      log('Attempting to reinstall numpy with a different version...');
+      log(`⚠️ Verification failed: numpy.rec module not available in numpy 1.26.3`);
+      log('Attempting to reinstall with a different version...');
       
-      // Try installing numpy 1.23.5 as fallback
+      // Try installing numpy 1.24.3 as fallback
       try {
-        await runCommand('pip3', ['install', 'numpy==1.23.5']);
+        await runCommand('pip3', ['install', '--force-reinstall', 'numpy==1.24.3']);
         await verifyNumpyRec();
-        log('✅ Verification successful after installing numpy 1.23.5');
+        log('✅ Verification successful after installing numpy 1.24.3');
       } catch (err) {
-        log(`⚠️ All attempts to install numpy with rec module failed. Continuing anyway...`);
+        log(`⚠️ Falling back to numpy 1.22.4 which has numpy.rec module...`);
+        await runCommand('pip3', ['install', '--force-reinstall', 'numpy==1.22.4']);
+        try {
+          await verifyNumpyRec();
+          log('✅ Verification successful after installing numpy 1.22.4');
+        } catch (finalError) {
+          log(`⚠️ All attempts to install numpy with rec module failed. This will likely cause issues.`);
+        }
       }
     }
     
-    // Now install jobspy
+    // Now install jobspy with compatibility settings
     log('Installing jobspy...');
     try {
-      await runCommand('pip3', ['install', 'jobspy==0.29.0']);
+      await runCommand('pip3', ['install', 'jobspy==0.29.0', '--no-dependencies']);
+      log('Successfully installed jobspy 0.29.0 without extra dependencies');
+      
+      // Install additional dependencies that jobspy needs (but not numpy)
+      await runCommand('pip3', ['install', 'redis>=3.0.0', 'beautifulsoup4>=4.12.2', 'pandas>=2.1.0']);
     } catch (error) {
       log(`Failed to install jobspy with pip3, trying pip: ${error.message}`);
-      await runCommand('pip', ['install', 'jobspy==0.29.0']);
+      await runCommand('pip', ['install', 'jobspy==0.29.0', '--no-dependencies']);
+      await runCommand('pip', ['install', 'redis>=3.0.0', 'beautifulsoup4>=4.12.2', 'pandas>=2.1.0']);
     }
     
     // Run the Python scraper
