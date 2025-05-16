@@ -3,6 +3,10 @@
 # ClickClickJob Deployment Script
 echo "Starting ClickClickJob deployment process..."
 
+# Change to the frontend directory
+echo "Navigating to frontend directory..."
+cd frontend || { echo "Frontend directory not found"; exit 1; }
+
 # Check if Vercel CLI is installed
 if ! command -v vercel &> /dev/null; then
   echo "Vercel CLI not found. Installing..."
