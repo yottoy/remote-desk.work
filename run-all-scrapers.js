@@ -42,9 +42,18 @@ async function main() {
   try {
     log('Starting job scraper script');
     
-    // First install a compatible numpy version that includes numpy.rec
-    log('Installing compatible numpy version...');
+    // Install jobspy first
+    log('Installing jobspy...');
+    try {
+      await runCommand('pip3', ['install', 'jobspy==0.29.0', '-U']);
+    } catch (error) {
+      log(`Failed to install jobspy with pip3, trying pip: ${error.message}`);
+      await runCommand('pip', ['install', 'jobspy==0.29.0', '-U']);
+    }
     
+    // Then install a compatible numpy version that includes numpy.rec
+    // This will override any numpy version that jobspy installed
+    log('Installing compatible numpy version...');
     try {
       await runCommand('pip3', ['install', 'numpy==1.24.3', '-U', '--force-reinstall']);
       log('Successfully installed numpy 1.24.3');
@@ -52,15 +61,6 @@ async function main() {
       log(`Failed to install numpy with pip3, trying pip: ${error.message}`);
       await runCommand('pip', ['install', 'numpy==1.24.3', '-U', '--force-reinstall']);
       log('Successfully installed numpy 1.24.3 using pip');
-    }
-    
-    // Then install jobspy to ensure it's available
-    log('Installing jobspy...');
-    try {
-      await runCommand('pip3', ['install', 'jobspy==0.29.0', '-U']);
-    } catch (error) {
-      log(`Failed to install jobspy with pip3, trying pip: ${error.message}`);
-      await runCommand('pip', ['install', 'jobspy==0.29.0', '-U']);
     }
     
     // Run the Python scraper
