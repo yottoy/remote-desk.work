@@ -194,7 +194,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
       <Metadata 
         jobTitle={job.title}
         companyName={job.company}
-        jobDescription={job.descriptionText || job.description.substring(0, 250)}
+        jobDescription={job.descriptionText || (job.description ? job.description.substring(0, 250) : '')}
         location={job.location}
         keywords={job.tags}
       />
