@@ -1,93 +1,101 @@
-# ClickClickJob Job Scraper
+# Remote Admin/Data Entry Job Scraper
 
-A system for scraping remote admin and data entry job postings from various sites using JobSpy.
+A robust job scraping system for remote administrative and data entry positions. This system provides reliable job data collection from multiple sources with advanced error handling and fallback mechanisms.
 
 ## Features
 
-- Scrapes multiple job sites (Indeed, LinkedIn, WeWorkRemotely, etc.)
-- Focuses on remote admin and data entry positions
-- Deduplicates job listings across sources
-- Filters out irrelevant jobs and scams
-- Rotates proxies to avoid IP blocking
+- **Multi-source scraping** - Collects jobs from LinkedIn, Indeed, and other sites
+- **Robust error handling** - Multiple layers of fallback mechanisms
+- **Deduplication** - Ensures unique job listings
+- **Automatic scheduling** - Set up with GitHub Actions
+- **Simple deployment** - Easy to set up and run
 
-## GitHub Actions Workflow
+## Architecture
 
-This project includes a GitHub Actions workflow that:
+The system consists of multiple components:
 
-1. Automatically runs every 12 hours
-2. Sets up the Python and Node.js environment
-3. Tests the environment and dependencies
-4. Runs all scrapers in sequence
-5. Combines and processes results
-6. Saves job data as artifacts
+1. **Direct Python Scraper** (`direct_scraper.py`) - Primary scraping engine that directly uses the JobSpy library
+2. **Node.js Bridge** (`run-jobspy-direct.js`) - Executes the Python scraper from Node.js
+3. **Combined Runner** (`run-all-scrapers.js`) - Orchestrates the entire scraping process
+4. **GitHub Actions Workflow** - Handles automatic scheduled runs
 
-## Running Locally
+## Setup & Installation
 
 ### Prerequisites
 
-- Node.js 16+
+- Node.js (v16+)
 - Python 3.10+
-- npm
+- pip
 
 ### Installation
 
 ```bash
-# Install Node.js dependencies
-npm install
+# Clone the repository
+git clone https://github.com/your-username/remote-admin-job-scraper.git
+cd remote-admin-job-scraper
 
-# Install Python dependencies
-npm run setup-python
+# Install dependencies
+npm install
+python -m pip install numpy==1.24.3 pandas python-jobspy
 ```
 
-### Running
+### Configuration
+
+No additional configuration is needed to run the basic scraper. The system is designed to work with default settings.
+
+### Running the Scraper
 
 ```bash
-# Run the diagnostic test
-node test-github-environment.js
-
-# Run all scrapers
+# Run the main scraper
 npm start
-
-# Run specific scrapers
-npm run scrape-indeed
-npm run scrape-all
-npm run scrape-alt
-npm run scrape-wwr
 ```
 
-## GitHub Setup
+Or directly with Node.js:
 
-1. Push to GitHub using the included script:
-   ```bash
-   ./push-to-github.sh
-   ```
+```bash
+node run-all-scrapers.js
+```
 
-2. Go to your GitHub repository
-3. Click on the "Actions" tab
-4. Run the "Run Job Scrapers" workflow
+### Testing
 
-## Results
+To test the direct scraper:
 
-Job results are stored in several files:
+```bash
+npm test
+```
 
-- `indeed-results.json`: Indeed-specific jobs
-- `scrape-results.json`: Main JobSpy results
-- `alt-sites-results.json`: Alternative sites
-- `combined-results.json`: All deduplicated jobs
+## Output
+
+The system generates several output files:
+
+- `combined-results.json` - The main output file with all deduplicated jobs
+- `results/scrape-results.json` - Raw results from the scraper
+- `results/indeed_linkedin-results.json` - Results specifically from Indeed and LinkedIn
+
+## GitHub Actions Integration
+
+The repository includes a GitHub Actions workflow file (`.github/workflows/scrape-jobs.yml`) that automatically runs the scraper on a schedule (every 12 hours by default).
 
 ## Troubleshooting
 
-If you encounter issues with the JobSpy bridge:
+If you encounter any issues:
 
-1. Make sure Python dependencies are installed: `npm run setup-python`
-2. Test the bridge: `node test-bridge.js`
-3. Check job results in the `github-test-result.json` file
+1. Check the logs in the `logs/` directory
+2. Ensure all dependencies are correctly installed
+3. Verify your Python version (Python 3.10+ recommended)
+4. Make sure the script has appropriate permissions (`chmod +x direct_scraper.py`)
+
+## Extending the Scraper
+
+To add more job sources or modify the scraping behavior:
+
+1. Edit `direct_scraper.py` to include additional job site scraping logic
+2. Update the search terms in the script to target different job types
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT
 
-## Acknowledgments
+## Credits
 
-- [JobSpy](https://github.com/nickpollard/jobspy) - Python library for job scraping
-- All contributors who have helped improve this system 
+This project uses the [JobSpy](https://github.com/speedyapply/JobSpy) library for job scraping functionality. 
