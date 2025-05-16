@@ -1,0 +1,11 @@
+{
+  "source": [
+    "indeed",
+    "linkedin",
+    "glassdoor"
+  ],
+  "scrape_date": "2025-05-15T23:12:00.603791",
+  "error": "Scraping in progress...",
+  "jobs_count": 0,
+  "jobs": []
+}

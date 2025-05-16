@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface FilterOption {
   id: string;
@@ -20,6 +20,7 @@ interface AdvancedFiltersProps {
   showCounts?: boolean;
   className?: string;
   isCollapsible?: boolean;
+  mobileView?: boolean;
 }
 
 // Individual Filter Section Component
@@ -32,14 +33,26 @@ const FilterSection: React.FC<FilterSectionProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(true);
   
+  // Check if any options in this section are selected
+  const hasSelectedOptions = selectedOptions.length > 0;
+  
   return (
-    <div className="py-4 border-b border-gray-200">
+    <div className="py-3 border-b border-gray-200 last:border-b-0">
       <button
         type="button"
-        className="flex w-full items-center justify-between text-left focus:outline-none"
+        className="flex w-full items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md"
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-controls={`filter-section-${id}`}
       >
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <h3 className={`text-sm font-semibold ${hasSelectedOptions ? 'text-blue-600' : 'text-gray-900'} flex items-center`}>
+          {title}
+          {hasSelectedOptions && (
+            <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full px-2 py-0.5">
+              {selectedOptions.length}
+            </span>
+          )}
+        </h3>
         <span>
           <svg
             className={`h-4 w-4 transition-transform ${isOpen ? 'transform rotate-180' : ''}`}
@@ -53,7 +66,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
       </button>
       
       {isOpen && (
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-3" id={`filter-section-${id}`}>
           {options.map((option) => (
             <div key={option.id} className="flex items-center">
               <input
@@ -85,10 +98,14 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   showCounts = false,
   className = '',
   isCollapsible = true,
+  mobileView = false,
 }) => {
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState<Record<string, string[]>>(selectedFilters);
+  
   // Helper to handle filter changes from any section
   const handleFilterChange = (sectionId: string, optionId: string, checked: boolean) => {
-    const currentValues = selectedFilters[sectionId] || [];
+    const currentValues = appliedFilters[sectionId] || [];
     let newValues: string[];
     
     if (checked) {
@@ -97,15 +114,44 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       newValues = currentValues.filter(val => val !== optionId);
     }
     
-    onFilterChange(sectionId, newValues);
+    setAppliedFilters({
+      ...appliedFilters,
+      [sectionId]: newValues
+    });
+    
+    if (!mobileView) {
+      onFilterChange(sectionId, newValues);
+    }
+  };
+  
+  // Apply all filters at once (for mobile view)
+  const applyFilters = () => {
+    Object.entries(appliedFilters).forEach(([key, values]) => {
+      onFilterChange(key, values);
+    });
+    setIsMobileFiltersOpen(false);
   };
   
   // Clear all filters
   const clearAllFilters = () => {
-    Object.keys(selectedFilters).forEach(key => {
-      onFilterChange(key, []);
-    });
+    const emptyFilters = Object.keys(appliedFilters).reduce((acc, key) => {
+      acc[key] = [];
+      return acc;
+    }, {} as Record<string, string[]>);
+    
+    setAppliedFilters(emptyFilters);
+    
+    if (!mobileView) {
+      Object.keys(selectedFilters).forEach(key => {
+        onFilterChange(key, []);
+      });
+    }
   };
+  
+  // Update applied filters when selected filters change (for sync between URL params and UI)
+  useEffect(() => {
+    setAppliedFilters(selectedFilters);
+  }, [selectedFilters]);
   
   // Filter sections definition - specifically for admin and data entry jobs
   const filterSections = [
@@ -185,10 +231,93 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   ];
   
   // Calculate if any filters are active
-  const hasActiveFilters = Object.values(selectedFilters).some(
+  const hasActiveFilters = Object.values(appliedFilters).some(
     filters => filters && filters.length > 0
   );
   
+  // Calculate total filter count for mobile button
+  const totalFilterCount = Object.values(appliedFilters).reduce(
+    (total, filters) => total + (filters ? filters.length : 0), 0
+  );
+  
+  // Mobile filter drawer for small screens
+  if (mobileView) {
+    return (
+      <>
+        <button 
+          onClick={() => setIsMobileFiltersOpen(true)}
+          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <svg className="-ml-1 mr-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+          </svg>
+          Filters
+          {totalFilterCount > 0 && (
+            <span className="ml-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full px-2 py-0.5">
+              {totalFilterCount}
+            </span>
+          )}
+        </button>
+      
+        {isMobileFiltersOpen && (
+          <div className="fixed inset-0 z-40 flex">
+            {/* Overlay */}
+            <div className="fixed inset-0">
+              <div className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsMobileFiltersOpen(false)} />
+            </div>
+            
+            {/* Drawer panel */}
+            <div className="relative ml-auto flex h-full w-full max-w-xs flex-col overflow-y-auto bg-white py-4 pb-12 shadow-xl">
+              <div className="flex px-4 pb-2 pt-5">
+                <button 
+                  type="button" 
+                  className="-m-2 p-2 text-gray-400 hover:text-gray-500"
+                  onClick={() => setIsMobileFiltersOpen(false)}
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <h2 className="ml-2 text-lg font-medium text-gray-900">Filters</h2>
+              </div>
+              
+              <div className="mt-4 px-4 divide-y divide-gray-200">
+                {filterSections.map((section) => (
+                  <FilterSection
+                    key={section.id}
+                    id={section.id}
+                    title={section.title}
+                    options={section.options}
+                    selectedOptions={appliedFilters[section.id] || []}
+                    onChange={handleFilterChange}
+                  />
+                ))}
+              </div>
+              
+              <div className="sticky bottom-0 mt-auto border-t border-gray-200 bg-white p-4 flex space-x-3">
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="flex-1 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:bg-gray-50"
+                >
+                  Clear all
+                </button>
+                <button
+                  type="button"
+                  onClick={applyFilters}
+                  className="flex-1 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:bg-blue-700"
+                >
+                  Apply filters
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+  
+  // Desktop version
   return (
     <div className={`bg-white rounded-lg shadow-sm ${className}`}>
       <div className="px-4 py-5 sm:p-6">
@@ -205,14 +334,14 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
           )}
         </div>
         
-        <div className="mt-4">
+        <div className="mt-4 divide-y divide-gray-200">
           {filterSections.map((section) => (
             <FilterSection
               key={section.id}
               id={section.id}
               title={section.title}
               options={section.options}
-              selectedOptions={selectedFilters[section.id] || []}
+              selectedOptions={appliedFilters[section.id] || []}
               onChange={handleFilterChange}
             />
           ))}

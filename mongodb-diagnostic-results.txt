@@ -1,0 +1,2666 @@
+
+
+======= DATABASE: clickclickjob =======
+
+
+=== SCHEMA ANALYSIS ===
+
+Sample Document from clickclickjob.jobs:
+{
+  _id: ObjectId('68261cea402d76d5169a2e63'),
+  title: 'Remote Data Entry Specialist',
+  company: 'ABC Company',
+  description: "We're looking for a detail-oriented data entry specialist who can work remotely...",
+  location: 'Remote',
+  salary: 45000,
+  postedDate: ISODate('2025-05-15T16:57:14.595Z'),
+  jobType: 'data_entry',
+  experienceLevel: 'entry',
+  employmentType: 'full-time',
+  skills: [
+    'Excel',
+    'Typing',
+    'Attention to Detail'
+  ],
+  remote: true,
+  url: 'https://example.com/job1',
+  credibilityScore: 0.8
+}
+
+Random Sample (up to 3 documents) from clickclickjob.jobs:
+{
+  _id: ObjectId('68261cea402d76d5169a2e65'),
+  title: 'Remote Customer Service Representative',
+  company: 'Service Co.',
+  description: 'Handle customer inquiries via email, chat, and phone...',
+  location: 'Remote',
+  salary: 38000,
+  postedDate: ISODate('2025-05-15T16:57:14.595Z'),
+  jobType: 'customer_service',
+  experienceLevel: 'entry',
+  employmentType: 'full-time',
+  skills: [
+    'Communication',
+    'Problem Solving',
+    'Customer Support'
+  ],
+  remote: true,
+  url: 'https://example.com/job3',
+  credibilityScore: 0.75
+}
+{
+  _id: ObjectId('68261cea402d76d5169a2e64'),
+  title: 'Virtual Administrative Assistant',
+  company: 'XYZ Corp',
+  description: 'Support executives remotely with calendar management, email correspondence...',
+  location: 'Remote, US-Only',
+  salary: 52000,
+  postedDate: ISODate('2025-05-15T16:57:14.595Z'),
+  jobType: 'admin',
+  experienceLevel: 'mid',
+  employmentType: 'full-time',
+  skills: [
+    'Microsoft Office',
+    'Calendar Management',
+    'Communication'
+  ],
+  remote: true,
+  url: 'https://example.com/job2',
+  credibilityScore: 0.9
+}
+{
+  _id: ObjectId('68261cea402d76d5169a2e67'),
+  title: 'Remote Executive Assistant',
+  company: 'Tech Leaders',
+  description: 'Support C-level executives with scheduling, travel arrangements...',
+  location: 'Remote, US-Only',
+  salary: 65000,
+  postedDate: ISODate('2025-05-10T16:57:14.595Z'),
+  jobType: 'admin',
+  experienceLevel: 'senior',
+  employmentType: 'full-time',
+  skills: [
+    'Calendar Management',
+    'Travel Coordination',
+    'Executive Support'
+  ],
+  remote: true,
+  url: 'https://example.com/job5',
+  credibilityScore: 0.85
+}
+
+Field Distribution for clickclickjob.jobs:
+{
+  field: '_id',
+  count: 5,
+  types: [
+    'object',
+    'objectId'
+  ]
+}
+{
+  field: 'title',
+  count: 5,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'company',
+  count: 5,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'description',
+  count: 5,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'location',
+  count: 5,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'salary',
+  count: 5,
+  types: [
+    'number'
+  ]
+}
+{
+  field: 'postedDate',
+  count: 5,
+  types: [
+    'object',
+    'date'
+  ]
+}
+{
+  field: 'jobType',
+  count: 5,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'experienceLevel',
+  count: 5,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'employmentType',
+  count: 5,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'skills',
+  count: 5,
+  types: [
+    'object',
+    'array',
+    'array<string>'
+  ]
+}
+{
+  field: 'remote',
+  count: 5,
+  types: [
+    'boolean'
+  ]
+}
+{
+  field: 'url',
+  count: 5,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'credibilityScore',
+  count: 5,
+  types: [
+    'number'
+  ]
+}
+
+=== INDEX ANALYSIS for clickclickjob.jobs ===
+
+Existing Indexes:
+[
+  {
+    v: 2,
+    key: {
+      _id: 1
+    },
+    name: '_id_'
+  }
+]
+
+Collection Statistics:
+{
+  ok: 1,
+  capped: false,
+  wiredTiger: {
+    metadata: {
+      formatVersion: 1
+    },
+    creationString: 'access_pattern_hint=none,allocation_size=4KB,app_metadata=(formatVersion=1),assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none,write_timestamp=off),block_allocation=best,block_compressor=snappy,cache_resident=false,checksum=on,colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,import=(compare_timestamp=oldest_timestamp,enabled=false,file_metadata=,metadata_file=,panic_corrupt=true,repair=false),internal_item_max=0,internal_key_max=0,internal_key_truncate=true,internal_page_max=4KB,key_format=q,key_gap=10,leaf_item_max=0,leaf_key_max=0,leaf_page_max=32KB,leaf_value_max=64MB,log=(enabled=false),lsm=(auto_throttle=true,bloom=true,bloom_bit_count=16,bloom_config=,bloom_hash_count=8,bloom_oldest=false,chunk_count_limit=0,chunk_max=5GB,chunk_size=10MB,merge_custom=(prefix=,start_generation=0,suffix=),merge_max=15,merge_min=0),memory_page_image_max=0,memory_page_max=10m,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=90,tiered_storage=(auth_token=,bucket=,bucket_prefix=,cache_directory=,local_retention=300,name=,object_target_size=0),type=file,value_format=u,verbose=[],write_timestamp_usage=none',
+    type: 'file',
+    uri: 'statistics:table:collection-3544-9063857362633674751',
+    LSM: {
+      'bloom filter false positives': 0,
+      'bloom filter hits': 0,
+      'bloom filter misses': 0,
+      'bloom filter pages evicted from cache': 0,
+      'bloom filter pages read into cache': 0,
+      'bloom filters in the LSM tree': 0,
+      'chunks in the LSM tree': 0,
+      'highest merge generation in the LSM tree': 0,
+      'queries that could have benefited from a Bloom filter that did not exist': 0,
+      'sleep for LSM checkpoint throttle': 0,
+      'sleep for LSM merge throttle': 0,
+      'total size of bloom filters': 0
+    },
+    autocommit: {
+      'retries for readonly operations': 0,
+      'retries for update operations': 0
+    },
+    backup: {
+      'total modified incremental blocks with compressed data': 0,
+      'total modified incremental blocks without compressed data': 0
+    },
+    'block-manager': {
+      'allocations requiring file extension': 0,
+      'blocks allocated': 0,
+      'blocks freed': 0,
+      'checkpoint size': 4096,
+      'file allocation unit size': 4096,
+      'file bytes available for reuse': 0,
+      'file magic number': 120897,
+      'file major version number': 1,
+      'file size in bytes': 20480,
+      'minor version number': 0
+    },
+    btree: {
+      'btree checkpoint generation': 5366,
+      'btree clean tree checkpoint expiration time': Long('9223372036854775807'),
+      'btree compact pages reviewed': 0,
+      'btree compact pages rewritten': 0,
+      'btree compact pages skipped': 0,
+      'btree expected number of compact bytes rewritten': 0,
+      'btree expected number of compact pages rewritten': 0,
+      'btree number of pages reconciled during checkpoint': 0,
+      'btree skipped by compaction as process would not reduce size': 0,
+      'column-store fixed-size leaf pages': 0,
+      'column-store fixed-size time windows': 0,
+      'column-store internal pages': 0,
+      'column-store variable-size RLE encoded values': 0,
+      'column-store variable-size deleted values': 0,
+      'column-store variable-size leaf pages': 0,
+      'fixed-record size': 0,
+      'maximum internal page size': 4096,
+      'maximum leaf page key size': 2867,
+      'maximum leaf page size': 32768,
+      'maximum leaf page value size': 67108864,
+      'maximum tree depth': 0,
+      'number of key/value pairs': 0,
+      'overflow pages': 0,
+      'row-store empty values': 0,
+      'row-store internal pages': 0,
+      'row-store leaf pages': 0
+    },
+    cache: {
+      'bytes currently in the cache': 3030,
+      'bytes dirty in the cache cumulative': 0,
+      'bytes read into cache': 4969,
+      'bytes written from cache': 0,
+      'checkpoint blocked page eviction': 0,
+      'checkpoint of history store file blocked non-history store page eviction': 0,
+      'data source pages selected for eviction unable to be evicted': 0,
+      'eviction gave up due to detecting a disk value without a timestamp behind the last update on the chain': 0,
+      'eviction gave up due to detecting a tombstone without a timestamp ahead of the selected on disk update': 0,
+      'eviction gave up due to detecting a tombstone without a timestamp ahead of the selected on disk update after validating the update chain': 0,
+      'eviction gave up due to detecting update chain entries without timestamps after the selected on disk update': 0,
+      'eviction gave up due to needing to remove a record from the history store but checkpoint is running': 0,
+      'eviction gave up due to no progress being made': 0,
+      'eviction walk passes of a file': 0,
+      'eviction walk target pages histogram - 0-9': 0,
+      'eviction walk target pages histogram - 10-31': 0,
+      'eviction walk target pages histogram - 128 and higher': 0,
+      'eviction walk target pages histogram - 32-63': 0,
+      'eviction walk target pages histogram - 64-128': 0,
+      'eviction walk target pages reduced due to history store cache pressure': 0,
+      'eviction walks abandoned': 0,
+      'eviction walks gave up because they restarted their walk twice': 0,
+      'eviction walks gave up because they saw too many pages and found no candidates': 0,
+      'eviction walks gave up because they saw too many pages and found too few candidates': 0,
+      'eviction walks random search fails to locate a page, results in a null position': 0,
+      'eviction walks reached end of tree': 0,
+      'eviction walks restarted': 0,
+      'eviction walks started from root of tree': 0,
+      'eviction walks started from saved location in tree': 0,
+      'hazard pointer blocked page eviction': 0,
+      'history store table insert calls': 0,
+      'history store table insert calls that returned restart': 0,
+      'history store table reads': 0,
+      'history store table reads missed': 0,
+      'history store table reads requiring squashed modifies': 0,
+      'history store table resolved updates without timestamps that lose their durable timestamp': 0,
+      'history store table truncation by rollback to stable to remove an unstable update': 0,
+      'history store table truncation by rollback to stable to remove an update': 0,
+      'history store table truncation to remove all the keys of a btree': 0,
+      'history store table truncation to remove an update': 0,
+      'history store table truncation to remove range of updates due to an update without a timestamp on data page': 0,
+      'history store table truncation to remove range of updates due to key being removed from the data page during reconciliation': 0,
+      'history store table truncations that would have happened in non-dryrun mode': 0,
+      'history store table truncations to remove an unstable update that would have happened in non-dryrun mode': 0,
+      'history store table truncations to remove an update that would have happened in non-dryrun mode': 0,
+      'history store table updates without timestamps fixed up by reinserting with the fixed timestamp': 0,
+      'history store table writes requiring squashed modifies': 0,
+      'in-memory page passed criteria to be split': 0,
+      'in-memory page splits': 0,
+      'internal page split blocked its eviction': 0,
+      'internal pages evicted': 0,
+      'internal pages split during eviction': 0,
+      'leaf pages split during eviction': 0,
+      'locate a random in-mem ref by examining all entries on the root page': 0,
+      'modified pages evicted': 0,
+      'multi-block reconciliation blocked whilst checkpoint is running': 0,
+      'overflow keys on a multiblock row-store page blocked its eviction': 0,
+      'overflow pages read into cache': 0,
+      'page split during eviction deepened the tree': 0,
+      'page written requiring history store records': 0,
+      'pages dirtied due to obsolete time window by eviction': 0,
+      'pages read into cache': 3,
+      'pages read into cache after truncate': 0,
+      'pages read into cache after truncate in prepare state': 0,
+      'pages read into cache by checkpoint': 0,
+      'pages requested from the cache': 14,
+      'pages requested from the cache due to pre-fetch': 0,
+      'pages seen by eviction walk': 0,
+      'pages written from cache': 0,
+      'pages written requiring in-memory restoration': 0,
+      'recent modification of a page blocked its eviction': 0,
+      'reverse splits performed': 0,
+      'reverse splits skipped because of VLCS namespace gap restrictions': 0,
+      'the number of times full update inserted to history store': 0,
+      'the number of times reverse modify inserted to history store': 0,
+      'tracked dirty bytes in the cache': 0,
+      'tracked dirty internal page bytes in the cache': 0,
+      'tracked dirty leaf page bytes in the cache': 0,
+      'uncommitted truncate blocked page eviction': 0,
+      'unmodified pages evicted': 0
+    },
+    cache_walk: {
+      'Average difference between current eviction generation when the page was last considered': 0,
+      'Average on-disk page image size seen': 0,
+      'Average time in cache for pages that have been visited by the eviction server': 0,
+      'Average time in cache for pages that have not been visited by the eviction server': 0,
+      'Clean pages currently in cache': 0,
+      'Current eviction generation': 0,
+      'Dirty pages currently in cache': 0,
+      'Entries in the root page': 0,
+      'Internal pages currently in cache': 0,
+      'Leaf pages currently in cache': 0,
+      'Maximum difference between current eviction generation when the page was last considered': 0,
+      'Maximum page size seen': 0,
+      'Minimum on-disk page image size seen': 0,
+      'Number of pages never visited by eviction server': 0,
+      'On-disk page image sizes smaller than a single allocation unit': 0,
+      'Pages created in memory and never written': 0,
+      'Pages currently queued for eviction': 0,
+      'Pages that could not be queued for eviction': 0,
+      'Refs skipped during cache traversal': 0,
+      'Size of the root page': 0,
+      'Total number of pages currently in cache': 0
+    },
+    checkpoint: {
+      'checkpoint has acquired a snapshot for its transaction': 0,
+      'pages added for eviction during checkpoint cleanup': 0,
+      'pages dirtied due to obsolete time window by checkpoint cleanup': 0,
+      'pages read into cache during checkpoint cleanup (reclaim_space)': 0,
+      'pages read into cache during checkpoint cleanup due to obsolete time window': 0,
+      'pages removed during checkpoint cleanup': 0,
+      'pages skipped during checkpoint cleanup tree walk': 0,
+      'pages visited during checkpoint cleanup': 0,
+      'transaction checkpoints due to obsolete pages': 0
+    },
+    compression: {
+      'compressed page maximum internal page size prior to compression': 4096,
+      'compressed page maximum leaf page size prior to compression ': 131072,
+      'page written to disk failed to compress': 0,
+      'page written to disk was too small to compress': 0,
+      'pages read from disk': 0,
+      'pages read from disk with compression ratio greater than 64': 0,
+      'pages read from disk with compression ratio smaller than  2': 0,
+      'pages read from disk with compression ratio smaller than  4': 0,
+      'pages read from disk with compression ratio smaller than  8': 0,
+      'pages read from disk with compression ratio smaller than 16': 0,
+      'pages read from disk with compression ratio smaller than 32': 0,
+      'pages read from disk with compression ratio smaller than 64': 0,
+      'pages written to disk': 0,
+      'pages written to disk with compression ratio greater than 64': 0,
+      'pages written to disk with compression ratio smaller than  2': 0,
+      'pages written to disk with compression ratio smaller than  4': 0,
+      'pages written to disk with compression ratio smaller than  8': 0,
+      'pages written to disk with compression ratio smaller than 16': 0,
+      'pages written to disk with compression ratio smaller than 32': 0,
+      'pages written to disk with compression ratio smaller than 64': 0
+    },
+    cursor: {
+      'Total number of deleted pages skipped during tree walk': 0,
+      'Total number of entries skipped by cursor next calls': 0,
+      'Total number of entries skipped by cursor prev calls': 0,
+      'Total number of entries skipped to position the history store cursor': 0,
+      'Total number of in-memory deleted pages skipped during tree walk': 0,
+      'Total number of on-disk deleted pages skipped during tree walk': 0,
+      'Total number of times a search near has exited due to prefix config': 0,
+      'Total number of times cursor fails to temporarily release pinned page to encourage eviction of hot or large page': 0,
+      'Total number of times cursor temporarily releases pinned page to encourage eviction of hot or large page': 0,
+      'bulk loaded cursor insert calls': 0,
+      'cache cursors reuse count': 1,
+      'close calls that result in cache': 14,
+      'create calls': 13,
+      'cursor bound calls that return an error': 0,
+      'cursor bounds cleared from reset': 0,
+      'cursor bounds comparisons performed': 0,
+      'cursor bounds next called on an unpositioned cursor': 0,
+      'cursor bounds next early exit': 0,
+      'cursor bounds prev called on an unpositioned cursor': 0,
+      'cursor bounds prev early exit': 0,
+      'cursor bounds search early exit': 0,
+      'cursor bounds search near call repositioned cursor': 0,
+      'cursor cache calls that return an error': 0,
+      'cursor close calls that return an error': 0,
+      'cursor compare calls that return an error': 0,
+      'cursor equals calls that return an error': 0,
+      'cursor get key calls that return an error': 0,
+      'cursor get value calls that return an error': 0,
+      'cursor insert calls that return an error': 0,
+      'cursor insert check calls that return an error': 0,
+      'cursor largest key calls that return an error': 0,
+      'cursor modify calls that return an error': 0,
+      'cursor next calls that return an error': 0,
+      'cursor next calls that skip due to a globally visible history store tombstone': 0,
+      'cursor next calls that skip greater than 1 and fewer than 100 entries': 0,
+      'cursor next calls that skip greater than or equal to 100 entries': 0,
+      'cursor next random calls that return an error': 0,
+      'cursor prev calls that return an error': 0,
+      'cursor prev calls that skip due to a globally visible history store tombstone': 0,
+      'cursor prev calls that skip greater than or equal to 100 entries': 0,
+      'cursor prev calls that skip less than 100 entries': 0,
+      'cursor reconfigure calls that return an error': 0,
+      'cursor remove calls that return an error': 0,
+      'cursor reopen calls that return an error': 0,
+      'cursor reserve calls that return an error': 0,
+      'cursor reset calls that return an error': 0,
+      'cursor search calls that return an error': 0,
+      'cursor search near calls that return an error': 0,
+      'cursor update calls that return an error': 0,
+      'insert calls': 0,
+      'insert key and value bytes': 0,
+      modify: 0,
+      'modify key and value bytes affected': 0,
+      'modify value bytes modified': 0,
+      'next calls': 64,
+      'open cursor count': 0,
+      'operation restarted': 0,
+      'prev calls': 0,
+      'remove calls': 0,
+      'remove key bytes removed': 0,
+      'reserve calls': 0,
+      'reset calls': 29,
+      'search calls': 0,
+      'search history store calls': 0,
+      'search near calls': 0,
+      'truncate calls': 0,
+      'update calls': 0,
+      'update key and value bytes': 0,
+      'update value size change': 0
+    },
+    reconciliation: {
+      'VLCS pages explicitly reconciled as empty': 0,
+      'approximate byte size of timestamps in pages written': 0,
+      'approximate byte size of transaction IDs in pages written': 0,
+      'dictionary matches': 0,
+      'fast-path pages deleted': 0,
+      'internal page key bytes discarded using suffix compression': 0,
+      'internal page multi-block writes': 0,
+      'leaf page key bytes discarded using prefix compression': 0,
+      'leaf page multi-block writes': 0,
+      'leaf-page overflow keys': 0,
+      'maximum blocks required for a page': 0,
+      'overflow values written': 0,
+      'page reconciliation calls': 0,
+      'page reconciliation calls for eviction': 0,
+      'pages deleted': 0,
+      'pages written including an aggregated newest start durable timestamp ': 0,
+      'pages written including an aggregated newest stop durable timestamp ': 0,
+      'pages written including an aggregated newest stop timestamp ': 0,
+      'pages written including an aggregated newest stop transaction ID': 0,
+      'pages written including an aggregated newest transaction ID ': 0,
+      'pages written including an aggregated oldest start timestamp ': 0,
+      'pages written including an aggregated prepare': 0,
+      'pages written including at least one prepare': 0,
+      'pages written including at least one start durable timestamp': 0,
+      'pages written including at least one start timestamp': 0,
+      'pages written including at least one start transaction ID': 0,
+      'pages written including at least one stop durable timestamp': 0,
+      'pages written including at least one stop timestamp': 0,
+      'pages written including at least one stop transaction ID': 0,
+      'records written including a prepare': 0,
+      'records written including a start durable timestamp': 0,
+      'records written including a start timestamp': 0,
+      'records written including a start transaction ID': 0,
+      'records written including a stop durable timestamp': 0,
+      'records written including a stop timestamp': 0,
+      'records written including a stop transaction ID': 0
+    },
+    session: {
+      'object compaction': 0
+    },
+    transaction: {
+      'a reader raced with a prepared transaction commit and skipped an update or updates': 0,
+      'number of times overflow removed value is read': 0,
+      'race to read prepared update retry': 0,
+      'rollback to stable history store keys that would have been swept in non-dryrun mode': 0,
+      'rollback to stable history store records with stop timestamps older than newer records': 0,
+      'rollback to stable inconsistent checkpoint': 0,
+      'rollback to stable keys removed': 0,
+      'rollback to stable keys restored': 0,
+      'rollback to stable keys that would have been removed in non-dryrun mode': 0,
+      'rollback to stable keys that would have been restored in non-dryrun mode': 0,
+      'rollback to stable restored tombstones from history store': 0,
+      'rollback to stable restored updates from history store': 0,
+      'rollback to stable skipping delete rle': 0,
+      'rollback to stable skipping stable rle': 0,
+      'rollback to stable sweeping history store keys': 0,
+      'rollback to stable tombstones from history store that would have been restored in non-dryrun mode': 0,
+      'rollback to stable updates from history store that would have been restored in non-dryrun mode': 0,
+      'rollback to stable updates removed from history store': 0,
+      'rollback to stable updates that would have been removed from history store in non-dryrun mode': 0,
+      'update conflicts': 0
+    }
+  },
+  sharded: false,
+  size: 2306,
+  count: 5,
+  numOrphanDocs: 0,
+  storageSize: 20480,
+  totalIndexSize: 20480,
+  totalSize: 40960,
+  indexSizes: {
+    _id_: 20480
+  },
+  avgObjSize: 461,
+  ns: 'clickclickjob.jobs',
+  nindexes: 1,
+  scaleFactor: 1
+}
+
+=== TTL ANALYSIS for clickclickjob.jobs ===
+
+TTL Indexes:
+No TTL indexes found
+
+Detected Date Fields: postedDate
+
+Document Age Distribution by postedDate:
+Last 30 days: 5
+30-60 days old: 0
+60-90 days old: 0
+Older than 90 days: 0
+
+=== QUERY PERFORMANCE for clickclickjob.jobs ===
+
+Explain typical search query (using remote field):
+{
+  explainVersion: '1',
+  queryPlanner: {
+    namespace: 'clickclickjob.jobs',
+    parsedQuery: {
+      remote: {
+        '$eq': true
+      }
+    },
+    indexFilterSet: false,
+    queryHash: '17989F22',
+    planCacheShapeHash: '17989F22',
+    planCacheKey: '450DC02A',
+    optimizationTimeMillis: 0,
+    maxIndexedOrSolutionsReached: false,
+    maxIndexedAndSolutionsReached: false,
+    maxScansToExplodeReached: false,
+    prunedSimilarIndexes: false,
+    winningPlan: {
+      isCached: false,
+      stage: 'LIMIT',
+      limitAmount: 10,
+      inputStage: {
+        stage: 'COLLSCAN',
+        filter: {
+          remote: {
+            '$eq': true
+          }
+        },
+        direction: 'forward'
+      }
+    },
+    rejectedPlans: []
+  },
+  executionStats: {
+    executionSuccess: true,
+    nReturned: 5,
+    executionTimeMillis: 0,
+    totalKeysExamined: 0,
+    totalDocsExamined: 5,
+    executionStages: {
+      isCached: false,
+      stage: 'LIMIT',
+      nReturned: 5,
+      executionTimeMillisEstimate: 0,
+      works: 6,
+      advanced: 5,
+      needTime: 0,
+      needYield: 0,
+      saveState: 0,
+      restoreState: 0,
+      isEOF: 1,
+      limitAmount: 10,
+      inputStage: {
+        stage: 'COLLSCAN',
+        filter: {
+          remote: {
+            '$eq': true
+          }
+        },
+        nReturned: 5,
+        executionTimeMillisEstimate: 0,
+        works: 6,
+        advanced: 5,
+        needTime: 0,
+        needYield: 0,
+        saveState: 0,
+        restoreState: 0,
+        isEOF: 1,
+        direction: 'forward',
+        docsExamined: 5
+      }
+    }
+  },
+  queryShapeHash: 'E406BA15F700FBAD7C0F48E5D9988681C4B7A1C95E572EFF2955F7182C870351',
+  command: {
+    find: 'jobs',
+    filter: {
+      remote: true
+    },
+    limit: 10,
+    '$db': 'clickclickjob'
+  },
+  serverInfo: {
+    host: 'ac-xt9ca6g-shard-00-01.mjemntb.mongodb.net',
+    port: 27017,
+    version: '8.0.9',
+    gitVersion: 'f882ef816d531ecfbb593843e4c554fda90ca416'
+  },
+  serverParameters: {
+    internalQueryFacetBufferSizeBytes: 104857600,
+    internalQueryFacetMaxOutputDocSizeBytes: 104857600,
+    internalLookupStageIntermediateDocumentMaxSizeBytes: 16793600,
+    internalDocumentSourceGroupMaxMemoryBytes: 104857600,
+    internalQueryMaxBlockingSortMemoryUsageBytes: 33554432,
+    internalQueryProhibitBlockingMergeOnMongoS: 0,
+    internalQueryMaxAddToSetBytes: 104857600,
+    internalDocumentSourceSetWindowFieldsMaxMemoryBytes: 104857600,
+    internalQueryFrameworkControl: 'trySbeRestricted',
+    internalQueryPlannerIgnoreIndexWithCollationForRegex: 1
+  },
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1747417005, i: 74 }),
+    signature: {
+      hash: Binary.createFromBase64('cvG4AOwUPzNQGx884eU0cUTlkGk=', 0),
+      keyId: Long('7441706206747426834')
+    }
+  },
+  operationTime: Timestamp({ t: 1747417005, i: 74 })
+}
+
+=== COLLECTION METRICS for clickclickjob.jobs ===
+
+Total Documents: 5
+Collection Size: 2306 bytes
+Average Document Size: 461.2 bytes
+
+=== POTENTIAL ISSUES for clickclickjob.jobs ===
+
+Searching for documents with large arrays:
+No large array fields found (>10 elements)
+
+
+======= DATABASE: remote-jobs =======
+
+
+=== SCHEMA ANALYSIS ===
+
+Sample Document from remote-jobs.jobs:
+{
+  _id: ObjectId('682284efc96fdbc710342e5d'),
+  uniqueIdentifier: 'unknown company-community phone: account executive, b2b',
+  __v: 0,
+  company: 'Unknown Company',
+  createdAt: ISODate('2025-05-12T23:31:59.602Z'),
+  credibilityScore: 9,
+  description: '<img src="https://we-work-remotely.imgix.net/logos/0170/9330/logo.gif?ixlib=rails-4.0.0&w=50&h=50&dpr=2&fit=fill&auto=compress" /> <p> <strong>Headquarters:</strong> Boston <br /><strong>URL:</strong> <a href="https://communityphone.org">https://communityphone.org</a>\n' +
+    '</p> <h1>🌟 <strong>About the role</strong>\n' +
+    '</h1> <p><strong>Your Mission</strong></p> <ul> <li>Identify and pursue new business opportunities across small business .</li> <li>Manage the full sales cycle. Success here requires someone who’s genuinely curious about customers’ businesses and challenges, eager to dig deep, uncover pain points, and craft tailored solutions.</li> <li>Collaborate with leadership and marketing to refine messaging and sales strategy as we scale.</li> <li>Build and maintain strong relationships with prospects, offering a consultative sales experience.</li> <li>Log activity and maintain accurate records in our CRM (HubSpot).</li> <li>Stay on top of market trends and competitive landscape to inform your sales approach.</li> <li>Provide structured feedback to leadership to help shape product, process, and messaging.</li> </ul> <h1>🚀 What excites you<strong>...</strong>\n' +
+    '</h1> <ul> <li>The chance to build something from scratch—and leave your mark on a new sales organization.</li> <li>Having a direct line to leadership and being part of a small but mighty team that values your input.</li> <li>The challenge of selling a product that’s simple, high-impact, and uniquely positioned in the market.</li> <li>Fast-paced, dynamic environments where every win counts—and where you get to experiment and learn.</li> </ul> <h1>🏆 <strong>You are...</strong>\n' +
+    `</h1> <ul> <li>3+ years of experience in B2B sales, preferably with a track record of full-cycle success.</li> <li>Proven ability to hunt for new business and manage a high volume of outreach.</li> <li>Strong communicator who can build trust and rapport with decision makers across industries.</li> <li>Naturally curious and always looking for ways to improve your pitch and your results.</li> <li>Comfortable working independently and thriving in a remote, fast-paced environment.</li> <li>Excited by the challenges (and rewards) of an early-stage team where processes are evolving.</li> <li>Prior experience selling to small businesses, franchise owners, or multi-location businesses (nice-to-have).</li> <li>Familiarity with phone service or telecom (bonus but not required).</li> </ul> <h1>💙 Community Phone Culture</h1> <p>Community Phone has a customer-obsessed culture. We are looking for team members who love our product and mission. </p> <p>Beyond the job description, here are some traits members of our team share:</p> <p>We value <strong>Curiosity</strong> and learning in our employees. We promote open-mindedness, embrace mistakes, and encourage challenging questions for personal growth. We create a culture of continuous learning to empower our team to tackle challenges and excel in their roles.</p> <p><strong>Efficiency Where it Counts</strong>. We operate lean, optimizing resources to improve our products and deliver a world-class customer experience. We prioritize value over excess, embodying a scrappy and resourceful spirit to achieve our mission and values</p> <p>We prioritize taking decisive action over deliberation, recognizing that building a world-class product requires pushing personal limits and taking risks. We believe that a <strong>Bias Toward Action</strong> is essential for achieving our goals and delivering exceptional results to our customers.</p> <p>We strive for <strong>Transparency</strong> and prioritize open, Direct communication. This helps us resolve issues quickly and build strong relationships with our stakeholders.</p> <p>We take our work seriously and see it as a reflection of who we are. We're always looking for ways to improve and are open to feedback. We approach our work with a sense of ownership and a desire to deliver the best possible results. By embodying a <strong>Founder Mindset</strong>, we're able to achieve our goals and create exceptional products.</p> <p>We value a <strong>Caring Mentality</strong>. Our customers come first, and we collaborate to provide exceptional service. We prioritize teamwork over personal accolades, fostering a customer-focused culture that drives our success and promotes a supportive work environment.</p> <h1>💸 Compensation</h1> <p>Our compensation for this position includes a base annual salary of $14,400 USD (paid biweekly) + uncapped commissions.</p> <p><strong>To apply:</strong> <a href="https://weworkremotely.com/remote-jobs/community-phone-account-executive-b2b">https://weworkremotely.com/remote-jobs/community-phone-account-executive-b2b</a></p>`,
+  descriptionText: "Headquarters: Boston URL: https://communityphone.org 🌟 About the role Your Mission Identify and pursue new business opportunities across small business . Manage the full sales cycle. Success here requires someone who’s genuinely curious about customers’ businesses and challenges, eager to dig deep, uncover pain points, and craft tailored solutions. Collaborate with leadership and marketing to refine messaging and sales strategy as we scale. Build and maintain strong relationships with prospects, offering a consultative sales experience. Log activity and maintain accurate records in our CRM (HubSpot). Stay on top of market trends and competitive landscape to inform your sales approach. Provide structured feedback to leadership to help shape product, process, and messaging. 🚀 What excites you ... The chance to build something from scratch—and leave your mark on a new sales organization. Having a direct line to leadership and being part of a small but mighty team that values your input. The challenge of selling a product that’s simple, high-impact, and uniquely positioned in the market. Fast-paced, dynamic environments where every win counts—and where you get to experiment and learn. 🏆 You are... 3+ years of experience in B2B sales, preferably with a track record of full-cycle success. Proven ability to hunt for new business and manage a high volume of outreach. Strong communicator who can build trust and rapport with decision makers across industries. Naturally curious and always looking for ways to improve your pitch and your results. Comfortable working independently and thriving in a remote, fast-paced environment. Excited by the challenges (and rewards) of an early-stage team where processes are evolving. Prior experience selling to small businesses, franchise owners, or multi-location businesses (nice-to-have). Familiarity with phone service or telecom (bonus but not required). 💙 Community Phone Culture Community Phone has a customer-obsessed culture. We are looking for team members who love our product and mission. Beyond the job description, here are some traits members of our team share: We value Curiosity and learning in our employees. We promote open-mindedness, embrace mistakes, and encourage challenging questions for personal growth. We create a culture of continuous learning to empower our team to tackle challenges and excel in their roles. Efficiency Where it Counts . We operate lean, optimizing resources to improve our products and deliver a world-class customer experience. We prioritize value over excess, embodying a scrappy and resourceful spirit to achieve our mission and values We prioritize taking decisive action over deliberation, recognizing that building a world-class product requires pushing personal limits and taking risks. We believe that a Bias Toward Action is essential for achieving our goals and delivering exceptional results to our customers. We strive for Transparency and prioritize open, Direct communication. This helps us resolve issues quickly and build strong relationships with our stakeholders. We take our work seriously and see it as a reflection of who we are. We're always looking for ways to improve and are open to feedback. We approach our work with a sense of ownership and a desire to deliver the best possible results. By embodying a Founder Mindset , we're able to achieve our goals and create exceptional products. We value a Caring Mentality . Our customers come first, and we collaborate to provide exceptional service. We prioritize teamwork over personal accolades, fostering a customer-focused culture that drives our success and promotes a supportive work environment. 💸 Compensation Our compensation for this position includes a base annual salary of $14,400 USD (paid biweekly) + uncapped commissions. To apply: https://weworkremotely.com/remote-jobs/community-phone-account-executive-b2b",
+  expiresAt: ISODate('2025-06-11T23:48:30.744Z'),
+  featured: true,
+  location: 'Remote',
+  postedDate: ISODate('2025-05-12T19:12:43.000Z'),
+  qualityScore: 8,
+  scrapedDate: ISODate('2025-05-12T23:48:30.744Z'),
+  source: 'WeWorkRemotelyRss',
+  tags: [],
+  title: 'Community Phone: Account Executive, B2B',
+  updatedAt: ISODate('2025-05-12T23:48:30.744Z'),
+  url: 'https://weworkremotely.com/remote-jobs/community-phone-account-executive-b2b'
+}
+
+Random Sample (up to 3 documents) from remote-jobs.jobs:
+{
+  _id: ObjectId('682284efc96fdbc710342e5f'),
+  uniqueIdentifier: "unknown company-contentjet inc.: we're hiring: account manager (remote, full-time)",
+  __v: 0,
+  company: 'Unknown Company',
+  createdAt: ISODate('2025-05-12T23:31:59.602Z'),
+  credibilityScore: 9,
+  description: '<img src="https://we-work-remotely.imgix.net/logos/0170/9132/logo.gif?ixlib=rails-4.0.0&w=50&h=50&dpr=2&fit=fill&auto=compress" /> <p> <strong>Headquarters:</strong> Montreal, Canada <br /><strong>URL:</strong> <a href="https://www.contentjet.com">https://www.contentjet.com</a>\n' +
+    '</p> <p class="p1">Are you a detail-obsessed communicator who thrives in fast-paced creative environments? Do you love working with creators, clients, and campaigns that move fast and perform even faster? Then you might be the next star Account Manager to join ContentJet—a global UGC powerhouse.</p> <p class="p1"><strong>About Us:</strong></p> <p class="p1">ContentJet is a performance-driven UGC production company with team members in over 14 countries. We work with top mobile apps, e-commerce brands, and tech startups to produce scroll-stopping content that performs. From creator-led videos to AI-powered ads, we bring together creativity and speed to help brands scale their paid media with confidence.</p> <p class="p1"><strong>What You’ll Do:</strong></p> <p class="p1">As our Account Manager, you’ll be the bridge between our clients and our internal creative team. You’ll manage relationships, lead onboarding and feedback calls, ensure client needs are met, and keep everything running smoothly from script to final video delivery. This is a client-facing role that requires exceptional communication, organization, and people skills.</p> <p class="p1"><strong>You will:</strong></p> <ul> <li class="p1">Own the client relationship: from onboarding to delivery, you’re the go-to</li> <li class="p1">Host video calls like a pro—getting briefs, presenting updates, solving problems</li> <li class="p1">Manage projects across multiple teams (Creative Directors, editors, strategists, and more)</li> <li class="p1">Keep everything running on time and in scope</li> <li class="p1">Translate feedback into clear action steps</li> <li class="p1">Spot upsell opportunities and help accounts grow</li> <li class="p1">Be a champion of performance and quality across every touchpoint</li> </ul> <p class="p1"><strong>Who You Are:</strong></p> <ul> <li class="p1">You’ve worked at a creative or marketing agency</li> <li class="p1">You’ve got experience with UGC, influencers, or social content</li> <li class="p1">You’re fluent in English, both written and spoken (Spanish = big bonus)</li> <li class="p1">You’re amazing on video calls and with written communication</li> <li class="p1">You’re organized and detail-driven</li> <li class="p1">You can manage multiple clients and priorities like a pro</li> <li class="p1">You have a can-do, solution-first mindset</li> </ul> <p class="p1"><strong>Perks + Career Growth:</strong></p> <ul> <li class="p1">Base Salary: 10,000-15,000 USD per Year</li> <li class="p1">Bonuses: Add 10–20% to your salary based on performance</li> <li class="p1">Career path: Our best AMs have 3x’d their salary by growing into leadership roles</li> <li class="p1">Remote work: Join a global team from wherever you are</li> <li class="p1">Ownership: Work directly with big-name clients and make real impact</li> <li class="p1">Creative exposure: Be part of cutting-edge UGC, AI videos, and performance-driven campaigns</li> <li class="p1">Culture: High-trust, high-speed, zero-drama environment where ideas move fast=</li> </ul> <p class="p1"><strong>Ready to join ContentJet?</strong></p> <p class="p1">Send your resume, and tell us why you’d crush this role. If you’ve worked on content, creator campaigns, or managed clients—show us!</p> <p><strong>To apply:</strong> <a href="https://weworkremotely.com/remote-jobs/contentjet-inc-we-re-hiring-account-manager-remote-full-time">https://weworkremotely.com/remote-jobs/contentjet-inc-we-re-hiring-account-manager-remote-full-time</a></p>',
+  descriptionText: 'Headquarters: Montreal, Canada URL: https://www.contentjet.com Are you a detail-obsessed communicator who thrives in fast-paced creative environments? Do you love working with creators, clients, and campaigns that move fast and perform even faster? Then you might be the next star Account Manager to join ContentJet—a global UGC powerhouse. About Us: ContentJet is a performance-driven UGC production company with team members in over 14 countries. We work with top mobile apps, e-commerce brands, and tech startups to produce scroll-stopping content that performs. From creator-led videos to AI-powered ads, we bring together creativity and speed to help brands scale their paid media with confidence. What You’ll Do: As our Account Manager, you’ll be the bridge between our clients and our internal creative team. You’ll manage relationships, lead onboarding and feedback calls, ensure client needs are met, and keep everything running smoothly from script to final video delivery. This is a client-facing role that requires exceptional communication, organization, and people skills. You will: Own the client relationship: from onboarding to delivery, you’re the go-to Host video calls like a pro—getting briefs, presenting updates, solving problems Manage projects across multiple teams (Creative Directors, editors, strategists, and more) Keep everything running on time and in scope Translate feedback into clear action steps Spot upsell opportunities and help accounts grow Be a champion of performance and quality across every touchpoint Who You Are: You’ve worked at a creative or marketing agency You’ve got experience with UGC, influencers, or social content You’re fluent in English, both written and spoken (Spanish = big bonus) You’re amazing on video calls and with written communication You’re organized and detail-driven You can manage multiple clients and priorities like a pro You have a can-do, solution-first mindset Perks + Career Growth: Base Salary: 10,000-15,000 USD per Year Bonuses: Add 10–20% to your salary based on performance Career path: Our best AMs have 3x’d their salary by growing into leadership roles Remote work: Join a global team from wherever you are Ownership: Work directly with big-name clients and make real impact Creative exposure: Be part of cutting-edge UGC, AI videos, and performance-driven campaigns Culture: High-trust, high-speed, zero-drama environment where ideas move fast= Ready to join ContentJet? Send your resume, and tell us why you’d crush this role. If you’ve worked on content, creator campaigns, or managed clients—show us! To apply: https://weworkremotely.com/remote-jobs/contentjet-inc-we-re-hiring-account-manager-remote-full-time',
+  expiresAt: ISODate('2025-06-11T23:48:30.744Z'),
+  featured: true,
+  location: 'Remote',
+  postedDate: ISODate('2025-05-02T10:20:00.000Z'),
+  qualityScore: 8,
+  scrapedDate: ISODate('2025-05-12T23:48:30.744Z'),
+  source: 'WeWorkRemotelyRss',
+  tags: [],
+  title: "ContentJet Inc.: We're Hiring: Account Manager (Remote, Full-Time)",
+  updatedAt: ISODate('2025-05-12T23:48:30.744Z'),
+  url: 'https://weworkremotely.com/remote-jobs/contentjet-inc-we-re-hiring-account-manager-remote-full-time'
+}
+{
+  _id: ObjectId('682284efc96fdbc710342e5e'),
+  uniqueIdentifier: 'unknown company-animalz: senior content marketer',
+  __v: 0,
+  company: 'Unknown Company',
+  createdAt: ISODate('2025-05-12T23:31:59.602Z'),
+  credibilityScore: 9,
+  description: '<img src="https://we-work-remotely.imgix.net/logos/0017/3233/logo.gif?ixlib=rails-4.0.0&w=50&h=50&dpr=2&fit=fill&auto=compress" /> <p> <strong>Headquarters:</strong> San Diego, California <br /><strong>URL:</strong> <a href="https://animalz.co">https://animalz.co</a>\n' +
+    `</p> <p>As a Senior Content Marketer at Animalz, you'll take ownership of executing and maintaining content strategies for a portfolio of high-growth B2B technology customers. You'll be responsible for producing compelling, audience-focused content that drives measurable business outcomes.</p> <p>This isn't just a writing role. You'll oversee content pipelines, assign work to freelancers, collaborate with design, and act as a trusted partner to customers. You'll work closely with the Heads of Content to translate strategy into action and work with editors and subject matter experts to ensure everything you ship is thoughtful, useful, and aligned with business outcomes.</p> <h2>What You'll Do</h2> <ul> <li> <p>Execute and maintain content strategies developed by Heads of Content, adapting them to evolving customer needs and feedback </p> </li> <li> <p>Create high-performing content—blogs, guides, landing pages, email nurtures, and more—that aligns with SEO best practices and customer intent </p> </li> <li> <p>Assign and manage freelance writers, ensuring timely, high-quality delivery for the accounts and strategies you support </p> </li> <li> <p>Collaborate with design to create graphics for various deliverables (create design briefs, explain concepts, etc)…</p> </li> <li> <p>Audit, refresh, and optimize existing content to improve performance across search, conversion, and engagement metrics </p> </li> <li> <p>Manage content calendars and delivery pipelines, balancing quality with high-volume output </p> </li> <li> <p>Create monthly performance reports for the customers you manage, communicate key results and insights, and ensure content is aligned with customer goals and target outcomes.</p> </li> <li> <p>Participate in knowledge-sharing within the team, contributing expertise while learning from others in a collaborative environment</p> </li> <li> <p>Contribute to internal initiatives, from researching and piloting new service offerings to improving AI-assisted content workflows </p> </li> </ul> <h2>Core Competencies</h2> <ul> <li> <p><strong>Strategic Execution:</strong> You can translate an established strategy into consistent, high-quality execution, adjusting tactics based on results and feedback</p> </li> <li> <p><strong>Editorial Judgment:</strong> You understand how to craft effective B2B content across formats, funnel stages, and buyer personas—and you help others do the same</p> </li> <li> <p><strong>Customer Empathy:</strong> You communicate clearly, manage expectations, and build trust with customers through insight and transparency</p> </li> <li> <p><strong>Technical Curiosity:</strong> You have a strong grasp of technology and software team dynamics, and a genuine interest in learning how complex products work so you can explain them clearly and persuasively.</p> </li> <li> <p><strong>Executional Excellence: </strong>You reliably deliver quality content on time—even when managing multiple accounts, content types, and contributors</p> </li> <li> <p><strong>AI Fluency:</strong> You know how to use AI tools to support content workflows responsibly and efficiently, and stay current on emerging best practices</p> </li> <li> <p><strong>Analytical Thinking: </strong>You know how to assess content performance using tools like Google Analytics, Google Search Console, and Ahrefs, and how to iterate for better results</p> </li> <li> <p><strong>Freelancer Management &amp; Feedback Loop:</strong> You assign work to freelancers, communicate customer feedback effectively, and ensure deliverables meet account standards while collaborating with editors throughout the process</p> </li> <li> <p><strong>Adaptability:</strong> You're comfortable navigating ambiguity, trying new tools or formats, and adjusting your approach when priorities shift</p> </li> <li> <p><strong>Value-Driven Thinking:</strong> You optimize for long-term impact over short-term wins, and focus on solving for our customers’ customers</p> </li> <li> <p><strong>Growth Mindset: </strong>You invest in your own development and actively bring back insights that elevate the team's thinking and output</p> </li> </ul> <h2>What We're Looking For</h2> <ul> <li> <p>4–6 years of experience in content marketing, preferably in a B2B SaaS or agency setting </p> </li> <li> <p>Proven ability to execute content strategies that support business goals—traffic, conversions, engagement, or retention </p> </li> <li> <p>Strong customer management skills, including the ability to communicate proactively, manage feedback loops, and build trust across multiple accounts </p> </li> <li> <p>Exceptional writing and editing skills, with a strong grasp of SEO and narrative clarity </p> </li> <li> <p>Experience assigning work to and managing freelance writers in a fast-paced editorial environment </p> </li> <li> <p>Familiarity with AI tools (e.g., ChatGPT, Perplexity, Claude) and the ability to use them to enhance—not replace—human editorial quality </p> </li> <li> <p>Strong command of content tools and analytics platforms (e.g., Google Analytics, Ahrefs, HubSpot, Clearscope) </p> </li> <li> <p>Experience collaborating with other content professionals and helping refine internal processes </p> </li> <li> <p>Excellent communication, organization, and remote collaboration skills </p> </li> <li> <p>Curiosity and a commitment to continuous learning in the evolving world of content and content strategy </p> </li> </ul> <h2>Our Values</h2> <p>At Animalz, our values guide how we show up for our customers, our teammates, and the content we create. We’re looking for team members who embody these principles and want to grow within them.</p> <ul> <li> <p><strong>Value Over Vanity:</strong> We measure our success in customer impact, not surface-level praise. We focus on content that drives sustainable, long-term results by understanding and serving our customers’ customers.</p> </li> <li> <p><strong>Two Steps Ahead:</strong> Great work anticipates needs before they arise. We’re proactive and strategic, always looking for ways to solve problems before they become blockers.</p> </li> <li> <p><strong>Power Source; Not Power Trip:</strong> We lead through service, not authority. We energize our teammates and customers, convert obstacles into momentum, and focus on elevating others.</p> </li> <li> <p><strong>Pursue Mastery: </strong>We believe great work comes from deliberate practice, open collaboration, and constant curiosity. We’re always learning, evolving, and testing new approaches.</p> </li> <li> <p><strong>Left Brain, Right Brain, Robot Brain: </strong>Our best work blends creativity, analysis, and smart use of technology—including AI—to drive meaningful outcomes without sacrificing humanity or voice.</p> </li> <li> <p><strong>In the Arena: </strong>We’re not spectators. We experiment boldly, contribute to thought leadership, and stay immersed in our customers’ industries so we can lead from experience, not theory.</p> </li> </ul> <h2>Your First 90 Days</h2> <p><strong>Days 1-30: Learn &amp; Integrate</strong></p> <ul> <li> <p>Complete onboarding and master our tools and processes</p> </li> <li> <p>Deep dive into your assigned customer accounts</p> </li> <li> <p>Create your first content deliverables with guidance</p> </li> <li> <p>Build relationships with your team and customers</p> </li> </ul> <p><strong>Days 31-60: Execute &amp; Own</strong></p> <ul> <li> <p>Take ownership of 1-2 customer accounts</p> </li> <li> <p>Start managing freelance writers and content calendars</p> </li> <li> <p>Present your first performance reports to customers</p> </li> <li> <p>Contribute to team meetings and internal initiatives</p> </li> </ul> <p><strong>Days 61-90: Drive Impact</strong></p> <ul> <li> <p>Own content execution for 3-4 customer accounts</p> </li> <li> <p>Lead strategy refinements based on data</p> </li> <li> <p>Share your expertise and improve our processes</p> </li> <li> <p>Demonstrate measurable improvements in content performance for your customers</p> </li> </ul> <h2>Working Arrangements</h2> <p><strong>Location</strong>: Fully remote, anywhere in the world </p> <p><strong>Timezone Requirements: </strong>We ask for at least 4 hours of overlap with US timezones (EST/PST) to collaborate effectively with our team and customers</p> <h2>Compensation &amp; Benefits</h2> <p><strong>Salary Range:</strong> $70,000 - $85,000 USD annually</p> <p>This role offers competitive compensation with placement within the range based on experience, skills, and demonstrated impact in previous content marketing roles.</p> <ul> <li> <p>Health &amp; vision insurance (or wellness stipend for non-US team members)</p> </li> <li> <p>401(k) retirement plan (US only)</p> </li> <li> <p>Unlimited PTO policy</p> </li> <li> <p>Flexible working schedule</p> </li> <li> <p>Team lunch stipends</p> </li> </ul> <h2>Diversity, Equity &amp; Inclusion</h2> <p>At Animalz, we believe diverse perspectives make us stronger. We're committed to building an inclusive workplace where people of all backgrounds, experiences, and identities can thrive. We particularly encourage applications from historically underrepresented groups in tech and marketing, including people of color, women, LGBTQ+ individuals, people with disabilities, and those from varied socioeconomic backgrounds.</p> <h2>Equal Opportunity</h2> <p>Animalz is an equal opportunity employer. We do not discriminate based on race, religion, color, national origin, sex, sexual orientation, gender identity, age, status as a protected veteran, status as an individual with a disability, or other applicable legally protected characteristics.</p> <p> </p> <p>We’re excited to meet you!</p> <p> </p> <p><strong>To apply:</strong> <a href="https://weworkremotely.com/remote-jobs/animalz-senior-content-marketer-2">https://weworkremotely.com/remote-jobs/animalz-senior-content-marketer-2</a></p>`,
+  descriptionText: "Headquarters: San Diego, California URL: https://animalz.co As a Senior Content Marketer at Animalz, you'll take ownership of executing and maintaining content strategies for a portfolio of high-growth B2B technology customers. You'll be responsible for producing compelling, audience-focused content that drives measurable business outcomes. This isn't just a writing role. You'll oversee content pipelines, assign work to freelancers, collaborate with design, and act as a trusted partner to customers. You'll work closely with the Heads of Content to translate strategy into action and work with editors and subject matter experts to ensure everything you ship is thoughtful, useful, and aligned with business outcomes. What You'll Do Execute and maintain content strategies developed by Heads of Content, adapting them to evolving customer needs and feedback Create high-performing content—blogs, guides, landing pages, email nurtures, and more—that aligns with SEO best practices and customer intent Assign and manage freelance writers, ensuring timely, high-quality delivery for the accounts and strategies you support Collaborate with design to create graphics for various deliverables (create design briefs, explain concepts, etc)… Audit, refresh, and optimize existing content to improve performance across search, conversion, and engagement metrics Manage content calendars and delivery pipelines, balancing quality with high-volume output Create monthly performance reports for the customers you manage, communicate key results and insights, and ensure content is aligned with customer goals and target outcomes. Participate in knowledge-sharing within the team, contributing expertise while learning from others in a collaborative environment Contribute to internal initiatives, from researching and piloting new service offerings to improving AI-assisted content workflows Core Competencies Strategic Execution: You can translate an established strategy into consistent, high-quality execution, adjusting tactics based on results and feedback Editorial Judgment: You understand how to craft effective B2B content across formats, funnel stages, and buyer personas—and you help others do the same Customer Empathy: You communicate clearly, manage expectations, and build trust with customers through insight and transparency Technical Curiosity: You have a strong grasp of technology and software team dynamics, and a genuine interest in learning how complex products work so you can explain them clearly and persuasively. Executional Excellence: You reliably deliver quality content on time—even when managing multiple accounts, content types, and contributors AI Fluency: You know how to use AI tools to support content workflows responsibly and efficiently, and stay current on emerging best practices Analytical Thinking: You know how to assess content performance using tools like Google Analytics, Google Search Console, and Ahrefs, and how to iterate for better results Freelancer Management &amp; Feedback Loop: You assign work to freelancers, communicate customer feedback effectively, and ensure deliverables meet account standards while collaborating with editors throughout the process Adaptability: You're comfortable navigating ambiguity, trying new tools or formats, and adjusting your approach when priorities shift Value-Driven Thinking: You optimize for long-term impact over short-term wins, and focus on solving for our customers’ customers Growth Mindset: You invest in your own development and actively bring back insights that elevate the team's thinking and output What We're Looking For 4–6 years of experience in content marketing, preferably in a B2B SaaS or agency setting Proven ability to execute content strategies that support business goals—traffic, conversions, engagement, or retention Strong customer management skills, including the ability to communicate proactively, manage feedback loops, and build trust across multiple accounts Exceptional writing and editing skills, with a strong grasp of SEO and narrative clarity Experience assigning work to and managing freelance writers in a fast-paced editorial environment Familiarity with AI tools (e.g., ChatGPT, Perplexity, Claude) and the ability to use them to enhance—not replace—human editorial quality Strong command of content tools and analytics platforms (e.g., Google Analytics, Ahrefs, HubSpot, Clearscope) Experience collaborating with other content professionals and helping refine internal processes Excellent communication, organization, and remote collaboration skills Curiosity and a commitment to continuous learning in the evolving world of content and content strategy Our Values At Animalz, our values guide how we show up for our customers, our teammates, and the content we create. We’re looking for team members who embody these principles and want to grow within them. Value Over Vanity: We measure our success in customer impact, not surface-level praise. We focus on content that drives sustainable, long-term results by understanding and serving our customers’ customers. Two Steps Ahead: Great work anticipates needs before they arise. We’re proactive and strategic, always looking for ways to solve problems before they become blockers. Power Source; Not Power Trip: We lead through service, not authority. We energize our teammates and customers, convert obstacles into momentum, and focus on elevating others. Pursue Mastery: We believe great work comes from deliberate practice, open collaboration, and constant curiosity. We’re always learning, evolving, and testing new approaches. Left Brain, Right Brain, Robot Brain: Our best work blends creativity, analysis, and smart use of technology—including AI—to drive meaningful outcomes without sacrificing humanity or voice. In the Arena: We’re not spectators. We experiment boldly, contribute to thought leadership, and stay immersed in our customers’ industries so we can lead from experience, not theory. Your First 90 Days Days 1-30: Learn &amp; Integrate Complete onboarding and master our tools and processes Deep dive into your assigned customer accounts Create your first content deliverables with guidance Build relationships with your team and customers Days 31-60: Execute &amp; Own Take ownership of 1-2 customer accounts Start managing freelance writers and content calendars Present your first performance reports to customers Contribute to team meetings and internal initiatives Days 61-90: Drive Impact Own content execution for 3-4 customer accounts Lead strategy refinements based on data Share your expertise and improve our processes Demonstrate measurable improvements in content performance for your customers Working Arrangements Location : Fully remote, anywhere in the world Timezone Requirements: We ask for at least 4 hours of overlap with US timezones (EST/PST) to collaborate effectively with our team and customers Compensation &amp; Benefits Salary Range: $70,000 - $85,000 USD annually This role offers competitive compensation with placement within the range based on experience, skills, and demonstrated impact in previous content marketing roles. Health &amp; vision insurance (or wellness stipend for non-US team members) 401(k) retirement plan (US only) Unlimited PTO policy Flexible working schedule Team lunch stipends Diversity, Equity &amp; Inclusion At Animalz, we believe diverse perspectives make us stronger. We're committed to building an inclusive workplace where people of all backgrounds, experiences, and identities can thrive. We particularly encourage applications from historically underrepresented groups in tech and marketing, including people of color, women, LGBTQ+ individuals, people with disabilities, and those from varied socioeconomic backgrounds. Equal Opportunity Animalz is an equal opportunity employer. We do not discriminate based on race, religion, color, national origin, sex, sexual orientation, gender identity, age, status as a protected veteran, status as an individual with a disability, or other applicable legally protected characteristics. We’re excited to meet you! To apply: https://weworkremotely.com/remote-jobs/animalz-senior-content-marketer-2",
+  expiresAt: ISODate('2025-06-11T23:48:30.744Z'),
+  featured: true,
+  location: 'Remote',
+  postedDate: ISODate('2025-05-09T12:43:07.000Z'),
+  qualityScore: 8,
+  scrapedDate: ISODate('2025-05-12T23:48:30.744Z'),
+  source: 'WeWorkRemotelyRss',
+  tags: [],
+  title: 'Animalz: Senior Content Marketer',
+  updatedAt: ISODate('2025-05-12T23:48:30.744Z'),
+  url: 'https://weworkremotely.com/remote-jobs/animalz-senior-content-marketer-2'
+}
+{
+  _id: ObjectId('682284efc96fdbc710342e60'),
+  uniqueIdentifier: 'unknown company-proxify ab: senior shopify developer',
+  __v: 0,
+  company: 'Unknown Company',
+  createdAt: ISODate('2025-05-12T23:31:59.602Z'),
+  credibilityScore: 9,
+  description: '<p> <strong>Headquarters:</strong> Sweden <br /><strong>URL:</strong> <a href="http://career.proxify.io">http://career.proxify.io</a>\n' +
+    '</p> <div><strong>The Role:<br></strong></div> <div> </div> <div>We are looking for a Senior Shopify Developer for one of our clients. You are a perfect candidate if you are growth-oriented, you love what you do, and you enjoy working on new ideas to develop exciting products and growth features. <br><br>\n' +
+    "</div> <div> </div> <div><strong>What we are looking for:</strong></div> <div> </div> <ul> <li>Broad shop construction, launch, and maintenance expertise, as well as a general understanding of the admin system.</li> <li>Proven skills in HTML5, CSS3, and JavaScript, as well as a thorough grasp of the DOM.</li> <li>Previous experience working with a custom theme and/or the Storefront API.</li> <li>Working knowledge of Shopify's theming system and Liquid templating.</li> <li>Previous experience implementing/debugging third-party Shopify apps, as well as building unique solutions if needed.</li> <li>In-depth knowledge and expertise with Vanilla.JS, jQuery, ES2015/ES6, and current JavaScript frameworks.</li> <li>Working knowledge of Shopify's object/properties, AJAX API, and Meta fields.</li> <li>Extensive testing and debugging abilities using the browser console and other tools.</li> <li>Prior experience developing responsive layouts for desktop, tablet, and mobile devices.</li> <li>Working knowledge of the third-party services and APIs, as well as Shopify Apps.</li> <li>Ability to communicate effectively and provide proactive feedback.</li> </ul> <div>\n" +
+    '<strong><br>Nice-to-have:</strong> <br><br>\n' +
+    `</div> <ul> <li>Time zone: CET (+/- 3 hours).</li> <li>Knowledge of TypeScript.</li> </ul> <div><strong><br>Responsibilities:<br></strong></div> <ul> <li>Create an engaging and knowledgeable online Shopify store to increase sales and revenue.</li> <li>Create bespoke Shopify themes and change pre-existing templates per predefined brand guidelines.</li> <li>Be an expert in all aspects of the e-commerce platform.</li> <li>Work with the UX and UI Design Teams to create unique, strong, and inventive frontend user experiences.</li> <li>Ensure a smooth connection with Marketing Tools, Platform APIs, and Shopify Apps to optimize the shop for overall efficiency and functionality.</li> <li>Test and debug websites regularly to improve performance.</li> <li>Provide technical support and coordination, protecting enterprises against failure.</li> <li>Increase conversion rates by optimizing your website.</li> </ul> <div> </div> <div> </div> <div> </div> <div><strong>What we offer:</strong></div> <div> </div> <div><strong>Get paid, not played</strong></div> <div>No more unreliable clients. Enjoy on-time monthly payments with flexible withdrawal options.</div> <div> </div> <div><strong>Predictable project hours</strong></div> <div>Enjoy a harmonious work-life balance with consistent 8-hour working days with clients.</div> <div> </div> <div><strong>Flex days, so you can recharge</strong></div> <div>Enjoy up to 24 flex days off per year without losing pay, for full-time positions found through Proxify.</div> <div> </div> <div><strong>Career-accelerating positions at cutting-edge companies</strong></div> <div>Discover exclusive long-term remote positions at the world's most exciting companies.</div> <div> </div> <div><strong>Hand-picked opportunities, just for you</strong></div> <div>Skip the typical recruitment roadblocks and biases with personally matched positions.</div> <div> </div> <div><strong>One seamless process, multiple opportunities</strong></div> <div>A one-time contracting process for endless opportunities, with no extra assessments.</div> <div> </div> <div><strong>Compensation</strong></div> <div>Enjoy the same pay, every month with positions landed through Proxify.</div> <p><strong>To apply:</strong> <a href="https://weworkremotely.com/remote-jobs/proxify-ab-senior-shopify-developer-2">https://weworkremotely.com/remote-jobs/proxify-ab-senior-shopify-developer-2</a></p>`,
+  descriptionText: "Headquarters: Sweden URL: http://career.proxify.io The Role: We are looking for a Senior Shopify Developer for one of our clients. You are a perfect candidate if you are growth-oriented, you love what you do, and you enjoy working on new ideas to develop exciting products and growth features. What we are looking for: Broad shop construction, launch, and maintenance expertise, as well as a general understanding of the admin system. Proven skills in HTML5, CSS3, and JavaScript, as well as a thorough grasp of the DOM. Previous experience working with a custom theme and/or the Storefront API. Working knowledge of Shopify's theming system and Liquid templating. Previous experience implementing/debugging third-party Shopify apps, as well as building unique solutions if needed. In-depth knowledge and expertise with Vanilla.JS, jQuery, ES2015/ES6, and current JavaScript frameworks. Working knowledge of Shopify's object/properties, AJAX API, and Meta fields. Extensive testing and debugging abilities using the browser console and other tools. Prior experience developing responsive layouts for desktop, tablet, and mobile devices. Working knowledge of the third-party services and APIs, as well as Shopify Apps. Ability to communicate effectively and provide proactive feedback. Nice-to-have: Time zone: CET (+/- 3 hours). Knowledge of TypeScript. Responsibilities: Create an engaging and knowledgeable online Shopify store to increase sales and revenue. Create bespoke Shopify themes and change pre-existing templates per predefined brand guidelines. Be an expert in all aspects of the e-commerce platform. Work with the UX and UI Design Teams to create unique, strong, and inventive frontend user experiences. Ensure a smooth connection with Marketing Tools, Platform APIs, and Shopify Apps to optimize the shop for overall efficiency and functionality. Test and debug websites regularly to improve performance. Provide technical support and coordination, protecting enterprises against failure. Increase conversion rates by optimizing your website. What we offer: Get paid, not played No more unreliable clients. Enjoy on-time monthly payments with flexible withdrawal options. Predictable project hours Enjoy a harmonious work-life balance with consistent 8-hour working days with clients. Flex days, so you can recharge Enjoy up to 24 flex days off per year without losing pay, for full-time positions found through Proxify. Career-accelerating positions at cutting-edge companies Discover exclusive long-term remote positions at the world's most exciting companies. Hand-picked opportunities, just for you Skip the typical recruitment roadblocks and biases with personally matched positions. One seamless process, multiple opportunities A one-time contracting process for endless opportunities, with no extra assessments. Compensation Enjoy the same pay, every month with positions landed through Proxify. To apply: https://weworkremotely.com/remote-jobs/proxify-ab-senior-shopify-developer-2",
+  expiresAt: ISODate('2025-06-11T23:48:30.744Z'),
+  featured: true,
+  location: 'Remote',
+  postedDate: ISODate('2025-05-09T18:17:57.000Z'),
+  qualityScore: 8,
+  scrapedDate: ISODate('2025-05-12T23:48:30.744Z'),
+  source: 'WeWorkRemotelyRss',
+  tags: [],
+  title: 'Proxify AB: Senior Shopify Developer',
+  updatedAt: ISODate('2025-05-12T23:48:30.744Z'),
+  url: 'https://weworkremotely.com/remote-jobs/proxify-ab-senior-shopify-developer-2'
+}
+
+Field Distribution for remote-jobs.jobs:
+{
+  field: '_id',
+  count: 4,
+  types: [
+    'object',
+    'objectId'
+  ]
+}
+{
+  field: 'uniqueIdentifier',
+  count: 4,
+  types: [
+    'string'
+  ]
+}
+{
+  field: '__v',
+  count: 4,
+  types: [
+    'number'
+  ]
+}
+{
+  field: 'company',
+  count: 4,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'createdAt',
+  count: 4,
+  types: [
+    'object',
+    'date'
+  ]
+}
+{
+  field: 'credibilityScore',
+  count: 4,
+  types: [
+    'number'
+  ]
+}
+{
+  field: 'description',
+  count: 4,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'descriptionText',
+  count: 4,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'expiresAt',
+  count: 4,
+  types: [
+    'object',
+    'date'
+  ]
+}
+{
+  field: 'featured',
+  count: 4,
+  types: [
+    'boolean'
+  ]
+}
+{
+  field: 'location',
+  count: 4,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'postedDate',
+  count: 4,
+  types: [
+    'object',
+    'date'
+  ]
+}
+{
+  field: 'qualityScore',
+  count: 4,
+  types: [
+    'number'
+  ]
+}
+{
+  field: 'scrapedDate',
+  count: 4,
+  types: [
+    'object',
+    'date'
+  ]
+}
+{
+  field: 'source',
+  count: 4,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'tags',
+  count: 4,
+  types: [
+    'object',
+    'array'
+  ]
+}
+{
+  field: 'title',
+  count: 4,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'updatedAt',
+  count: 4,
+  types: [
+    'object',
+    'date'
+  ]
+}
+{
+  field: 'url',
+  count: 4,
+  types: [
+    'string'
+  ]
+}
+
+=== INDEX ANALYSIS for remote-jobs.jobs ===
+
+Existing Indexes:
+[
+  {
+    v: 2,
+    key: {
+      _id: 1
+    },
+    name: '_id_'
+  },
+  {
+    v: 2,
+    key: {
+      title: 1
+    },
+    name: 'title_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      company: 1
+    },
+    name: 'company_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      url: 1
+    },
+    name: 'url_1',
+    background: true,
+    unique: true
+  },
+  {
+    v: 2,
+    key: {
+      postedDate: 1
+    },
+    name: 'postedDate_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      scrapedDate: 1
+    },
+    name: 'scrapedDate_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      expiresAt: 1
+    },
+    name: 'expiresAt_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      source: 1
+    },
+    name: 'source_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      sourceId: 1
+    },
+    name: 'sourceId_1',
+    background: true,
+    sparse: true
+  },
+  {
+    v: 2,
+    key: {
+      qualityScore: 1
+    },
+    name: 'qualityScore_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      featured: 1
+    },
+    name: 'featured_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      tags: 1
+    },
+    name: 'tags_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      uniqueIdentifier: 1
+    },
+    name: 'uniqueIdentifier_1',
+    background: true,
+    unique: true
+  },
+  {
+    v: 2,
+    key: {
+      company: 1,
+      title: 1,
+      source: 1
+    },
+    name: 'company_1_title_1_source_1',
+    background: true
+  },
+  {
+    v: 2,
+    key: {
+      _fts: 'text',
+      _ftsx: 1
+    },
+    name: 'title_text_company_text_descriptionText_text',
+    background: true,
+    weights: {
+      company: 1,
+      descriptionText: 1,
+      title: 1
+    },
+    default_language: 'english',
+    language_override: 'language',
+    textIndexVersion: 3
+  }
+]
+
+Collection Statistics:
+{
+  ok: 1,
+  capped: false,
+  wiredTiger: {
+    metadata: {
+      formatVersion: 1
+    },
+    creationString: 'access_pattern_hint=none,allocation_size=4KB,app_metadata=(formatVersion=1),assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none,write_timestamp=off),block_allocation=best,block_compressor=snappy,cache_resident=false,checksum=on,colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,import=(compare_timestamp=oldest_timestamp,enabled=false,file_metadata=,metadata_file=,panic_corrupt=true,repair=false),internal_item_max=0,internal_key_max=0,internal_key_truncate=true,internal_page_max=4KB,key_format=q,key_gap=10,leaf_item_max=0,leaf_key_max=0,leaf_page_max=32KB,leaf_value_max=64MB,log=(enabled=false),lsm=(auto_throttle=true,bloom=true,bloom_bit_count=16,bloom_config=,bloom_hash_count=8,bloom_oldest=false,chunk_count_limit=0,chunk_max=5GB,chunk_size=10MB,merge_custom=(prefix=,start_generation=0,suffix=),merge_max=15,merge_min=0),memory_page_image_max=0,memory_page_max=10m,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=90,tiered_storage=(auth_token=,bucket=,bucket_prefix=,cache_directory=,local_retention=300,name=,object_target_size=0),type=file,value_format=u,verbose=[],write_timestamp_usage=none',
+    type: 'file',
+    uri: 'statistics:table:collection-4247-3841899205310721950',
+    LSM: {
+      'bloom filter false positives': 0,
+      'bloom filter hits': 0,
+      'bloom filter misses': 0,
+      'bloom filter pages evicted from cache': 0,
+      'bloom filter pages read into cache': 0,
+      'bloom filters in the LSM tree': 0,
+      'chunks in the LSM tree': 0,
+      'highest merge generation in the LSM tree': 0,
+      'queries that could have benefited from a Bloom filter that did not exist': 0,
+      'sleep for LSM checkpoint throttle': 0,
+      'sleep for LSM merge throttle': 0,
+      'total size of bloom filters': 0
+    },
+    autocommit: {
+      'retries for readonly operations': 0,
+      'retries for update operations': 0
+    },
+    backup: {
+      'total modified incremental blocks with compressed data': 0,
+      'total modified incremental blocks without compressed data': 0
+    },
+    'block-manager': {
+      'allocations requiring file extension': 0,
+      'blocks allocated': 0,
+      'blocks freed': 0,
+      'checkpoint size': 16384,
+      'file allocation unit size': 4096,
+      'file bytes available for reuse': 28672,
+      'file magic number': 120897,
+      'file major version number': 1,
+      'file size in bytes': 61440,
+      'minor version number': 0
+    },
+    btree: {
+      'btree checkpoint generation': 5366,
+      'btree clean tree checkpoint expiration time': Long('9223372036854775807'),
+      'btree compact pages reviewed': 0,
+      'btree compact pages rewritten': 0,
+      'btree compact pages skipped': 0,
+      'btree expected number of compact bytes rewritten': 0,
+      'btree expected number of compact pages rewritten': 0,
+      'btree number of pages reconciled during checkpoint': 0,
+      'btree skipped by compaction as process would not reduce size': 0,
+      'column-store fixed-size leaf pages': 0,
+      'column-store fixed-size time windows': 0,
+      'column-store internal pages': 0,
+      'column-store variable-size RLE encoded values': 0,
+      'column-store variable-size deleted values': 0,
+      'column-store variable-size leaf pages': 0,
+      'fixed-record size': 0,
+      'maximum internal page size': 4096,
+      'maximum leaf page key size': 2867,
+      'maximum leaf page size': 32768,
+      'maximum leaf page value size': 67108864,
+      'maximum tree depth': 0,
+      'number of key/value pairs': 0,
+      'overflow pages': 0,
+      'row-store empty values': 0,
+      'row-store internal pages': 0,
+      'row-store leaf pages': 0
+    },
+    cache: {
+      'bytes currently in the cache': 46782,
+      'bytes dirty in the cache cumulative': 0,
+      'bytes read into cache': 86022,
+      'bytes written from cache': 0,
+      'checkpoint blocked page eviction': 0,
+      'checkpoint of history store file blocked non-history store page eviction': 0,
+      'data source pages selected for eviction unable to be evicted': 0,
+      'eviction gave up due to detecting a disk value without a timestamp behind the last update on the chain': 0,
+      'eviction gave up due to detecting a tombstone without a timestamp ahead of the selected on disk update': 0,
+      'eviction gave up due to detecting a tombstone without a timestamp ahead of the selected on disk update after validating the update chain': 0,
+      'eviction gave up due to detecting update chain entries without timestamps after the selected on disk update': 0,
+      'eviction gave up due to needing to remove a record from the history store but checkpoint is running': 0,
+      'eviction gave up due to no progress being made': 0,
+      'eviction walk passes of a file': 0,
+      'eviction walk target pages histogram - 0-9': 0,
+      'eviction walk target pages histogram - 10-31': 0,
+      'eviction walk target pages histogram - 128 and higher': 0,
+      'eviction walk target pages histogram - 32-63': 0,
+      'eviction walk target pages histogram - 64-128': 0,
+      'eviction walk target pages reduced due to history store cache pressure': 0,
+      'eviction walks abandoned': 0,
+      'eviction walks gave up because they restarted their walk twice': 0,
+      'eviction walks gave up because they saw too many pages and found no candidates': 0,
+      'eviction walks gave up because they saw too many pages and found too few candidates': 0,
+      'eviction walks random search fails to locate a page, results in a null position': 0,
+      'eviction walks reached end of tree': 0,
+      'eviction walks restarted': 0,
+      'eviction walks started from root of tree': 0,
+      'eviction walks started from saved location in tree': 0,
+      'hazard pointer blocked page eviction': 0,
+      'history store table insert calls': 0,
+      'history store table insert calls that returned restart': 0,
+      'history store table reads': 0,
+      'history store table reads missed': 0,
+      'history store table reads requiring squashed modifies': 0,
+      'history store table resolved updates without timestamps that lose their durable timestamp': 0,
+      'history store table truncation by rollback to stable to remove an unstable update': 0,
+      'history store table truncation by rollback to stable to remove an update': 0,
+      'history store table truncation to remove all the keys of a btree': 0,
+      'history store table truncation to remove an update': 0,
+      'history store table truncation to remove range of updates due to an update without a timestamp on data page': 0,
+      'history store table truncation to remove range of updates due to key being removed from the data page during reconciliation': 0,
+      'history store table truncations that would have happened in non-dryrun mode': 0,
+      'history store table truncations to remove an unstable update that would have happened in non-dryrun mode': 0,
+      'history store table truncations to remove an update that would have happened in non-dryrun mode': 0,
+      'history store table updates without timestamps fixed up by reinserting with the fixed timestamp': 0,
+      'history store table writes requiring squashed modifies': 0,
+      'in-memory page passed criteria to be split': 0,
+      'in-memory page splits': 0,
+      'internal page split blocked its eviction': 0,
+      'internal pages evicted': 0,
+      'internal pages split during eviction': 0,
+      'leaf pages split during eviction': 0,
+      'locate a random in-mem ref by examining all entries on the root page': 0,
+      'modified pages evicted': 0,
+      'multi-block reconciliation blocked whilst checkpoint is running': 0,
+      'overflow keys on a multiblock row-store page blocked its eviction': 0,
+      'overflow pages read into cache': 0,
+      'page split during eviction deepened the tree': 0,
+      'page written requiring history store records': 0,
+      'pages dirtied due to obsolete time window by eviction': 0,
+      'pages read into cache': 3,
+      'pages read into cache after truncate': 0,
+      'pages read into cache after truncate in prepare state': 0,
+      'pages read into cache by checkpoint': 0,
+      'pages requested from the cache': 4,
+      'pages requested from the cache due to pre-fetch': 0,
+      'pages seen by eviction walk': 0,
+      'pages written from cache': 0,
+      'pages written requiring in-memory restoration': 0,
+      'recent modification of a page blocked its eviction': 0,
+      'reverse splits performed': 0,
+      'reverse splits skipped because of VLCS namespace gap restrictions': 0,
+      'the number of times full update inserted to history store': 0,
+      'the number of times reverse modify inserted to history store': 0,
+      'tracked dirty bytes in the cache': 0,
+      'tracked dirty internal page bytes in the cache': 0,
+      'tracked dirty leaf page bytes in the cache': 0,
+      'uncommitted truncate blocked page eviction': 0,
+      'unmodified pages evicted': 0
+    },
+    cache_walk: {
+      'Average difference between current eviction generation when the page was last considered': 0,
+      'Average on-disk page image size seen': 0,
+      'Average time in cache for pages that have been visited by the eviction server': 0,
+      'Average time in cache for pages that have not been visited by the eviction server': 0,
+      'Clean pages currently in cache': 0,
+      'Current eviction generation': 0,
+      'Dirty pages currently in cache': 0,
+      'Entries in the root page': 0,
+      'Internal pages currently in cache': 0,
+      'Leaf pages currently in cache': 0,
+      'Maximum difference between current eviction generation when the page was last considered': 0,
+      'Maximum page size seen': 0,
+      'Minimum on-disk page image size seen': 0,
+      'Number of pages never visited by eviction server': 0,
+      'On-disk page image sizes smaller than a single allocation unit': 0,
+      'Pages created in memory and never written': 0,
+      'Pages currently queued for eviction': 0,
+      'Pages that could not be queued for eviction': 0,
+      'Refs skipped during cache traversal': 0,
+      'Size of the root page': 0,
+      'Total number of pages currently in cache': 0
+    },
+    checkpoint: {
+      'checkpoint has acquired a snapshot for its transaction': 0,
+      'pages added for eviction during checkpoint cleanup': 0,
+      'pages dirtied due to obsolete time window by checkpoint cleanup': 0,
+      'pages read into cache during checkpoint cleanup (reclaim_space)': 0,
+      'pages read into cache during checkpoint cleanup due to obsolete time window': 0,
+      'pages removed during checkpoint cleanup': 0,
+      'pages skipped during checkpoint cleanup tree walk': 0,
+      'pages visited during checkpoint cleanup': 0,
+      'transaction checkpoints due to obsolete pages': 0
+    },
+    compression: {
+      'compressed page maximum internal page size prior to compression': 4096,
+      'compressed page maximum leaf page size prior to compression ': 131072,
+      'page written to disk failed to compress': 0,
+      'page written to disk was too small to compress': 0,
+      'pages read from disk': 2,
+      'pages read from disk with compression ratio greater than 64': 0,
+      'pages read from disk with compression ratio smaller than  2': 0,
+      'pages read from disk with compression ratio smaller than  4': 2,
+      'pages read from disk with compression ratio smaller than  8': 0,
+      'pages read from disk with compression ratio smaller than 16': 0,
+      'pages read from disk with compression ratio smaller than 32': 0,
+      'pages read from disk with compression ratio smaller than 64': 0,
+      'pages written to disk': 0,
+      'pages written to disk with compression ratio greater than 64': 0,
+      'pages written to disk with compression ratio smaller than  2': 0,
+      'pages written to disk with compression ratio smaller than  4': 0,
+      'pages written to disk with compression ratio smaller than  8': 0,
+      'pages written to disk with compression ratio smaller than 16': 0,
+      'pages written to disk with compression ratio smaller than 32': 0,
+      'pages written to disk with compression ratio smaller than 64': 0
+    },
+    cursor: {
+      'Total number of deleted pages skipped during tree walk': 0,
+      'Total number of entries skipped by cursor next calls': 0,
+      'Total number of entries skipped by cursor prev calls': 0,
+      'Total number of entries skipped to position the history store cursor': 0,
+      'Total number of in-memory deleted pages skipped during tree walk': 0,
+      'Total number of on-disk deleted pages skipped during tree walk': 0,
+      'Total number of times a search near has exited due to prefix config': 0,
+      'Total number of times cursor fails to temporarily release pinned page to encourage eviction of hot or large page': 0,
+      'Total number of times cursor temporarily releases pinned page to encourage eviction of hot or large page': 0,
+      'bulk loaded cursor insert calls': 0,
+      'cache cursors reuse count': 0,
+      'close calls that result in cache': 4,
+      'create calls': 4,
+      'cursor bound calls that return an error': 0,
+      'cursor bounds cleared from reset': 0,
+      'cursor bounds comparisons performed': 0,
+      'cursor bounds next called on an unpositioned cursor': 0,
+      'cursor bounds next early exit': 0,
+      'cursor bounds prev called on an unpositioned cursor': 0,
+      'cursor bounds prev early exit': 0,
+      'cursor bounds search early exit': 0,
+      'cursor bounds search near call repositioned cursor': 0,
+      'cursor cache calls that return an error': 0,
+      'cursor close calls that return an error': 0,
+      'cursor compare calls that return an error': 0,
+      'cursor equals calls that return an error': 0,
+      'cursor get key calls that return an error': 0,
+      'cursor get value calls that return an error': 0,
+      'cursor insert calls that return an error': 0,
+      'cursor insert check calls that return an error': 0,
+      'cursor largest key calls that return an error': 0,
+      'cursor modify calls that return an error': 0,
+      'cursor next calls that return an error': 0,
+      'cursor next calls that skip due to a globally visible history store tombstone': 0,
+      'cursor next calls that skip greater than 1 and fewer than 100 entries': 0,
+      'cursor next calls that skip greater than or equal to 100 entries': 0,
+      'cursor next random calls that return an error': 0,
+      'cursor prev calls that return an error': 0,
+      'cursor prev calls that skip due to a globally visible history store tombstone': 0,
+      'cursor prev calls that skip greater than or equal to 100 entries': 0,
+      'cursor prev calls that skip less than 100 entries': 0,
+      'cursor reconfigure calls that return an error': 0,
+      'cursor remove calls that return an error': 0,
+      'cursor reopen calls that return an error': 0,
+      'cursor reserve calls that return an error': 0,
+      'cursor reset calls that return an error': 0,
+      'cursor search calls that return an error': 0,
+      'cursor search near calls that return an error': 0,
+      'cursor update calls that return an error': 0,
+      'insert calls': 0,
+      'insert key and value bytes': 0,
+      modify: 0,
+      'modify key and value bytes affected': 0,
+      'modify value bytes modified': 0,
+      'next calls': 12,
+      'open cursor count': 0,
+      'operation restarted': 0,
+      'prev calls': 0,
+      'remove calls': 0,
+      'remove key bytes removed': 0,
+      'reserve calls': 0,
+      'reset calls': 8,
+      'search calls': 0,
+      'search history store calls': 0,
+      'search near calls': 0,
+      'truncate calls': 0,
+      'update calls': 0,
+      'update key and value bytes': 0,
+      'update value size change': 0
+    },
+    reconciliation: {
+      'VLCS pages explicitly reconciled as empty': 0,
+      'approximate byte size of timestamps in pages written': 0,
+      'approximate byte size of transaction IDs in pages written': 0,
+      'dictionary matches': 0,
+      'fast-path pages deleted': 0,
+      'internal page key bytes discarded using suffix compression': 0,
+      'internal page multi-block writes': 0,
+      'leaf page key bytes discarded using prefix compression': 0,
+      'leaf page multi-block writes': 0,
+      'leaf-page overflow keys': 0,
+      'maximum blocks required for a page': 0,
+      'overflow values written': 0,
+      'page reconciliation calls': 0,
+      'page reconciliation calls for eviction': 0,
+      'pages deleted': 0,
+      'pages written including an aggregated newest start durable timestamp ': 0,
+      'pages written including an aggregated newest stop durable timestamp ': 0,
+      'pages written including an aggregated newest stop timestamp ': 0,
+      'pages written including an aggregated newest stop transaction ID': 0,
+      'pages written including an aggregated newest transaction ID ': 0,
+      'pages written including an aggregated oldest start timestamp ': 0,
+      'pages written including an aggregated prepare': 0,
+      'pages written including at least one prepare': 0,
+      'pages written including at least one start durable timestamp': 0,
+      'pages written including at least one start timestamp': 0,
+      'pages written including at least one start transaction ID': 0,
+      'pages written including at least one stop durable timestamp': 0,
+      'pages written including at least one stop timestamp': 0,
+      'pages written including at least one stop transaction ID': 0,
+      'records written including a prepare': 0,
+      'records written including a start durable timestamp': 0,
+      'records written including a start timestamp': 0,
+      'records written including a start transaction ID': 0,
+      'records written including a stop durable timestamp': 0,
+      'records written including a stop timestamp': 0,
+      'records written including a stop transaction ID': 0
+    },
+    session: {
+      'object compaction': 0
+    },
+    transaction: {
+      'a reader raced with a prepared transaction commit and skipped an update or updates': 0,
+      'number of times overflow removed value is read': 0,
+      'race to read prepared update retry': 0,
+      'rollback to stable history store keys that would have been swept in non-dryrun mode': 0,
+      'rollback to stable history store records with stop timestamps older than newer records': 0,
+      'rollback to stable inconsistent checkpoint': 0,
+      'rollback to stable keys removed': 0,
+      'rollback to stable keys restored': 0,
+      'rollback to stable keys that would have been removed in non-dryrun mode': 0,
+      'rollback to stable keys that would have been restored in non-dryrun mode': 0,
+      'rollback to stable restored tombstones from history store': 0,
+      'rollback to stable restored updates from history store': 0,
+      'rollback to stable skipping delete rle': 0,
+      'rollback to stable skipping stable rle': 0,
+      'rollback to stable sweeping history store keys': 0,
+      'rollback to stable tombstones from history store that would have been restored in non-dryrun mode': 0,
+      'rollback to stable updates from history store that would have been restored in non-dryrun mode': 0,
+      'rollback to stable updates removed from history store': 0,
+      'rollback to stable updates that would have been removed from history store in non-dryrun mode': 0,
+      'update conflicts': 0
+    }
+  },
+  sharded: false,
+  size: 42923,
+  count: 4,
+  numOrphanDocs: 0,
+  storageSize: 61440,
+  totalIndexSize: 380928,
+  totalSize: 442368,
+  indexSizes: {
+    _id_: 36864,
+    title_1: 20480,
+    company_1: 20480,
+    url_1: 20480,
+    postedDate_1: 20480,
+    scrapedDate_1: 36864,
+    expiresAt_1: 36864,
+    source_1: 20480,
+    sourceId_1: 4096,
+    qualityScore_1: 20480,
+    featured_1: 20480,
+    tags_1: 20480,
+    uniqueIdentifier_1: 20480,
+    company_1_title_1_source_1: 20480,
+    title_text_company_text_descriptionText_text: 61440
+  },
+  avgObjSize: 10730,
+  ns: 'remote-jobs.jobs',
+  nindexes: 15,
+  scaleFactor: 1
+}
+
+=== TTL ANALYSIS for remote-jobs.jobs ===
+
+TTL Indexes:
+No TTL indexes found
+
+Detected Date Fields: createdAt, expiresAt, postedDate, scrapedDate, updatedAt
+
+Document Age Distribution by createdAt:
+Last 30 days: 4
+30-60 days old: 0
+60-90 days old: 0
+Older than 90 days: 0
+
+Document Age Distribution by expiresAt:
+Last 30 days: 4
+30-60 days old: 0
+60-90 days old: 0
+Older than 90 days: 0
+
+Document Age Distribution by postedDate:
+Last 30 days: 4
+30-60 days old: 0
+60-90 days old: 0
+Older than 90 days: 0
+
+Document Age Distribution by scrapedDate:
+Last 30 days: 4
+30-60 days old: 0
+60-90 days old: 0
+Older than 90 days: 0
+
+Document Age Distribution by updatedAt:
+Last 30 days: 4
+30-60 days old: 0
+60-90 days old: 0
+Older than 90 days: 0
+
+=== QUERY PERFORMANCE for remote-jobs.jobs ===
+Could not identify a field related to remote jobs in the sample document
+
+=== COLLECTION METRICS for remote-jobs.jobs ===
+
+Total Documents: 4
+Collection Size: 42923 bytes
+Average Document Size: 10730.75 bytes
+
+=== POTENTIAL ISSUES for remote-jobs.jobs ===
+
+Searching for documents with large arrays:
+No large array fields found (>10 elements)
+
+
+======= DATABASE: test =======
+
+
+=== SCHEMA ANALYSIS ===
+
+Sample Document from test.jobs:
+{
+  _id: ObjectId('68252a311390e67a7c26ef9f'),
+  title: 'LPN (Licensed Practical Nurse)',
+  company: 'Covenant Home Health Care',
+  location: 'Remote, US',
+  url: 'https://www.indeed.com/viewjob?jk=8fd24f4bb70e3661',
+  description: 'We are looking for a reliable LPN (Licensed Practical Nurse) to care for bedbound and injured patients in a professional and considerate manner. Your payrate will be $38\\-$40 per visit. You will work under the supervision of a registered nurse. LPN professionals must be first and foremost qualified and compassionate. The ideal candidate will be experienced in providing diverse basic care to those who need it while remaining patient and calm. It is a demanding job but also very rewarding.\n' +
+    '\n' +
+    '**Responsibilities**\n' +
+    '\n' +
+    '* Record a patient’s medical history accurately\n' +
+    '* Take and record measurements of blood pressure, temperature, heart rate etc.\n' +
+    '* Observe patients under treatment to identify progress, side\\-effects of medications etc.\n' +
+    '* Monitor patients’ condition including fluid intake and output and compose patient charts\n' +
+    '* Assist ailing patients in daily necessary activities such as eating, bathing etc.\n' +
+    '* Administer injections, prescribed medications, enemas etc., clean and dress wounds and assist with other basic medical care tasks\n' +
+    '* Collect samples for lab testing as assigned\n' +
+    '* Provide emotional and psychological support when needed\n' +
+    '* Communicate with patients’ family or friends to provide advice, comfort and release instructions\n' +
+    '\n' +
+    '**Skills**\n' +
+    '\n' +
+    '* Proven experience as LPN or similar role\n' +
+    '* Ability to undertake a variety of diverse care tasks and work in a multidisciplinary team\n' +
+    '* Familiarity with hospital health, safety and sanitation standards and procedures\n' +
+    '* Understanding of confidentiality obligations and nursing best practices\n' +
+    '* Excellent knowledge of medical and hospital terminology\n' +
+    '* Good knowledge of MS Office and data entry\n' +
+    '* Perfect physical condition and stamina\n' +
+    '* Excellent communication and interpersonal skills\n' +
+    '* Compassionate and able to handle stress\n' +
+    '* Successful completion of LPN license program is a must\n' +
+    '\n' +
+    'Job Types: Part\\-time, PRN\n' +
+    '\n' +
+    'Pay: $35\\.00 \\- $40\\.00 per hour\n' +
+    '\n' +
+    'Expected hours: 15 – 20 per week\n' +
+    '\n' +
+    'Benefits:\n' +
+    '\n' +
+    '* Flexible schedule\n' +
+    '\n' +
+    'Medical Specialty:\n' +
+    '\n' +
+    '* Home Health\n' +
+    '\n' +
+    'Work Location: Remote',
+  descriptionText: 'We are looking for a reliable LPN (Licensed Practical Nurse) to care for bedbound and injured patients in a professional and considerate manner. Your payrate will be $38\\-$40 per visit. You will work under the supervision of a registered nurse. LPN professionals must be first and foremost qualified and compassionate. The ideal candidate will be experienced in providing diverse basic care to those who need it while remaining patient and calm. It is a demanding job but also very rewarding.\n' +
+    '\n' +
+    '**Responsibilities**\n' +
+    '\n' +
+    '* Record a patient’s medical history accurately\n' +
+    '* Take and record measurements of blood pressure, temperature, heart rate etc.\n' +
+    '* Observe patients under treatment to identify progress, side\\-effects of medications etc.\n' +
+    '* Monitor patients’ condition including fluid intake and output and compose patient charts\n' +
+    '* Assist ailing patients in daily necessary activities such as eating, bathing etc.\n' +
+    '* Administer injections, prescribed medications, enemas etc., clean and dress wounds and assist with other basic medical care tasks\n' +
+    '* Collect samples for lab testing as assigned\n' +
+    '* Provide emotional and psychological support when needed\n' +
+    '* Communicate with patients’ family or friends to provide advice, comfort and release instructions\n' +
+    '\n' +
+    '**Skills**\n' +
+    '\n' +
+    '* Proven experience as LPN or similar role\n' +
+    '* Ability to undertake a variety of diverse care tasks and work in a multidisciplinary team\n' +
+    '* Familiarity with hospital health, safety and sanitation standards and procedures\n' +
+    '* Understanding of confidentiality obligations and nursing best practices\n' +
+    '* Excellent knowledge of medical and hospital terminology\n' +
+    '* Good knowledge of MS Office and data entry\n' +
+    '* Perfect physical condition and stamina\n' +
+    '* Excellent communication and interpersonal skills\n' +
+    '* Compassionate and able to handle stress\n' +
+    '* Successful completion of LPN license program is a must\n' +
+    '\n' +
+    'Job Types: Part\\-time, PRN\n' +
+    '\n' +
+    'Pay: $35\\.00 \\- $40\\.00 per hour\n' +
+    '\n' +
+    'Expected hours: 15 – 20 per week\n' +
+    '\n' +
+    'Benefits:\n' +
+    '\n' +
+    '* Flexible schedule\n' +
+    '\n' +
+    'Medical Specialty:\n' +
+    '\n' +
+    '* Home Health\n' +
+    '\n' +
+    'Work Location: Remote',
+  source: 'JobSpyIndeed',
+  postedDate: ISODate('2025-05-14T00:00:00.000Z'),
+  credibilityScore: 9,
+  searchQuery: 'data entry remote',
+  salary: '',
+  isRemote: true,
+  qualityScore: 10,
+  createdAt: ISODate('2025-05-15T12:31:32.266Z'),
+  updatedAt: ISODate('2025-05-15T12:31:32.270Z')
+}
+
+Random Sample (up to 3 documents) from test.jobs:
+{
+  _id: ObjectId('6825dea8aed382ab5f6422a8'),
+  title: 'REMOTE Title Foreclosure Specialist, Vylla',
+  company: 'Lensa',
+  location: 'Salem, OR',
+  url: 'https://www.linkedin.com/jobs/view/4228306153',
+  description: 'Lensa is the leading career site for job seekers at every stage of their career. Our client, Vylla Title, is seeking professionals. Apply via Lensa today!\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Come join our amazing team and work remote from home!**\n' +
+    ' The Title Foreclosure Specialist will be responsible for taking foreclosure abstract orders from the lender and preparing an abstractor report using partners. Preform a quality control on all files before sending to foreclosure attorney and lender. Update files as requested and also perform searches. Perform all duties in accordance with the company’s policies and procedures, all US state and federal laws and regulations, wherein the company operates. The Target Pay range for this position is $20\\.00 to $30\\.00\\.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**What You’ll Do**\n' +
+    '* Monitor assigned foreclosure e\\-mail box.\n' +
+    '* Order requested foreclosure abstracts from stated company partner(s) and update per attorney request.\n' +
+    '* Perform quality control evaluation once foreclosure abstract is received and before completed product is sent to client.\n' +
+    '* Determine if a file is acceptable.\n' +
+    '* Monitor vendor turnaround times for counseling and process improvements.\n' +
+    '* Perform other duties as assigned.\n' +
+    '\n' +
+    '\n' +
+    '**What You’ll Need**\n' +
+    '* High School diploma or equivalent work experience.\n' +
+    '* Two (2\\) to five (5\\) years’ title, settlement services or mortgage experience.\n' +
+    '* State title / escrow license preferred.\n' +
+    '* Intermediate skills in Microsoft Suite – Word, Excel, etc.\n' +
+    '* Intermediate skills in Equator and RamQuest.\n' +
+    '* Intermediate industry related skills.\n' +
+    '* Ability to understand, remember, and apply oral and/or written instructions or other information.\n' +
+    '* Ability to understand, remember, and communicate routine, factual information.\n' +
+    '* Ability to understand complex problems and to collaborate and explore alternative solutions.\n' +
+    '* Ability to understand opposing points of view on highly complex issues and to negotiate and integrate different viewpoints.\n' +
+    '* Ability to apply common sense in performing job.\n' +
+    '* Ability to make decisions that have moderate impact on the immediate work unit.\n' +
+    '* Ability to organize and prioritize own work schedule on sort\\-term basis (longer than one month).\n' +
+    '* Ability to add, subtract, multiply, divide and to record, balance, and check results for accuracy.\n' +
+    '* Ability to understand and follow basic instructions and guidelines.\n' +
+    '* Ability to complete routine forms, use existing form letters, and/or conduct routine oral communication\n' +
+    '* Ability to compose letters, outlines, memoranda, and basic reports and/or to orally communicate technical information.\n' +
+    '* Ability to communicate with individuals utilizing a telephone; requires ability to hear and speak effectively on the telephone.\n' +
+    '* Ability to express or exchange ideas by means of the spoken word, communicating orally with others accurately, audibly and quickly.\n' +
+    '\n' +
+    '\n' +
+    '**Our Company**\n' +
+    ' Vylla Title, LLC is part of The Carrington Companies. We are a full service title agent committed to providing the highest level of service. Our national footprint and full\\-service model offer a truly progressive approach to managing transactions and creating extraordinary experiences every step of the way. We offer a broad array of services for residential and commercial transactions, with years of expertise to serve many unique client needs.We love what we do and offer an exceptional place to work where you can be part of a strong team. That’s why we say we’re not just a team, but a “Vyllage.” Accelerate your career and join our Vyllage today! To read more visit: www.vyllatitle.com .\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**What We Offer**\n' +
+    '* Comprehensive healthcare plans for you and your family. Plus, a discretionary 401(k) match of 50% of the first 4% of pay contributed.\n' +
+    '* Access to several fitness, restaurant, retail (and more!) discounts through our employee portal.\n' +
+    '* Customized training programs to help you advance your career.\n' +
+    '* Employee referral bonuses so you’ll get paid to help Carrington and Vylla grow.\n' +
+    '* Educational Reimbursement.\n' +
+    '* Carrington Charitable Foundation contributes to the community through causes that reflect the interests of Carrington Associates. For more information about Carrington Charitable Foundation, and the organizations and programs, it supports through specific fundraising efforts, please visit: carringtoncf.org.\n' +
+    '\n' +
+    '\n' +
+    '**Notice to all applicants: Vylla does not do interviews or make offers via text or chat.**\n' +
+    ' Carrington is an equal opportunity employer. It is the policy of the company that applicants be considered for positions for which they qualify without regard to race, color, religion, sex, gender identity, national origin, ancestry, age, marital status, sexual orientation, protected veterans status, physical or mental disability or any other legally protected category. Carrington will make reasonable accommodations for known physical or mental limitations of a qualified applicant or employee with a disability unless the accommodation will impose an undue hardship on the company.',
+  descriptionText: 'Lensa is the leading career site for job seekers at every stage of their career. Our client, Vylla Title, is seeking professionals. Apply via Lensa today!\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Come join our amazing team and work remote from home!**\n' +
+    ' The Title Foreclosure Specialist will be responsible for taking foreclosure abstract orders from the lender and preparing an abstractor report using partners. Preform a quality control on all files before sending to foreclosure attorney and lender. Update files as requested and also perform searches. Perform all duties in accordance with the company’s policies and procedures, all US state and federal laws and regulations, wherein the company operates. The Target Pay range for this position is $20\\.00 to $30\\.00\\.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**What You’ll Do**\n' +
+    '* Monitor assigned foreclosure e\\-mail box.\n' +
+    '* Order requested foreclosure abstracts from stated company partner(s) and update per attorney request.\n' +
+    '* Perform quality control evaluation once foreclosure abstract is received and before completed product is sent to client.\n' +
+    '* Determine if a file is acceptable.\n' +
+    '* Monitor vendor turnaround times for counseling and process improvements.\n' +
+    '* Perform other duties as assigned.\n' +
+    '\n' +
+    '\n' +
+    '**What You’ll Need**\n' +
+    '* High School diploma or equivalent work experience.\n' +
+    '* Two (2\\) to five (5\\) years’ title, settlement services or mortgage experience.\n' +
+    '* State title / escrow license preferred.\n' +
+    '* Intermediate skills in Microsoft Suite – Word, Excel, etc.\n' +
+    '* Intermediate skills in Equator and RamQuest.\n' +
+    '* Intermediate industry related skills.\n' +
+    '* Ability to understand, remember, and apply oral and/or written instructions or other information.\n' +
+    '* Ability to understand, remember, and communicate routine, factual information.\n' +
+    '* Ability to understand complex problems and to collaborate and explore alternative solutions.\n' +
+    '* Ability to understand opposing points of view on highly complex issues and to negotiate and integrate different viewpoints.\n' +
+    '* Ability to apply common sense in performing job.\n' +
+    '* Ability to make decisions that have moderate impact on the immediate work unit.\n' +
+    '* Ability to organize and prioritize own work schedule on sort\\-term basis (longer than one month).\n' +
+    '* Ability to add, subtract, multiply, divide and to record, balance, and check results for accuracy.\n' +
+    '* Ability to understand and follow basic instructions and guidelines.\n' +
+    '* Ability to complete routine forms, use existing form letters, and/or conduct routine oral communication\n' +
+    '* Ability to compose letters, outlines, memoranda, and basic reports and/or to orally communicate technical information.\n' +
+    '* Ability to communicate with individuals utilizing a telephone; requires ability to hear and speak effectively on the telephone.\n' +
+    '* Ability to express or exchange ideas by means of the spoken word, communicating orally with others accurately, audibly and quickly.\n' +
+    '\n' +
+    '\n' +
+    '**Our Company**\n' +
+    ' Vylla Title, LLC is part of The Carrington Companies. We are a full service title agent committed to providing the highest level of service. Our national footprint and full\\-service model offer a truly progressive approach to managing transactions and creating extraordinary experiences every step of the way. We offer a broad array of services for residential and commercial transactions, with years of expertise to serve many unique client needs.We love what we do and offer an exceptional place to work where you can be part of a strong team. That’s why we say we’re not just a team, but a “Vyllage.” Accelerate your career and join our Vyllage today! To read more visit: www.vyllatitle.com .\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**What We Offer**\n' +
+    '* Comprehensive healthcare plans for you and your family. Plus, a discretionary 401(k) match of 50% of the first 4% of pay contributed.\n' +
+    '* Access to several fitness, restaurant, retail (and more!) discounts through our employee portal.\n' +
+    '* Customized training programs to help you advance your career.\n' +
+    '* Employee referral bonuses so you’ll get paid to help Carrington and Vylla grow.\n' +
+    '* Educational Reimbursement.\n' +
+    '* Carrington Charitable Foundation contributes to the community through causes that reflect the interests of Carrington Associates. For more information about Carrington Charitable Foundation, and the organizations and programs, it supports through specific fundraising efforts, please visit: carringtoncf.org.\n' +
+    '\n' +
+    '\n' +
+    '**Notice to all applicants: Vylla does not do interviews or make offers via text or chat.**\n' +
+    ' Carrington is an equal opportunity employer. It is the policy of the company that applicants be considered for positions for which they qualify without regard to race, color, religion, sex, gender identity, national origin, ancestry, age, marital status, sexual orientation, protected veterans status, physical or mental disability or any other legally protected category. Carrington will make reasonable accommodations for known physical or mental limitations of a qualified applicant or employee with a disability unless the accommodation will impose an undue hardship on the company.',
+  source: 'JobSpyLinkedIn',
+  postedDate: ISODate('2025-05-15T12:29:32.595Z'),
+  credibilityScore: 9,
+  searchQuery: 'data entry remote',
+  salary: '',
+  isRemote: true,
+  qualityScore: 10,
+  createdAt: ISODate('2025-05-15T12:31:36.141Z'),
+  updatedAt: ISODate('2025-05-15T12:31:36.141Z')
+}
+{
+  _id: ObjectId('68252fa39a4860ee8f0aaf97'),
+  title: 'Remote Office Manager',
+  company: 'Venture Smarter',
+  location: 'Remote',
+  url: 'https://www.linkedin.com/jobs/view/4228885384',
+  description: "Venture Smarter was founded by experts in law, finance, and strategy who saw a need for a more holistic approach to business consultancy. United by core values of innovation, integrity, and impact, we offer a 360\\-degree suite of solutions tailored to each client's needs. Over the years, we've successfully guided businesses through growth, market transitions, and legal complexities. As we look to the future, we're excited to continue being the catalyst that propels businesses to new heights. Join us in venturing smarter. Our mission is to be the driving force behind your business success. We offer specialized consultancy services that address your legal and business challenges, propelling you towards a future of limitless opportunities. By integrating innovation, integrity, and impact into our approach, we create tailored solutions that not only solve immediate issues but also position you for long\\-term growth. We're not just consultants; we're your partners in navigating the complex landscape of business evolution.\n" +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**The Role**\n' +
+    '**Company:** \n' +
+    ' Venture Smarter\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Location:** \n' +
+    ' Work from Home\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Salary:** \n' +
+    ' $3,500 per month\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Job Description**\n' +
+    ' Venture Smarter is seeking a highly organized and proactive Remote Office Manager to oversee daily administrative operations and support our remote teams. This role is ideal for someone with strong leadership, communication, and multitasking skills who thrives in a virtual environment.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Key Responsibilities**\n' +
+    '* Manage day\\-to\\-day administrative tasks and office operations remotely\n' +
+    '* Coordinate schedules, meetings, and communications across departments\n' +
+    '* Maintain records, databases, and digital filing systems\n' +
+    '* Assist in budgeting, purchasing, and expense tracking\n' +
+    '* Ensure smooth onboarding processes for new remote hires\n' +
+    '* Act as a liaison between management and employees\n' +
+    '* Implement and maintain virtual office procedures and protocols\n' +
+    '\n' +
+    '\n' +
+    '**Benefits**\n' +
+    '* Competitive monthly salary of $3,500\n' +
+    '* Fully remote work setup\n' +
+    '* Health insurance and wellness benefits\n' +
+    '* Paid vacation and holidays\n' +
+    '* Opportunities for career advancement and skill development\n' +
+    '\n' +
+    '\n' +
+    '**Venture Smarter has been featured in media outlets such as CBS News, Digital Journal, and Go Banking Rates. Check us out – you’ll know we’re the place to be.**\n' +
+    '**Ideal Profile**\n' +
+    '**Requirements**\n' +
+    "* Bachelor's degree in Business Administration or related field\n" +
+    '* Proven experience in office management or administrative leadership (remote experience preferred)\n' +
+    '* Excellent organizational and time\\-management skills\n' +
+    '* Strong written and verbal communication abilities\n' +
+    '* Proficiency in remote collaboration tools (e.g., Slack, Zoom, Google Workspace)\n' +
+    '* Self\\-motivated, reliable, and adaptable to a dynamic remote work environment\n' +
+    '\n' +
+    '\n' +
+    "**What's on Offer?**\n" +
+    '* A role that offers a breadth of learning opportunities\n' +
+    '* Flexible working options\n' +
+    '* Opportunity to make a positive impact',
+  descriptionText: "Venture Smarter was founded by experts in law, finance, and strategy who saw a need for a more holistic approach to business consultancy. United by core values of innovation, integrity, and impact, we offer a 360\\-degree suite of solutions tailored to each client's needs. Over the years, we've successfully guided businesses through growth, market transitions, and legal complexities. As we look to the future, we're excited to continue being the catalyst that propels businesses to new heights. Join us in venturing smarter. Our mission is to be the driving force behind your business success. We offer specialized consultancy services that address your legal and business challenges, propelling you towards a future of limitless opportunities. By integrating innovation, integrity, and impact into our approach, we create tailored solutions that not only solve immediate issues but also position you for long\\-term growth. We're not just consultants; we're your partners in navigating the complex landscape of business evolution.\n" +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**The Role**\n' +
+    '**Company:** \n' +
+    ' Venture Smarter\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Location:** \n' +
+    ' Work from Home\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Salary:** \n' +
+    ' $3,500 per month\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Job Description**\n' +
+    ' Venture Smarter is seeking a highly organized and proactive Remote Office Manager to oversee daily administrative operations and support our remote teams. This role is ideal for someone with strong leadership, communication, and multitasking skills who thrives in a virtual environment.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Key Responsibilities**\n' +
+    '* Manage day\\-to\\-day administrative tasks and office operations remotely\n' +
+    '* Coordinate schedules, meetings, and communications across departments\n' +
+    '* Maintain records, databases, and digital filing systems\n' +
+    '* Assist in budgeting, purchasing, and expense tracking\n' +
+    '* Ensure smooth onboarding processes for new remote hires\n' +
+    '* Act as a liaison between management and employees\n' +
+    '* Implement and maintain virtual office procedures and protocols\n' +
+    '\n' +
+    '\n' +
+    '**Benefits**\n' +
+    '* Competitive monthly salary of $3,500\n' +
+    '* Fully remote work setup\n' +
+    '* Health insurance and wellness benefits\n' +
+    '* Paid vacation and holidays\n' +
+    '* Opportunities for career advancement and skill development\n' +
+    '\n' +
+    '\n' +
+    '**Venture Smarter has been featured in media outlets such as CBS News, Digital Journal, and Go Banking Rates. Check us out – you’ll know we’re the place to be.**\n' +
+    '**Ideal Profile**\n' +
+    '**Requirements**\n' +
+    "* Bachelor's degree in Business Administration or related field\n" +
+    '* Proven experience in office management or administrative leadership (remote experience preferred)\n' +
+    '* Excellent organizational and time\\-management skills\n' +
+    '* Strong written and verbal communication abilities\n' +
+    '* Proficiency in remote collaboration tools (e.g., Slack, Zoom, Google Workspace)\n' +
+    '* Self\\-motivated, reliable, and adaptable to a dynamic remote work environment\n' +
+    '\n' +
+    '\n' +
+    "**What's on Offer?**\n" +
+    '* A role that offers a breadth of learning opportunities\n' +
+    '* Flexible working options\n' +
+    '* Opportunity to make a positive impact',
+  source: 'JobSpyLinkedIn',
+  postedDate: ISODate('2025-05-13T00:00:00.000Z'),
+  credibilityScore: 9,
+  searchQuery: 'administrative assistant remote',
+  salary: '',
+  isRemote: true,
+  qualityScore: 10,
+  createdAt: ISODate('2025-05-15T06:25:49.217Z'),
+  updatedAt: ISODate('2025-05-15T06:25:49.225Z')
+}
+{
+  _id: ObjectId('68252fa59a4860ee8f0aafc9'),
+  title: 'Customer Service Representative - Remote',
+  company: 'Lensa',
+  location: 'Boise, ID',
+  url: 'https://www.linkedin.com/jobs/view/4227900970',
+  description: 'Lensa is the leading career site for job seekers at every stage of their career. Our client, Sharecare, is seeking professionals. Apply via Lensa today!\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Job Description**\n' +
+    ' Sharecare is the leading digital health company that helps people – no matter where they are in their health journey – unify and manage all their health in one place. Our comprehensive and data\\-driven virtual health platform is designed to help people, providers, employers, health plans, government organizations, and communities optimize individual and population\\-wide well\\-being by driving positive behavior change. Driven by our philosophy that we are all together better, at Sharecare, we are committed to supporting each individual through the lens of their personal health and making high\\-quality care more accessible and affordable for everyone. To learn more, visit www.sharecare.com.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Job Summary**\n' +
+    ' The Customer Service Representative (CSR) answers inbound calls from members and providers, inputs data, and provides a high level of customer service always extending courtesy and professionalism. The CSR handles inbound customer service inquiries and problems via the telephone and email while effectively recording communications accurately and consistently. Calls are predominantly “routine”, but may require deviation from standard screens, scripts and procedures. CSRs use a computerized system for tracking calls, information gathering, and/or troubleshooting and may assess needs, explain programs and suggest/promote alternative products or services.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '* This is a remote position and can be located anywhere within the United States.\n' +
+    '\n' +
+    '\n' +
+    '**Essential Job Functions**\n' +
+    '* Identify, evaluate and prioritize caller needs, questions and concerns.\n' +
+    '* Formulate plans of resolution and respond appropriately and efficiently.\n' +
+    '* Maintain and restore customer satisfaction and partner with other teams as needed.\n' +
+    '* Perform problem analysis, problem determination and recommended resolutions to the callers in accordance with standard protocol.\n' +
+    '* Proactively educate caller on program benefits.\n' +
+    '* Meet or exceed established call center metrics, attendance standards and quality levels.\n' +
+    '* Use computer tools to accurately process and document information.\n' +
+    '* Develop rapport with callers and appropriately adjust communication style.\n' +
+    '* Provide accurate information about Sharecare programs and services.\n' +
+    '* Escalate issues internally and follow up on escalated issues.\n' +
+    '\n' +
+    '\n' +
+    '**Qualifications**\n' +
+    '* High School Diploma\n' +
+    '* Prior experience in a customer service related field preferred\n' +
+    '* Great communication skills\n' +
+    '* Must be able to multi\\-task\n' +
+    '* General working knowledge of Microsoft Word \\& Outlook\n' +
+    '* Computer keyboard proficiency and internet navigation skills required\n' +
+    '* Have the ability to work effectively with others in a team environment\n' +
+    '* Ability to thrive in a fast\\-growing always changing environment\n' +
+    '\n' +
+    '\n' +
+    ' Sharecare and its subsidiaries are Equal Opportunity Employers and E\\-Verify users. Qualified applicants will receive consideration for employment without regard to race, color, sex, national origin, sexual orientation, gender identity, religion, age, equal pay, disability, genetic information, protected veteran status, or other status protected under applicable law.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    " Sharecare is an Equal Opportunity Employer and doesn't discriminate on the basis of race, color, sex, national origin, sexual orientation, gender identity, religion, age, disability, genetic information, protected veteran status,or other non\\-merit factor.",
+  descriptionText: 'Lensa is the leading career site for job seekers at every stage of their career. Our client, Sharecare, is seeking professionals. Apply via Lensa today!\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Job Description**\n' +
+    ' Sharecare is the leading digital health company that helps people – no matter where they are in their health journey – unify and manage all their health in one place. Our comprehensive and data\\-driven virtual health platform is designed to help people, providers, employers, health plans, government organizations, and communities optimize individual and population\\-wide well\\-being by driving positive behavior change. Driven by our philosophy that we are all together better, at Sharecare, we are committed to supporting each individual through the lens of their personal health and making high\\-quality care more accessible and affordable for everyone. To learn more, visit www.sharecare.com.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '**Job Summary**\n' +
+    ' The Customer Service Representative (CSR) answers inbound calls from members and providers, inputs data, and provides a high level of customer service always extending courtesy and professionalism. The CSR handles inbound customer service inquiries and problems via the telephone and email while effectively recording communications accurately and consistently. Calls are predominantly “routine”, but may require deviation from standard screens, scripts and procedures. CSRs use a computerized system for tracking calls, information gathering, and/or troubleshooting and may assess needs, explain programs and suggest/promote alternative products or services.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    '* This is a remote position and can be located anywhere within the United States.\n' +
+    '\n' +
+    '\n' +
+    '**Essential Job Functions**\n' +
+    '* Identify, evaluate and prioritize caller needs, questions and concerns.\n' +
+    '* Formulate plans of resolution and respond appropriately and efficiently.\n' +
+    '* Maintain and restore customer satisfaction and partner with other teams as needed.\n' +
+    '* Perform problem analysis, problem determination and recommended resolutions to the callers in accordance with standard protocol.\n' +
+    '* Proactively educate caller on program benefits.\n' +
+    '* Meet or exceed established call center metrics, attendance standards and quality levels.\n' +
+    '* Use computer tools to accurately process and document information.\n' +
+    '* Develop rapport with callers and appropriately adjust communication style.\n' +
+    '* Provide accurate information about Sharecare programs and services.\n' +
+    '* Escalate issues internally and follow up on escalated issues.\n' +
+    '\n' +
+    '\n' +
+    '**Qualifications**\n' +
+    '* High School Diploma\n' +
+    '* Prior experience in a customer service related field preferred\n' +
+    '* Great communication skills\n' +
+    '* Must be able to multi\\-task\n' +
+    '* General working knowledge of Microsoft Word \\& Outlook\n' +
+    '* Computer keyboard proficiency and internet navigation skills required\n' +
+    '* Have the ability to work effectively with others in a team environment\n' +
+    '* Ability to thrive in a fast\\-growing always changing environment\n' +
+    '\n' +
+    '\n' +
+    ' Sharecare and its subsidiaries are Equal Opportunity Employers and E\\-Verify users. Qualified applicants will receive consideration for employment without regard to race, color, sex, national origin, sexual orientation, gender identity, religion, age, equal pay, disability, genetic information, protected veteran status, or other status protected under applicable law.\n' +
+    '   \n' +
+    '\n' +
+    '  \n' +
+    '\n' +
+    " Sharecare is an Equal Opportunity Employer and doesn't discriminate on the basis of race, color, sex, national origin, sexual orientation, gender identity, religion, age, disability, genetic information, protected veteran status,or other non\\-merit factor.",
+  source: 'JobSpyLinkedIn',
+  postedDate: ISODate('2025-05-15T00:02:45.989Z'),
+  credibilityScore: 9,
+  searchQuery: 'customer service representative remote',
+  salary: '',
+  isRemote: true,
+  qualityScore: 10,
+  createdAt: ISODate('2025-05-15T00:04:53.702Z'),
+  updatedAt: ISODate('2025-05-15T00:04:53.702Z')
+}
+
+Field Distribution for test.jobs:
+{
+  field: '_id',
+  count: 100,
+  types: [
+    'object',
+    'objectId'
+  ]
+}
+{
+  field: 'title',
+  count: 100,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'company',
+  count: 100,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'location',
+  count: 100,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'url',
+  count: 100,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'description',
+  count: 100,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'descriptionText',
+  count: 100,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'source',
+  count: 100,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'postedDate',
+  count: 100,
+  types: [
+    'object',
+    'date'
+  ]
+}
+{
+  field: 'credibilityScore',
+  count: 100,
+  types: [
+    'number'
+  ]
+}
+{
+  field: 'searchQuery',
+  count: 100,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'salary',
+  count: 100,
+  types: [
+    'string'
+  ]
+}
+{
+  field: 'isRemote',
+  count: 100,
+  types: [
+    'boolean'
+  ]
+}
+{
+  field: 'qualityScore',
+  count: 100,
+  types: [
+    'number'
+  ]
+}
+{
+  field: 'createdAt',
+  count: 100,
+  types: [
+    'object',
+    'date'
+  ]
+}
+{
+  field: 'updatedAt',
+  count: 100,
+  types: [
+    'object',
+    'date'
+  ]
+}
+
+=== INDEX ANALYSIS for test.jobs ===
+
+Existing Indexes:
+[
+  {
+    v: 2,
+    key: {
+      _id: 1
+    },
+    name: '_id_'
+  }
+]
+
+Collection Statistics:
+{
+  ok: 1,
+  capped: false,
+  wiredTiger: {
+    metadata: {
+      formatVersion: 1
+    },
+    creationString: 'access_pattern_hint=none,allocation_size=4KB,app_metadata=(formatVersion=1),assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none,write_timestamp=off),block_allocation=best,block_compressor=snappy,cache_resident=false,checksum=on,colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,import=(compare_timestamp=oldest_timestamp,enabled=false,file_metadata=,metadata_file=,panic_corrupt=true,repair=false),internal_item_max=0,internal_key_max=0,internal_key_truncate=true,internal_page_max=4KB,key_format=q,key_gap=10,leaf_item_max=0,leaf_key_max=0,leaf_page_max=32KB,leaf_value_max=64MB,log=(enabled=false),lsm=(auto_throttle=true,bloom=true,bloom_bit_count=16,bloom_config=,bloom_hash_count=8,bloom_oldest=false,chunk_count_limit=0,chunk_max=5GB,chunk_size=10MB,merge_custom=(prefix=,start_generation=0,suffix=),merge_max=15,merge_min=0),memory_page_image_max=0,memory_page_max=10m,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=90,tiered_storage=(auth_token=,bucket=,bucket_prefix=,cache_directory=,local_retention=300,name=,object_target_size=0),type=file,value_format=u,verbose=[],write_timestamp_usage=none',
+    type: 'file',
+    uri: 'statistics:table:collection-2794-9063857362633674751',
+    LSM: {
+      'bloom filter false positives': 0,
+      'bloom filter hits': 0,
+      'bloom filter misses': 0,
+      'bloom filter pages evicted from cache': 0,
+      'bloom filter pages read into cache': 0,
+      'bloom filters in the LSM tree': 0,
+      'chunks in the LSM tree': 0,
+      'highest merge generation in the LSM tree': 0,
+      'queries that could have benefited from a Bloom filter that did not exist': 0,
+      'sleep for LSM checkpoint throttle': 0,
+      'sleep for LSM merge throttle': 0,
+      'total size of bloom filters': 0
+    },
+    autocommit: {
+      'retries for readonly operations': 0,
+      'retries for update operations': 0
+    },
+    backup: {
+      'total modified incremental blocks with compressed data': 0,
+      'total modified incremental blocks without compressed data': 0
+    },
+    'block-manager': {
+      'allocations requiring file extension': 0,
+      'blocks allocated': 0,
+      'blocks freed': 0,
+      'checkpoint size': 1458176,
+      'file allocation unit size': 4096,
+      'file bytes available for reuse': 790528,
+      'file magic number': 120897,
+      'file major version number': 1,
+      'file size in bytes': 2265088,
+      'minor version number': 0
+    },
+    btree: {
+      'btree checkpoint generation': 5366,
+      'btree clean tree checkpoint expiration time': Long('9223372036854775807'),
+      'btree compact pages reviewed': 0,
+      'btree compact pages rewritten': 0,
+      'btree compact pages skipped': 0,
+      'btree expected number of compact bytes rewritten': 0,
+      'btree expected number of compact pages rewritten': 0,
+      'btree number of pages reconciled during checkpoint': 0,
+      'btree skipped by compaction as process would not reduce size': 0,
+      'column-store fixed-size leaf pages': 0,
+      'column-store fixed-size time windows': 0,
+      'column-store internal pages': 0,
+      'column-store variable-size RLE encoded values': 0,
+      'column-store variable-size deleted values': 0,
+      'column-store variable-size leaf pages': 0,
+      'fixed-record size': 0,
+      'maximum internal page size': 4096,
+      'maximum leaf page key size': 2867,
+      'maximum leaf page size': 32768,
+      'maximum leaf page value size': 67108864,
+      'maximum tree depth': 0,
+      'number of key/value pairs': 0,
+      'overflow pages': 0,
+      'row-store empty values': 0,
+      'row-store internal pages': 0,
+      'row-store leaf pages': 0
+    },
+    cache: {
+      'bytes currently in the cache': 2497956,
+      'bytes dirty in the cache cumulative': 0,
+      'bytes read into cache': 6749187,
+      'bytes written from cache': 0,
+      'checkpoint blocked page eviction': 0,
+      'checkpoint of history store file blocked non-history store page eviction': 0,
+      'data source pages selected for eviction unable to be evicted': 0,
+      'eviction gave up due to detecting a disk value without a timestamp behind the last update on the chain': 0,
+      'eviction gave up due to detecting a tombstone without a timestamp ahead of the selected on disk update': 0,
+      'eviction gave up due to detecting a tombstone without a timestamp ahead of the selected on disk update after validating the update chain': 0,
+      'eviction gave up due to detecting update chain entries without timestamps after the selected on disk update': 0,
+      'eviction gave up due to needing to remove a record from the history store but checkpoint is running': 0,
+      'eviction gave up due to no progress being made': 0,
+      'eviction walk passes of a file': 0,
+      'eviction walk target pages histogram - 0-9': 0,
+      'eviction walk target pages histogram - 10-31': 0,
+      'eviction walk target pages histogram - 128 and higher': 0,
+      'eviction walk target pages histogram - 32-63': 0,
+      'eviction walk target pages histogram - 64-128': 0,
+      'eviction walk target pages reduced due to history store cache pressure': 0,
+      'eviction walks abandoned': 0,
+      'eviction walks gave up because they restarted their walk twice': 0,
+      'eviction walks gave up because they saw too many pages and found no candidates': 0,
+      'eviction walks gave up because they saw too many pages and found too few candidates': 0,
+      'eviction walks random search fails to locate a page, results in a null position': 0,
+      'eviction walks reached end of tree': 0,
+      'eviction walks restarted': 0,
+      'eviction walks started from root of tree': 0,
+      'eviction walks started from saved location in tree': 0,
+      'hazard pointer blocked page eviction': 0,
+      'history store table insert calls': 0,
+      'history store table insert calls that returned restart': 0,
+      'history store table reads': 0,
+      'history store table reads missed': 0,
+      'history store table reads requiring squashed modifies': 0,
+      'history store table resolved updates without timestamps that lose their durable timestamp': 0,
+      'history store table truncation by rollback to stable to remove an unstable update': 0,
+      'history store table truncation by rollback to stable to remove an update': 0,
+      'history store table truncation to remove all the keys of a btree': 0,
+      'history store table truncation to remove an update': 0,
+      'history store table truncation to remove range of updates due to an update without a timestamp on data page': 0,
+      'history store table truncation to remove range of updates due to key being removed from the data page during reconciliation': 0,
+      'history store table truncations that would have happened in non-dryrun mode': 0,
+      'history store table truncations to remove an unstable update that would have happened in non-dryrun mode': 0,
+      'history store table truncations to remove an update that would have happened in non-dryrun mode': 0,
+      'history store table updates without timestamps fixed up by reinserting with the fixed timestamp': 0,
+      'history store table writes requiring squashed modifies': 0,
+      'in-memory page passed criteria to be split': 0,
+      'in-memory page splits': 0,
+      'internal page split blocked its eviction': 0,
+      'internal pages evicted': 0,
+      'internal pages split during eviction': 0,
+      'leaf pages split during eviction': 0,
+      'locate a random in-mem ref by examining all entries on the root page': 0,
+      'modified pages evicted': 0,
+      'multi-block reconciliation blocked whilst checkpoint is running': 0,
+      'overflow keys on a multiblock row-store page blocked its eviction': 0,
+      'overflow pages read into cache': 0,
+      'page split during eviction deepened the tree': 0,
+      'page written requiring history store records': 0,
+      'pages dirtied due to obsolete time window by eviction': 0,
+      'pages read into cache': 96,
+      'pages read into cache after truncate': 0,
+      'pages read into cache after truncate in prepare state': 0,
+      'pages read into cache by checkpoint': 0,
+      'pages requested from the cache': 50,
+      'pages requested from the cache due to pre-fetch': 0,
+      'pages seen by eviction walk': 0,
+      'pages written from cache': 0,
+      'pages written requiring in-memory restoration': 0,
+      'recent modification of a page blocked its eviction': 0,
+      'reverse splits performed': 0,
+      'reverse splits skipped because of VLCS namespace gap restrictions': 0,
+      'the number of times full update inserted to history store': 0,
+      'the number of times reverse modify inserted to history store': 0,
+      'tracked dirty bytes in the cache': 0,
+      'tracked dirty internal page bytes in the cache': 0,
+      'tracked dirty leaf page bytes in the cache': 0,
+      'uncommitted truncate blocked page eviction': 0,
+      'unmodified pages evicted': 0
+    },
+    cache_walk: {
+      'Average difference between current eviction generation when the page was last considered': 0,
+      'Average on-disk page image size seen': 0,
+      'Average time in cache for pages that have been visited by the eviction server': 0,
+      'Average time in cache for pages that have not been visited by the eviction server': 0,
+      'Clean pages currently in cache': 0,
+      'Current eviction generation': 0,
+      'Dirty pages currently in cache': 0,
+      'Entries in the root page': 0,
+      'Internal pages currently in cache': 0,
+      'Leaf pages currently in cache': 0,
+      'Maximum difference between current eviction generation when the page was last considered': 0,
+      'Maximum page size seen': 0,
+      'Minimum on-disk page image size seen': 0,
+      'Number of pages never visited by eviction server': 0,
+      'On-disk page image sizes smaller than a single allocation unit': 0,
+      'Pages created in memory and never written': 0,
+      'Pages currently queued for eviction': 0,
+      'Pages that could not be queued for eviction': 0,
+      'Refs skipped during cache traversal': 0,
+      'Size of the root page': 0,
+      'Total number of pages currently in cache': 0
+    },
+    checkpoint: {
+      'checkpoint has acquired a snapshot for its transaction': 0,
+      'pages added for eviction during checkpoint cleanup': 0,
+      'pages dirtied due to obsolete time window by checkpoint cleanup': 0,
+      'pages read into cache during checkpoint cleanup (reclaim_space)': 0,
+      'pages read into cache during checkpoint cleanup due to obsolete time window': 0,
+      'pages removed during checkpoint cleanup': 0,
+      'pages skipped during checkpoint cleanup tree walk': 0,
+      'pages visited during checkpoint cleanup': 0,
+      'transaction checkpoints due to obsolete pages': 0
+    },
+    compression: {
+      'compressed page maximum internal page size prior to compression': 4096,
+      'compressed page maximum leaf page size prior to compression ': 131072,
+      'page written to disk failed to compress': 0,
+      'page written to disk was too small to compress': 0,
+      'pages read from disk': 95,
+      'pages read from disk with compression ratio greater than 64': 0,
+      'pages read from disk with compression ratio smaller than  2': 0,
+      'pages read from disk with compression ratio smaller than  4': 89,
+      'pages read from disk with compression ratio smaller than  8': 6,
+      'pages read from disk with compression ratio smaller than 16': 0,
+      'pages read from disk with compression ratio smaller than 32': 0,
+      'pages read from disk with compression ratio smaller than 64': 0,
+      'pages written to disk': 0,
+      'pages written to disk with compression ratio greater than 64': 0,
+      'pages written to disk with compression ratio smaller than  2': 0,
+      'pages written to disk with compression ratio smaller than  4': 0,
+      'pages written to disk with compression ratio smaller than  8': 0,
+      'pages written to disk with compression ratio smaller than 16': 0,
+      'pages written to disk with compression ratio smaller than 32': 0,
+      'pages written to disk with compression ratio smaller than 64': 0
+    },
+    cursor: {
+      'Total number of deleted pages skipped during tree walk': 0,
+      'Total number of entries skipped by cursor next calls': 0,
+      'Total number of entries skipped by cursor prev calls': 0,
+      'Total number of entries skipped to position the history store cursor': 0,
+      'Total number of in-memory deleted pages skipped during tree walk': 0,
+      'Total number of on-disk deleted pages skipped during tree walk': 0,
+      'Total number of times a search near has exited due to prefix config': 0,
+      'Total number of times cursor fails to temporarily release pinned page to encourage eviction of hot or large page': 0,
+      'Total number of times cursor temporarily releases pinned page to encourage eviction of hot or large page': 0,
+      'bulk loaded cursor insert calls': 0,
+      'cache cursors reuse count': 0,
+      'close calls that result in cache': 3,
+      'create calls': 4,
+      'cursor bound calls that return an error': 0,
+      'cursor bounds cleared from reset': 0,
+      'cursor bounds comparisons performed': 0,
+      'cursor bounds next called on an unpositioned cursor': 0,
+      'cursor bounds next early exit': 0,
+      'cursor bounds prev called on an unpositioned cursor': 0,
+      'cursor bounds prev early exit': 0,
+      'cursor bounds search early exit': 0,
+      'cursor bounds search near call repositioned cursor': 0,
+      'cursor cache calls that return an error': 0,
+      'cursor close calls that return an error': 0,
+      'cursor compare calls that return an error': 0,
+      'cursor equals calls that return an error': 0,
+      'cursor get key calls that return an error': 0,
+      'cursor get value calls that return an error': 0,
+      'cursor insert calls that return an error': 0,
+      'cursor insert check calls that return an error': 0,
+      'cursor largest key calls that return an error': 0,
+      'cursor modify calls that return an error': 0,
+      'cursor next calls that return an error': 0,
+      'cursor next calls that skip due to a globally visible history store tombstone': 0,
+      'cursor next calls that skip greater than 1 and fewer than 100 entries': 0,
+      'cursor next calls that skip greater than or equal to 100 entries': 0,
+      'cursor next random calls that return an error': 0,
+      'cursor prev calls that return an error': 0,
+      'cursor prev calls that skip due to a globally visible history store tombstone': 0,
+      'cursor prev calls that skip greater than or equal to 100 entries': 0,
+      'cursor prev calls that skip less than 100 entries': 0,
+      'cursor reconfigure calls that return an error': 0,
+      'cursor remove calls that return an error': 0,
+      'cursor reopen calls that return an error': 0,
+      'cursor reserve calls that return an error': 0,
+      'cursor reset calls that return an error': 0,
+      'cursor search calls that return an error': 0,
+      'cursor search near calls that return an error': 0,
+      'cursor update calls that return an error': 0,
+      'insert calls': 0,
+      'insert key and value bytes': 0,
+      modify: 0,
+      'modify key and value bytes affected': 0,
+      'modify value bytes modified': 0,
+      'next calls': 134,
+      'open cursor count': 0,
+      'operation restarted': 0,
+      'prev calls': 0,
+      'remove calls': 0,
+      'remove key bytes removed': 0,
+      'reserve calls': 0,
+      'reset calls': 8,
+      'search calls': 0,
+      'search history store calls': 0,
+      'search near calls': 0,
+      'truncate calls': 0,
+      'update calls': 0,
+      'update key and value bytes': 0,
+      'update value size change': 0
+    },
+    reconciliation: {
+      'VLCS pages explicitly reconciled as empty': 0,
+      'approximate byte size of timestamps in pages written': 0,
+      'approximate byte size of transaction IDs in pages written': 0,
+      'dictionary matches': 0,
+      'fast-path pages deleted': 0,
+      'internal page key bytes discarded using suffix compression': 0,
+      'internal page multi-block writes': 0,
+      'leaf page key bytes discarded using prefix compression': 0,
+      'leaf page multi-block writes': 0,
+      'leaf-page overflow keys': 0,
+      'maximum blocks required for a page': 0,
+      'overflow values written': 0,
+      'page reconciliation calls': 0,
+      'page reconciliation calls for eviction': 0,
+      'pages deleted': 0,
+      'pages written including an aggregated newest start durable timestamp ': 0,
+      'pages written including an aggregated newest stop durable timestamp ': 0,
+      'pages written including an aggregated newest stop timestamp ': 0,
+      'pages written including an aggregated newest stop transaction ID': 0,
+      'pages written including an aggregated newest transaction ID ': 0,
+      'pages written including an aggregated oldest start timestamp ': 0,
+      'pages written including an aggregated prepare': 0,
+      'pages written including at least one prepare': 0,
+      'pages written including at least one start durable timestamp': 0,
+      'pages written including at least one start timestamp': 0,
+      'pages written including at least one start transaction ID': 0,
+      'pages written including at least one stop durable timestamp': 0,
+      'pages written including at least one stop timestamp': 0,
+      'pages written including at least one stop transaction ID': 0,
+      'records written including a prepare': 0,
+      'records written including a start durable timestamp': 0,
+      'records written including a start timestamp': 0,
+      'records written including a start transaction ID': 0,
+      'records written including a stop durable timestamp': 0,
+      'records written including a stop timestamp': 0,
+      'records written including a stop transaction ID': 0
+    },
+    session: {
+      'object compaction': 0
+    },
+    transaction: {
+      'a reader raced with a prepared transaction commit and skipped an update or updates': 0,
+      'number of times overflow removed value is read': 0,
+      'race to read prepared update retry': 0,
+      'rollback to stable history store keys that would have been swept in non-dryrun mode': 0,
+      'rollback to stable history store records with stop timestamps older than newer records': 0,
+      'rollback to stable inconsistent checkpoint': 0,
+      'rollback to stable keys removed': 0,
+      'rollback to stable keys restored': 0,
+      'rollback to stable keys that would have been removed in non-dryrun mode': 0,
+      'rollback to stable keys that would have been restored in non-dryrun mode': 0,
+      'rollback to stable restored tombstones from history store': 0,
+      'rollback to stable restored updates from history store': 0,
+      'rollback to stable skipping delete rle': 0,
+      'rollback to stable skipping stable rle': 0,
+      'rollback to stable sweeping history store keys': 0,
+      'rollback to stable tombstones from history store that would have been restored in non-dryrun mode': 0,
+      'rollback to stable updates from history store that would have been restored in non-dryrun mode': 0,
+      'rollback to stable updates removed from history store': 0,
+      'rollback to stable updates that would have been removed from history store in non-dryrun mode': 0,
+      'update conflicts': 0
+    }
+  },
+  sharded: false,
+  size: 4437734,
+  count: 772,
+  numOrphanDocs: 0,
+  storageSize: 2265088,
+  totalIndexSize: 57344,
+  totalSize: 2322432,
+  indexSizes: {
+    _id_: 57344
+  },
+  avgObjSize: 5748,
+  ns: 'test.jobs',
+  nindexes: 1,
+  scaleFactor: 1
+}
+
+=== TTL ANALYSIS for test.jobs ===
+
+TTL Indexes:
+No TTL indexes found
+
+Detected Date Fields: postedDate, createdAt, updatedAt
+
+Document Age Distribution by postedDate:
+Last 30 days: 769
+30-60 days old: 2
+60-90 days old: 1
+Older than 90 days: 0
+
+Document Age Distribution by createdAt:
+Last 30 days: 772
+30-60 days old: 0
+60-90 days old: 0
+Older than 90 days: 0
+
+Document Age Distribution by updatedAt:
+Last 30 days: 772
+30-60 days old: 0
+60-90 days old: 0
+Older than 90 days: 0
+
+=== QUERY PERFORMANCE for test.jobs ===
+
+Explain typical search query (using isRemote field):
+{
+  explainVersion: '1',
+  queryPlanner: {
+    namespace: 'test.jobs',
+    parsedQuery: {
+      isRemote: {
+        '$eq': true
+      }
+    },
+    indexFilterSet: false,
+    queryHash: '48AF49A1',
+    planCacheShapeHash: '48AF49A1',
+    planCacheKey: 'D9420715',
+    optimizationTimeMillis: 0,
+    maxIndexedOrSolutionsReached: false,
+    maxIndexedAndSolutionsReached: false,
+    maxScansToExplodeReached: false,
+    prunedSimilarIndexes: false,
+    winningPlan: {
+      isCached: false,
+      stage: 'LIMIT',
+      limitAmount: 10,
+      inputStage: {
+        stage: 'COLLSCAN',
+        filter: {
+          isRemote: {
+            '$eq': true
+          }
+        },
+        direction: 'forward'
+      }
+    },
+    rejectedPlans: []
+  },
+  executionStats: {
+    executionSuccess: true,
+    nReturned: 10,
+    executionTimeMillis: 0,
+    totalKeysExamined: 0,
+    totalDocsExamined: 10,
+    executionStages: {
+      isCached: false,
+      stage: 'LIMIT',
+      nReturned: 10,
+      executionTimeMillisEstimate: 0,
+      works: 11,
+      advanced: 10,
+      needTime: 0,
+      needYield: 0,
+      saveState: 0,
+      restoreState: 0,
+      isEOF: 1,
+      limitAmount: 10,
+      inputStage: {
+        stage: 'COLLSCAN',
+        filter: {
+          isRemote: {
+            '$eq': true
+          }
+        },
+        nReturned: 10,
+        executionTimeMillisEstimate: 0,
+        works: 10,
+        advanced: 10,
+        needTime: 0,
+        needYield: 0,
+        saveState: 0,
+        restoreState: 0,
+        isEOF: 0,
+        direction: 'forward',
+        docsExamined: 10
+      }
+    }
+  },
+  queryShapeHash: 'C3148B6D45D38194A086EFE461372C154DE167547F86EB257548BD1B9157C459',
+  command: {
+    find: 'jobs',
+    filter: {
+      isRemote: true
+    },
+    limit: 10,
+    '$db': 'test'
+  },
+  serverInfo: {
+    host: 'ac-xt9ca6g-shard-00-01.mjemntb.mongodb.net',
+    port: 27017,
+    version: '8.0.9',
+    gitVersion: 'f882ef816d531ecfbb593843e4c554fda90ca416'
+  },
+  serverParameters: {
+    internalQueryFacetBufferSizeBytes: 104857600,
+    internalQueryFacetMaxOutputDocSizeBytes: 104857600,
+    internalLookupStageIntermediateDocumentMaxSizeBytes: 16793600,
+    internalDocumentSourceGroupMaxMemoryBytes: 104857600,
+    internalQueryMaxBlockingSortMemoryUsageBytes: 33554432,
+    internalQueryProhibitBlockingMergeOnMongoS: 0,
+    internalQueryMaxAddToSetBytes: 104857600,
+    internalDocumentSourceSetWindowFieldsMaxMemoryBytes: 104857600,
+    internalQueryFrameworkControl: 'trySbeRestricted',
+    internalQueryPlannerIgnoreIndexWithCollationForRegex: 1
+  },
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1747417011, i: 42 }),
+    signature: {
+      hash: Binary.createFromBase64('3peZJ9024sRYpU4buCih6fBiRxM=', 0),
+      keyId: Long('7441706206747426834')
+    }
+  },
+  operationTime: Timestamp({ t: 1747417011, i: 42 })
+}
+
+=== COLLECTION METRICS for test.jobs ===
+
+Total Documents: 772
+Collection Size: 4437734 bytes
+Average Document Size: 5748.360103626943 bytes
+
+=== POTENTIAL ISSUES for test.jobs ===
+
+Searching for documents with large arrays:
+No large array fields found (>10 elements)

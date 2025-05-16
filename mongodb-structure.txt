@@ -1,0 +1,217 @@
+
+=== DATABASES ===
+{
+  databases: [
+    {
+      name: 'clickclickjob',
+      sizeOnDisk: Long('40960'),
+      empty: false
+    },
+    {
+      name: 'remote-jobs',
+      sizeOnDisk: Long('442368'),
+      empty: false
+    },
+    {
+      name: 'test',
+      sizeOnDisk: Long('2363392'),
+      empty: false
+    },
+    {
+      name: 'admin',
+      sizeOnDisk: Long('356352'),
+      empty: false
+    },
+    {
+      name: 'local',
+      sizeOnDisk: Long('6574710784'),
+      empty: false
+    }
+  ],
+  totalSize: Long('6577913856'),
+  totalSizeMb: Long('6273'),
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1747416771, i: 96 }),
+    signature: {
+      hash: Binary.createFromBase64('plg1J9txP0HHr+gj4+kwXmOWZTs=', 0),
+      keyId: Long('7441706206747426834')
+    }
+  },
+  operationTime: Timestamp({ t: 1747416771, i: 96 })
+}
+
+=== COLLECTIONS IN clickclickjob ===
+[
+  'jobs'
+]
+
+--- Sample document from clickclickjob.jobs ---
+{
+  _id: ObjectId('68261cea402d76d5169a2e63'),
+  title: 'Remote Data Entry Specialist',
+  company: 'ABC Company',
+  description: "We're looking for a detail-oriented data entry specialist who can work remotely...",
+  location: 'Remote',
+  salary: 45000,
+  postedDate: ISODate('2025-05-15T16:57:14.595Z'),
+  jobType: 'data_entry',
+  experienceLevel: 'entry',
+  employmentType: 'full-time',
+  skills: [
+    'Excel',
+    'Typing',
+    'Attention to Detail'
+  ],
+  remote: true,
+  url: 'https://example.com/job1',
+  credibilityScore: 0.8
+}
+
+=== COLLECTIONS IN remote-jobs ===
+[
+  'jobs'
+]
+
+--- Sample document from remote-jobs.jobs ---
+{
+  _id: ObjectId('682284efc96fdbc710342e5d'),
+  uniqueIdentifier: 'unknown company-community phone: account executive, b2b',
+  __v: 0,
+  company: 'Unknown Company',
+  createdAt: ISODate('2025-05-12T23:31:59.602Z'),
+  credibilityScore: 9,
+  description: '<img src="https://we-work-remotely.imgix.net/logos/0170/9330/logo.gif?ixlib=rails-4.0.0&w=50&h=50&dpr=2&fit=fill&auto=compress" /> <p> <strong>Headquarters:</strong> Boston <br /><strong>URL:</strong> <a href="https://communityphone.org">https://communityphone.org</a>\n' +
+    '</p> <h1>🌟 <strong>About the role</strong>\n' +
+    '</h1> <p><strong>Your Mission</strong></p> <ul> <li>Identify and pursue new business opportunities across small business .</li> <li>Manage the full sales cycle. Success here requires someone who’s genuinely curious about customers’ businesses and challenges, eager to dig deep, uncover pain points, and craft tailored solutions.</li> <li>Collaborate with leadership and marketing to refine messaging and sales strategy as we scale.</li> <li>Build and maintain strong relationships with prospects, offering a consultative sales experience.</li> <li>Log activity and maintain accurate records in our CRM (HubSpot).</li> <li>Stay on top of market trends and competitive landscape to inform your sales approach.</li> <li>Provide structured feedback to leadership to help shape product, process, and messaging.</li> </ul> <h1>🚀 What excites you<strong>...</strong>\n' +
+    '</h1> <ul> <li>The chance to build something from scratch—and leave your mark on a new sales organization.</li> <li>Having a direct line to leadership and being part of a small but mighty team that values your input.</li> <li>The challenge of selling a product that’s simple, high-impact, and uniquely positioned in the market.</li> <li>Fast-paced, dynamic environments where every win counts—and where you get to experiment and learn.</li> </ul> <h1>🏆 <strong>You are...</strong>\n' +
+    `</h1> <ul> <li>3+ years of experience in B2B sales, preferably with a track record of full-cycle success.</li> <li>Proven ability to hunt for new business and manage a high volume of outreach.</li> <li>Strong communicator who can build trust and rapport with decision makers across industries.</li> <li>Naturally curious and always looking for ways to improve your pitch and your results.</li> <li>Comfortable working independently and thriving in a remote, fast-paced environment.</li> <li>Excited by the challenges (and rewards) of an early-stage team where processes are evolving.</li> <li>Prior experience selling to small businesses, franchise owners, or multi-location businesses (nice-to-have).</li> <li>Familiarity with phone service or telecom (bonus but not required).</li> </ul> <h1>💙 Community Phone Culture</h1> <p>Community Phone has a customer-obsessed culture. We are looking for team members who love our product and mission. </p> <p>Beyond the job description, here are some traits members of our team share:</p> <p>We value <strong>Curiosity</strong> and learning in our employees. We promote open-mindedness, embrace mistakes, and encourage challenging questions for personal growth. We create a culture of continuous learning to empower our team to tackle challenges and excel in their roles.</p> <p><strong>Efficiency Where it Counts</strong>. We operate lean, optimizing resources to improve our products and deliver a world-class customer experience. We prioritize value over excess, embodying a scrappy and resourceful spirit to achieve our mission and values</p> <p>We prioritize taking decisive action over deliberation, recognizing that building a world-class product requires pushing personal limits and taking risks. We believe that a <strong>Bias Toward Action</strong> is essential for achieving our goals and delivering exceptional results to our customers.</p> <p>We strive for <strong>Transparency</strong> and prioritize open, Direct communication. This helps us resolve issues quickly and build strong relationships with our stakeholders.</p> <p>We take our work seriously and see it as a reflection of who we are. We're always looking for ways to improve and are open to feedback. We approach our work with a sense of ownership and a desire to deliver the best possible results. By embodying a <strong>Founder Mindset</strong>, we're able to achieve our goals and create exceptional products.</p> <p>We value a <strong>Caring Mentality</strong>. Our customers come first, and we collaborate to provide exceptional service. We prioritize teamwork over personal accolades, fostering a customer-focused culture that drives our success and promotes a supportive work environment.</p> <h1>💸 Compensation</h1> <p>Our compensation for this position includes a base annual salary of $14,400 USD (paid biweekly) + uncapped commissions.</p> <p><strong>To apply:</strong> <a href="https://weworkremotely.com/remote-jobs/community-phone-account-executive-b2b">https://weworkremotely.com/remote-jobs/community-phone-account-executive-b2b</a></p>`,
+  descriptionText: "Headquarters: Boston URL: https://communityphone.org 🌟 About the role Your Mission Identify and pursue new business opportunities across small business . Manage the full sales cycle. Success here requires someone who’s genuinely curious about customers’ businesses and challenges, eager to dig deep, uncover pain points, and craft tailored solutions. Collaborate with leadership and marketing to refine messaging and sales strategy as we scale. Build and maintain strong relationships with prospects, offering a consultative sales experience. Log activity and maintain accurate records in our CRM (HubSpot). Stay on top of market trends and competitive landscape to inform your sales approach. Provide structured feedback to leadership to help shape product, process, and messaging. 🚀 What excites you ... The chance to build something from scratch—and leave your mark on a new sales organization. Having a direct line to leadership and being part of a small but mighty team that values your input. The challenge of selling a product that’s simple, high-impact, and uniquely positioned in the market. Fast-paced, dynamic environments where every win counts—and where you get to experiment and learn. 🏆 You are... 3+ years of experience in B2B sales, preferably with a track record of full-cycle success. Proven ability to hunt for new business and manage a high volume of outreach. Strong communicator who can build trust and rapport with decision makers across industries. Naturally curious and always looking for ways to improve your pitch and your results. Comfortable working independently and thriving in a remote, fast-paced environment. Excited by the challenges (and rewards) of an early-stage team where processes are evolving. Prior experience selling to small businesses, franchise owners, or multi-location businesses (nice-to-have). Familiarity with phone service or telecom (bonus but not required). 💙 Community Phone Culture Community Phone has a customer-obsessed culture. We are looking for team members who love our product and mission. Beyond the job description, here are some traits members of our team share: We value Curiosity and learning in our employees. We promote open-mindedness, embrace mistakes, and encourage challenging questions for personal growth. We create a culture of continuous learning to empower our team to tackle challenges and excel in their roles. Efficiency Where it Counts . We operate lean, optimizing resources to improve our products and deliver a world-class customer experience. We prioritize value over excess, embodying a scrappy and resourceful spirit to achieve our mission and values We prioritize taking decisive action over deliberation, recognizing that building a world-class product requires pushing personal limits and taking risks. We believe that a Bias Toward Action is essential for achieving our goals and delivering exceptional results to our customers. We strive for Transparency and prioritize open, Direct communication. This helps us resolve issues quickly and build strong relationships with our stakeholders. We take our work seriously and see it as a reflection of who we are. We're always looking for ways to improve and are open to feedback. We approach our work with a sense of ownership and a desire to deliver the best possible results. By embodying a Founder Mindset , we're able to achieve our goals and create exceptional products. We value a Caring Mentality . Our customers come first, and we collaborate to provide exceptional service. We prioritize teamwork over personal accolades, fostering a customer-focused culture that drives our success and promotes a supportive work environment. 💸 Compensation Our compensation for this position includes a base annual salary of $14,400 USD (paid biweekly) + uncapped commissions. To apply: https://weworkremotely.com/remote-jobs/community-phone-account-executive-b2b",
+  expiresAt: ISODate('2025-06-11T23:48:30.744Z'),
+  featured: true,
+  location: 'Remote',
+  postedDate: ISODate('2025-05-12T19:12:43.000Z'),
+  qualityScore: 8,
+  scrapedDate: ISODate('2025-05-12T23:48:30.744Z'),
+  source: 'WeWorkRemotelyRss',
+  tags: [],
+  title: 'Community Phone: Account Executive, B2B',
+  updatedAt: ISODate('2025-05-12T23:48:30.744Z'),
+  url: 'https://weworkremotely.com/remote-jobs/community-phone-account-executive-b2b'
+}
+
+=== COLLECTIONS IN test ===
+[
+  'connection_tests',
+  'jobs'
+]
+
+--- Sample document from test.connection_tests ---
+{
+  _id: ObjectId('68250cce98a4221843d8f474'),
+  test_id: '2025-05-14T21:36:14.786Z',
+  message: 'GitHub Actions test',
+  timestamp: ISODate('2025-05-14T21:36:14.786Z')
+}
+
+--- Sample document from test.jobs ---
+{
+  _id: ObjectId('68252a311390e67a7c26ef9f'),
+  title: 'LPN (Licensed Practical Nurse)',
+  company: 'Covenant Home Health Care',
+  location: 'Remote, US',
+  url: 'https://www.indeed.com/viewjob?jk=8fd24f4bb70e3661',
+  description: 'We are looking for a reliable LPN (Licensed Practical Nurse) to care for bedbound and injured patients in a professional and considerate manner. Your payrate will be $38\\-$40 per visit. You will work under the supervision of a registered nurse. LPN professionals must be first and foremost qualified and compassionate. The ideal candidate will be experienced in providing diverse basic care to those who need it while remaining patient and calm. It is a demanding job but also very rewarding.\n' +
+    '\n' +
+    '**Responsibilities**\n' +
+    '\n' +
+    '* Record a patient’s medical history accurately\n' +
+    '* Take and record measurements of blood pressure, temperature, heart rate etc.\n' +
+    '* Observe patients under treatment to identify progress, side\\-effects of medications etc.\n' +
+    '* Monitor patients’ condition including fluid intake and output and compose patient charts\n' +
+    '* Assist ailing patients in daily necessary activities such as eating, bathing etc.\n' +
+    '* Administer injections, prescribed medications, enemas etc., clean and dress wounds and assist with other basic medical care tasks\n' +
+    '* Collect samples for lab testing as assigned\n' +
+    '* Provide emotional and psychological support when needed\n' +
+    '* Communicate with patients’ family or friends to provide advice, comfort and release instructions\n' +
+    '\n' +
+    '**Skills**\n' +
+    '\n' +
+    '* Proven experience as LPN or similar role\n' +
+    '* Ability to undertake a variety of diverse care tasks and work in a multidisciplinary team\n' +
+    '* Familiarity with hospital health, safety and sanitation standards and procedures\n' +
+    '* Understanding of confidentiality obligations and nursing best practices\n' +
+    '* Excellent knowledge of medical and hospital terminology\n' +
+    '* Good knowledge of MS Office and data entry\n' +
+    '* Perfect physical condition and stamina\n' +
+    '* Excellent communication and interpersonal skills\n' +
+    '* Compassionate and able to handle stress\n' +
+    '* Successful completion of LPN license program is a must\n' +
+    '\n' +
+    'Job Types: Part\\-time, PRN\n' +
+    '\n' +
+    'Pay: $35\\.00 \\- $40\\.00 per hour\n' +
+    '\n' +
+    'Expected hours: 15 – 20 per week\n' +
+    '\n' +
+    'Benefits:\n' +
+    '\n' +
+    '* Flexible schedule\n' +
+    '\n' +
+    'Medical Specialty:\n' +
+    '\n' +
+    '* Home Health\n' +
+    '\n' +
+    'Work Location: Remote',
+  descriptionText: 'We are looking for a reliable LPN (Licensed Practical Nurse) to care for bedbound and injured patients in a professional and considerate manner. Your payrate will be $38\\-$40 per visit. You will work under the supervision of a registered nurse. LPN professionals must be first and foremost qualified and compassionate. The ideal candidate will be experienced in providing diverse basic care to those who need it while remaining patient and calm. It is a demanding job but also very rewarding.\n' +
+    '\n' +
+    '**Responsibilities**\n' +
+    '\n' +
+    '* Record a patient’s medical history accurately\n' +
+    '* Take and record measurements of blood pressure, temperature, heart rate etc.\n' +
+    '* Observe patients under treatment to identify progress, side\\-effects of medications etc.\n' +
+    '* Monitor patients’ condition including fluid intake and output and compose patient charts\n' +
+    '* Assist ailing patients in daily necessary activities such as eating, bathing etc.\n' +
+    '* Administer injections, prescribed medications, enemas etc., clean and dress wounds and assist with other basic medical care tasks\n' +
+    '* Collect samples for lab testing as assigned\n' +
+    '* Provide emotional and psychological support when needed\n' +
+    '* Communicate with patients’ family or friends to provide advice, comfort and release instructions\n' +
+    '\n' +
+    '**Skills**\n' +
+    '\n' +
+    '* Proven experience as LPN or similar role\n' +
+    '* Ability to undertake a variety of diverse care tasks and work in a multidisciplinary team\n' +
+    '* Familiarity with hospital health, safety and sanitation standards and procedures\n' +
+    '* Understanding of confidentiality obligations and nursing best practices\n' +
+    '* Excellent knowledge of medical and hospital terminology\n' +
+    '* Good knowledge of MS Office and data entry\n' +
+    '* Perfect physical condition and stamina\n' +
+    '* Excellent communication and interpersonal skills\n' +
+    '* Compassionate and able to handle stress\n' +
+    '* Successful completion of LPN license program is a must\n' +
+    '\n' +
+    'Job Types: Part\\-time, PRN\n' +
+    '\n' +
+    'Pay: $35\\.00 \\- $40\\.00 per hour\n' +
+    '\n' +
+    'Expected hours: 15 – 20 per week\n' +
+    '\n' +
+    'Benefits:\n' +
+    '\n' +
+    '* Flexible schedule\n' +
+    '\n' +
+    'Medical Specialty:\n' +
+    '\n' +
+    '* Home Health\n' +
+    '\n' +
+    'Work Location: Remote',
+  source: 'JobSpyIndeed',
+  postedDate: ISODate('2025-05-14T00:00:00.000Z'),
+  credibilityScore: 9,
+  searchQuery: 'data entry remote',
+  salary: '',
+  isRemote: true,
+  qualityScore: 10,
+  createdAt: ISODate('2025-05-15T12:31:32.266Z'),
+  updatedAt: ISODate('2025-05-15T12:31:32.270Z')
+}

@@ -1,7 +1,7 @@
-import { EnhancedJobListing } from '../types/job';
+import { Job, EnhancedJobListing } from '../types/job';
 
 // Mock data for jobs (in a real app, these would come from an API)
-export const mockJobs = [
+export const mockJobs: Job[] = [
   {
     _id: 'job1',
     title: 'Remote Data Entry Specialist',
@@ -15,7 +15,13 @@ export const mockJobs = [
     featured: true,
     jobType: 'full-time',
     experienceLevel: 'entry-level',
-    categories: ['data-entry'],
+    payRange: '$15-20',
+    location_restriction: 'us-only',
+    jobCategory: 'data-entry',
+    skills: ['Fast typing', 'Attention to detail', 'Data verification'],
+    softwareRequirements: ['microsoft-office', 'excel'],
+    timezone: 'EST/CST preferred',
+    datePosted: 'today',
     tags: ['data-entry', 'remote', 'entry-level'],
     url: 'https://example.com/jobs/remote-data-entry-specialist'
   },
@@ -32,8 +38,14 @@ export const mockJobs = [
     featured: true,
     jobType: 'part-time',
     experienceLevel: 'entry-level',
-    categories: ['administrative', 'virtual-assistant'],
-    tags: ['administrative', 'remote', 'virtual-assistant'],
+    payRange: '$15-20',
+    location_restriction: 'worldwide',
+    jobCategory: 'administrative-assistant',
+    skills: ['Calendar management', 'Email management', 'Travel arrangements'],
+    softwareRequirements: ['microsoft-office', 'google-workspace'],
+    timezone: 'Flexible',
+    datePosted: 'this-week',
+    tags: ['administrative', 'remote', 'entry-level'],
     url: 'https://example.com/jobs/virtual-administrative-assistant'
   },
   {
@@ -49,8 +61,14 @@ export const mockJobs = [
     featured: true,
     jobType: 'full-time',
     experienceLevel: 'experienced',
-    categories: ['customer-service'],
-    tags: ['customer-service', 'remote', 'communication'],
+    payRange: '$15-20',
+    location_restriction: 'us-only',
+    jobCategory: 'customer-service',
+    skills: ['Customer support', 'Problem solving', 'Phone etiquette'],
+    softwareRequirements: ['crm-systems'],
+    timezone: 'EST/PST',
+    datePosted: 'this-week',
+    tags: ['customer-service', 'remote', 'experienced'],
     url: 'https://example.com/jobs/customer-service-representative'
   },
   {
@@ -66,8 +84,14 @@ export const mockJobs = [
     featured: false,
     jobType: 'part-time',
     experienceLevel: 'no-experience',
-    categories: ['data-entry'],
-    tags: ['data-entry', 'remote', 'part-time'],
+    payRange: 'under-$15',
+    location_restriction: 'us-only',
+    jobCategory: 'data-entry',
+    skills: ['Data verification', 'Basic computer skills'],
+    softwareRequirements: ['data-entry-software'],
+    timezone: 'Flexible',
+    datePosted: 'this-week',
+    tags: ['data-entry', 'remote', 'no-experience'],
     url: 'https://example.com/jobs/data-entry-clerk'
   },
   {
@@ -83,8 +107,14 @@ export const mockJobs = [
     featured: false,
     jobType: 'contract',
     experienceLevel: 'entry-level',
-    categories: ['transcription'],
-    tags: ['transcription', 'remote', 'audio'],
+    payRange: '$15-20',
+    location_restriction: 'worldwide',
+    jobCategory: 'transcription',
+    skills: ['Fast typing', 'Excellent hearing', 'Grammar skills'],
+    softwareRequirements: ['microsoft-office'],
+    timezone: 'Flexible',
+    datePosted: 'this-week',
+    tags: ['transcription', 'remote', 'entry-level'],
     url: 'https://example.com/jobs/transcriptionist'
   },
   {
@@ -100,9 +130,61 @@ export const mockJobs = [
     featured: false,
     jobType: 'full-time',
     experienceLevel: 'experienced',
-    categories: ['administrative', 'virtual-assistant'],
-    tags: ['executive-assistant', 'remote', 'administrative'],
+    payRange: '$20-25',
+    location_restriction: 'us-only',
+    jobCategory: 'administrative-assistant',
+    skills: ['Executive support', 'Calendar management', 'Travel arrangements', 'Confidentiality'],
+    softwareRequirements: ['microsoft-office', 'google-workspace'],
+    timezone: 'EST/CST',
+    datePosted: 'this-week',
+    tags: ['administrative', 'executive', 'remote', 'experienced'],
     url: 'https://example.com/jobs/virtual-executive-assistant'
+  },
+  {
+    _id: 'job7',
+    title: 'Bookkeeping Assistant',
+    company: 'FinanceHelp Inc',
+    location: 'Remote (US & Canada)',
+    description: '<p>Assist with accounts payable, accounts receivable, and general bookkeeping tasks. Reconcile accounts and prepare financial reports. Experience with QuickBooks required.</p>',
+    descriptionText: 'Assist with accounts payable, accounts receivable, and general bookkeeping tasks. Reconcile accounts and prepare financial reports. Experience with QuickBooks required.',
+    salary: '$20-24/hr',
+    postedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    qualityScore: 8.7,
+    featured: false,
+    jobType: 'part-time',
+    experienceLevel: 'experienced',
+    payRange: '$20-25',
+    location_restriction: 'us-canada',
+    jobCategory: 'bookkeeping',
+    skills: ['Bookkeeping', 'Account reconciliation', 'Financial reporting'],
+    softwareRequirements: ['quickbooks', 'excel'],
+    timezone: 'EST/CST',
+    datePosted: 'this-week',
+    tags: ['bookkeeping', 'finance', 'remote', 'experienced'],
+    url: 'https://example.com/jobs/bookkeeping-assistant'
+  },
+  {
+    _id: 'job8',
+    title: 'Entry-Level Data Processor',
+    company: 'DataWorks Solutions',
+    location: 'Remote (Worldwide)',
+    description: '<p>Process and validate data from multiple sources. Format data according to company standards and check for accuracy and completeness.</p>',
+    descriptionText: 'Process and validate data from multiple sources. Format data according to company standards and check for accuracy and completeness.',
+    salary: '$13-15/hr',
+    postedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    qualityScore: 7.8,
+    featured: false,
+    jobType: 'full-time',
+    experienceLevel: 'no-experience',
+    payRange: 'under-$15',
+    location_restriction: 'worldwide',
+    jobCategory: 'data-entry',
+    skills: ['Basic computer skills', 'Attention to detail'],
+    softwareRequirements: ['microsoft-office', 'excel'],
+    timezone: 'Flexible',
+    datePosted: 'today',
+    tags: ['data-entry', 'remote', 'no-experience'],
+    url: 'https://example.com/jobs/entry-level-data-processor'
   },
 ];
 
@@ -137,39 +219,62 @@ export const getJobById = (id: string): EnhancedJobListing => {
   };
 };
 
-// Mock function to search jobs
-export const searchJobs = (query: string, filters = {}) => {
+// Filter jobs by category
+export const getJobsByCategory = (category: string): Job[] => {
+  return mockJobs.filter(job => 
+    job.jobCategory === category || (job.tags && job.tags.includes(category))
+  );
+};
+
+// Get latest jobs (most recent first)
+export const getLatestJobs = (count: number = 10): Job[] => {
+  return [...mockJobs]
+    .sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime())
+    .slice(0, count);
+};
+
+// Get featured jobs
+export const getFeaturedJobs = (count: number = 3): Job[] => {
+  return [...mockJobs]
+    .filter(job => job.featured)
+    .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0))
+    .slice(0, count);
+};
+
+// Search jobs by query and filters
+export const searchJobs = (query: string, filters: Record<string, any> = {}): Job[] => {
   let results = [...mockJobs];
   
-  // Apply search query if provided
+  // Apply text search
   if (query) {
-    const searchTerms = query.toLowerCase().split(' ');
-    results = results.filter(job => {
-      return searchTerms.some(term => 
-        job.title.toLowerCase().includes(term) || 
-        job.company.toLowerCase().includes(term) || 
-        job.descriptionText.toLowerCase().includes(term)
-      );
-    });
+    const searchTerm = query.toLowerCase();
+    results = results.filter(job => 
+      job.title.toLowerCase().includes(searchTerm) || 
+      job.company.toLowerCase().includes(searchTerm) || 
+      (job.descriptionText && job.descriptionText.toLowerCase().includes(searchTerm))
+    );
   }
   
-  // Apply filters if provided
-  if (Object.keys(filters).length > 0) {
-    results = results.filter(job => {
-      return Object.entries(filters).every(([key, value]) => {
-        // @ts-ignore - dynamic property access
-        return !value || job[key] === value || (Array.isArray(value) && value.includes(job[key]));
-      });
-    });
+  // Apply filters (if any)
+  for (const [key, value] of Object.entries(filters)) {
+    if (!value) continue;
+    
+    if (key === 'jobType' && value) {
+      results = results.filter(job => job.jobType === value);
+    } else if (key === 'experienceLevel' && value) {
+      results = results.filter(job => job.experienceLevel === value);
+    } else if (key === 'payRange' && value) {
+      results = results.filter(job => job.payRange === value);
+    } else if (key === 'location' && value) {
+      results = results.filter(job => job.location_restriction === value);
+    } else if (key === 'datePosted' && value) {
+      results = results.filter(job => job.datePosted === value);
+    } else if (key === 'jobCategory' && value) {
+      results = results.filter(job => job.jobCategory === value);
+    }
   }
   
-  return {
-    jobs: results,
-    total: results.length,
-    page: 1,
-    pageSize: results.length,
-    totalPages: 1
-  };
+  return results;
 };
 
 // Mock function to get similar jobs

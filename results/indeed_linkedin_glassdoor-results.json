@@ -1,0 +1,7 @@
+{
+  "source": "indeed_linkedin_glassdoor",
+  "scrape_date": "2025-05-15T23:12:04.697631",
+  "error": "Scraping error: No module named 'numpy.rec'",
+  "jobs_count": 0,
+  "jobs": []
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 interface SearchBarProps {
@@ -27,6 +27,32 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [activeFilters, setActiveFilters] = useState<string[]>(
     filterChips.filter(chip => chip.active).map(chip => chip.value)
   );
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Initialize search term from URL query if available
+  useEffect(() => {
+    if (router.query.q && typeof router.query.q === 'string') {
+      setSearchTerm(router.query.q);
+    }
+    
+    // Initialize active filters from URL query if available
+    if (router.query.filters && typeof router.query.filters === 'string') {
+      const urlFilters = router.query.filters.split(',');
+      setActiveFilters(urlFilters);
+    }
+    
+    // Check if viewport is mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, [router.query]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,12 +61,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
     } else {
       // Default behavior: navigate to jobs page with search query
       router.push({
-        pathname: '/jobs',
+        pathname: '/jobs/',
         query: { 
           q: searchTerm,
           ...(activeFilters.length > 0 && { filters: activeFilters.join(',') })
         },
-      });
+      }, undefined, { shallow: false });
     }
   };
 
@@ -66,7 +92,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <div className={`w-full ${className}`}>
-      <form onSubmit={handleSubmit} className="flex w-full">
+      <form onSubmit={handleSubmit} className={`flex flex-col sm:flex-row w-full gap-2 sm:gap-0`}>
         <div className="relative flex-grow">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -79,27 +105,29 @@ const SearchBar: React.FC<SearchBarProps> = ({
             placeholder={placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Search"
           />
         </div>
         <button
           type="submit"
-          className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="w-full sm:w-auto sm:ml-3 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          Search
+          {isMobile ? 'Search Jobs' : 'Search'}
         </button>
       </form>
 
       {filterChips.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-4 max-w-full overflow-x-auto pb-2">
           {filterChips.map((chip) => (
             <button
               key={chip.value}
               onClick={() => toggleFilter(chip.value)}
-              className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+              className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 activeFilters.includes(chip.value)
-                  ? 'bg-blue-100 text-blue-800'
-                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-transparent'
               }`}
+              aria-pressed={activeFilters.includes(chip.value)}
             >
               {chip.label}
               {activeFilters.includes(chip.value) && (
@@ -113,7 +141,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
           {activeFilters.length > 0 && (
             <button
               onClick={clearAllFilters}
-              className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
+              className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-transparent transition-colors"
+              aria-label="Clear all filters"
             >
               Clear All
               <svg className="ml-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

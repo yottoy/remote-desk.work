@@ -28,8 +28,26 @@ const nextConfig = {
   },
   output: 'standalone',
   
-  // Add trailing slash configuration to fix routing issues
-  trailingSlash: false
+  // Changed to true to ensure consistent URL patterns
+  trailingSlash: true,
+  
+  // Add custom rewrites and redirects to handle 404s more gracefully
+  async rewrites() {
+    return [
+      {
+        // Rewrite any unmatched routes to the 404 page without changing the URL
+        source: '/:path*',
+        destination: '/_404',
+        has: [
+          {
+            type: 'header',
+            key: 'x-matched-path',
+            value: '((?!_next|api).*)'
+          }
+        ]
+      }
+    ];
+  }
 };
 
 module.exports = nextConfig; 
