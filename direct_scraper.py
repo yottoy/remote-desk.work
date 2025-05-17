@@ -12,7 +12,32 @@ import logging
 import traceback
 import platform
 import subprocess
+import re
 from datetime import datetime
+
+# Try to import required packages, install if not available
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    subprocess.run([sys.executable, "-m", "pip", "install", "beautifulsoup4"], check=False)
+    from bs4 import BeautifulSoup
+
+try:
+    from markdownify import markdownify as md
+except ImportError:
+    subprocess.run([sys.executable, "-m", "pip", "install", "markdownify"], check=False)
+    try:
+        from markdownify import markdownify as md
+    except ImportError:
+        # Define a simple fallback if markdownify can't be installed
+        def md(html_text):
+            return html_text
+            
+import html
+import re
+from markdownify import markdownify as md
+from bs4 import BeautifulSoup
+import html
 
 # Set up logging to both file and console
 os.makedirs("logs", exist_ok=True)
@@ -256,6 +281,116 @@ def create_fallback_results():
     logger.info(f"Created {len(mock_jobs)} mock jobs as fallback data in {filename}")
     return mock_jobs
 
+def format_job_description(description, source=None):
+    """
+    Format job descriptions to preserve formatting and improve readability
+    
+    Args:
+        description (str): The raw job description text
+        source (str): The source of the job (linkedin, indeed, etc.)
+        
+    Returns:
+        str: Formatted HTML description with proper line breaks, lists, etc.
+    """
+    if not description:
+        return ""
+    
+    logger.info(f"Formatting job description from {source}")
+    
+    # Handle LinkedIn descriptions which often come as plain text
+    # with no proper HTML formatting
+    if source and source.lower() == 'linkedin':
+        try:
+            # First escape any HTML that might be in the text
+            description = html.escape(description)
+            
+            # Convert URLs to links
+            url_pattern = r'(https?://[^\s]+)'
+            description = re.sub(url_pattern, r'<a href="\1" target="_blank" rel="noopener noreferrer">\1</a>', description)
+            
+            # Convert bullet points (* Some text) to HTML lists
+            # Look for patterns like "* Item" or "• Item" at the beginning of lines
+            parts = []
+            in_list = False
+            for line in description.split('\n'):
+                line = line.strip()
+                if not line:
+                    if in_list:
+                        parts.append('</ul>')
+                        in_list = False
+                    parts.append('<p>&nbsp;</p>')
+                    continue
+                
+                # Check for bullet points (asterisks or bullet characters)
+                if line.startswith('*') or line.startswith('•'):
+                    if not in_list:
+                        parts.append('<ul>')
+                        in_list = True
+                    item_text = line[1:].strip()
+                    parts.append(f'<li>{item_text}</li>')
+                elif in_list:
+                    parts.append('</ul>')
+                    in_list = False
+                    parts.append(f'<p>{line}</p>')
+                else:
+                    # Check if line appears to be a heading (all caps, short)
+                    if line.isupper() and len(line) < 50:
+                        parts.append(f'<h3>{line}</h3>')
+                    # Check if line appears to be a subheading (ends with colon)
+                    elif line.endswith(':') and len(line) < 80:
+                        parts.append(f'<h4>{line}</h4>')
+                    else:
+                        parts.append(f'<p>{line}</p>')
+            
+            if in_list:
+                parts.append('</ul>')
+            
+            formatted_description = ''.join(parts)
+            return formatted_description
+        
+        except Exception as e:
+            logger.error(f"Error formatting LinkedIn description: {str(e)}")
+            # Fall back to basic formatting
+            return description.replace('\n', '<br>')
+    
+    # For descriptions that might already contain HTML
+    try:
+        # If it already has HTML tags, try to clean it up
+        if '<' in description and '>' in description:
+            soup = BeautifulSoup(description, 'html.parser')
+            # Convert any script or style tags to plain text
+            for tag in soup.find_all(['script', 'style']):
+                tag.decompose()
+                
+            # Return the cleaned HTML
+            return str(soup)
+        else:
+            # For plain text, convert line breaks and detect lists
+            description = html.escape(description)
+            
+            # Convert lines that look like list items
+            lines = description.split('\n')
+            formatted_lines = []
+            
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if not line:
+                    formatted_lines.append('<p>&nbsp;</p>')
+                    continue
+                
+                # Look for numbered lists (1. Item) or bullet-like characters
+                if re.match(r'^\d+\.', line) or line.startswith('-') or line.startswith('•'):
+                    formatted_lines.append(f'<li>{line[line.find(" ")+1:]}</li>')
+                else:
+                    formatted_lines.append(f'<p>{line}</p>')
+            
+            return ''.join(formatted_lines)
+    except Exception as e:
+        logger.error(f"Error formatting job description: {str(e)}")
+        # Return description with basic line breaks as a fallback
+        return description.replace('\n', '<br>')
+
+# Modify save_jobs_to_file to apply formatting
 def save_jobs_to_file(df, site_name, search_term):
     """Save job results to a JSON file"""
     try:
@@ -268,6 +403,17 @@ def save_jobs_to_file(df, site_name, search_term):
             try:
                 jobs_json = df.to_json(orient="records", date_format="iso")
                 jobs_list = json.loads(jobs_json)
+                
+                # Format job descriptions
+                for job in jobs_list:
+                    if 'description' in job and job['description']:
+                        job['description'] = format_job_description(job['description'], site_name)
+                    
+                    # Add a plain text version for search indexing
+                    if 'description' in job and job['description']:
+                        # Simple method to strip HTML tags for plain text version
+                        job['descriptionText'] = re.sub(r'<[^>]+>', ' ', job['description'])
+                
             except Exception as e:
                 logger.error(f"Error converting DataFrame to JSON: {str(e)}")
                 # Fallback conversion
@@ -392,7 +538,19 @@ def try_all_search_variations(site, base_terms):
         "data entry remote",
         "remote administrative assistant",
         "virtual assistant data entry",
-        "work from home office assistant"
+        "work from home office assistant",
+        # Additional more specific search terms to increase job volume
+        "remote data clerk",
+        "virtual data entry",
+        "remote admin support",
+        "work from home administrative",
+        "remote clerical",
+        "virtual office assistant",
+        "remote executive assistant",
+        "work from home data processing",
+        "remote transcription",
+        "virtual receptionist",
+        "customer service data entry remote"
     ]
     
     for search_term in variations:
@@ -405,17 +563,17 @@ def try_all_search_variations(site, base_terms):
         # Add a small delay between searches
         time.sleep(random.uniform(2.0, 4.0))
         
-        # Define common parameters with higher results_wanted
+        # Define common parameters with higher results_wanted and longer timeframe
         params = {
-            "results_wanted": 10,  # Increased to get more results
-            "hours_old": 168,      # Increased to last 7 days
+            "results_wanted": 25,  # Increased from 10 to get more results
+            "hours_old": 336,      # Increased to last 14 days (was 168 = 7 days)
             "is_remote": True      # Explicitly look for remote jobs
         }
         
         if "indeed" in str(site).lower():
             params.update({
                 "country_indeed": "USA",
-                "job_type": "fulltime"
+                "job_type": "fulltime"  # Keep this as the default, but we'll try different types
             })
         
         # Try the search
@@ -425,10 +583,44 @@ def try_all_search_variations(site, base_terms):
             logger.info(f"Found {len(jobs)} jobs with search term '{search_term}'")
             all_jobs.extend(jobs)
             # If we found jobs, continue to the next variation to collect more
-            if len(all_jobs) >= 20:  # Stop after finding sufficient jobs
-                break
+            # Removing the early stop to collect more jobs
+            # if len(all_jobs) >= 20:  # Stop after finding sufficient jobs
+            #    break
         else:
             logger.warning(f"No jobs found with search term '{search_term}'")
+            
+            # If initial attempt failed, try with less restrictive parameters
+            if "indeed" in str(site).lower():
+                # Try alternate job types if fulltime didn't work
+                for job_type in ["parttime", "contract", ""]:
+                    alt_params = params.copy()
+                    if job_type:
+                        alt_params["job_type"] = job_type
+                    else:
+                        # Remove job_type filter entirely
+                        if "job_type" in alt_params:
+                            del alt_params["job_type"]
+                    
+                    logger.info(f"Retrying with job_type={job_type if job_type else 'any'}")
+                    retry_jobs = scrape_with_fallback(site, search_term, **alt_params)
+                    
+                    if retry_jobs and len(retry_jobs) > 0:
+                        logger.info(f"Found {len(retry_jobs)} jobs with alternative parameters")
+                        all_jobs.extend(retry_jobs)
+                        break
+    
+    # Deduplicate jobs by URL before saving
+    if all_jobs:
+        unique_jobs = []
+        job_urls = set()
+        
+        for job in all_jobs:
+            if 'job_url' in job and job['job_url'] and job['job_url'] not in job_urls:
+                job_urls.add(job['job_url'])
+                unique_jobs.append(job)
+        
+        logger.info(f"Deduplicated from {len(all_jobs)} to {len(unique_jobs)} jobs")
+        all_jobs = unique_jobs
     
     # Save the combined results
     if all_jobs:
@@ -468,7 +660,7 @@ def scrape_indeed():
     jobs = try_all_search_variations("indeed", "data entry administrative assistant")
     
     # If that didn't work, try with more specific parameters
-    if not jobs:
+    if not jobs or len(jobs) < 10:  # Changed to try additional methods if we found fewer than 10 jobs
         logger.info("Trying Indeed with more specific parameters")
         try:
             from jobspy import scrape_jobs
@@ -478,7 +670,14 @@ def scrape_indeed():
                 '"data entry" remote',
                 '"administrative assistant" (remote OR virtual)',
                 'virtual assistant (data OR administrative)',
-                'work from home data entry'
+                'work from home data entry',
+                # Additional search terms to increase volume
+                'remote data specialist',
+                'work from home clerk',
+                'virtual administrative support',
+                'remote secretary',
+                'office admin remote',
+                'data processing work from home'
             ]
             
             for term in search_terms:
@@ -489,8 +688,8 @@ def scrape_indeed():
                         search_term=term,
                         location="Remote",
                         country_indeed="USA",
-                        hours_old=72,
-                        results_wanted=5,
+                        hours_old=336,  # Increased to 14 days
+                        results_wanted=15,  # Increased from 5
                         verbose=2
                     )
                     
