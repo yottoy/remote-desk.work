@@ -23,26 +23,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Extract query parameters with defaults
     const {
       page = '1',
-      limit = '20'
+      limit = '20',
+      category = '',
+      search = ''
     } = req.query;
 
     try {
-      // Simplified query - just get all jobs without any filters
-      const filter = {};
-      console.log('Using simplified query filter:', filter);
+      // Build base filter
+      const filter: any = {};
+
+      // Add category filter if specified
+      if (category && typeof category === 'string') {
+        try {
+          const categoryPattern = new RegExp(category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          filter.category = { $regex: categoryPattern };
+        } catch (error) {
+          console.warn('Invalid category pattern:', error);
+        }
+      }
+
+      // Add search filter if specified
+      if (search && typeof search === 'string') {
+        try {
+          const searchPattern = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          filter.$or = [
+            { title: { $regex: searchPattern } },
+            { description: { $regex: searchPattern } },
+            { company: { $regex: searchPattern } }
+          ];
+        } catch (error) {
+          console.warn('Invalid search pattern:', error);
+        }
+      }
+
+      console.log('Using filter:', JSON.stringify(filter, null, 2));
 
       // Pagination
-      let pageNum = Math.max(1, parseInt(page as string));
-      let limitNum = Math.min(100, Math.max(1, parseInt(limit as string)));
+      let pageNum = Math.max(1, parseInt(typeof page === 'string' ? page : '1'));
+      let limitNum = Math.min(100, Math.max(1, parseInt(typeof limit === 'string' ? limit : '20')));
       const skip = (pageNum - 1) * limitNum;
 
       // First check total count
       const totalJobs = await jobsCollection.countDocuments(filter);
-      console.log('Total jobs in collection:', totalJobs);
+      console.log('Total matching jobs:', totalJobs);
 
       // Execute query with pagination
       const jobs = await jobsCollection
         .find(filter)
+        .sort({ postedDate: -1 }) // Sort by newest first
         .skip(skip)
         .limit(limitNum)
         .toArray();
@@ -51,6 +79,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Calculate pagination metadata
       const totalPages = Math.ceil(totalJobs / limitNum);
+
+      // Set cache headers
+      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
 
       // Return jobs with pagination metadata
       return res.status(200).json({

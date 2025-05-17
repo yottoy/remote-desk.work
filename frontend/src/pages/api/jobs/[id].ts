@@ -1,66 +1,51 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { ObjectId } from 'mongodb';
 import { connectToDatabase } from '../../../utils/mongodb';
+import { ObjectId } from 'mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('Job details API route called with query:', req.query);
-
-  // Only allow GET requests
+  const { id } = req.query;
+  
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Get the job ID from the URL
-  const { id } = req.query;
-
   if (!id || typeof id !== 'string') {
-    console.error('Invalid job ID provided:', id);
-    return res.status(400).json({ error: 'Job ID is required' });
+    return res.status(400).json({ error: 'Invalid job ID' });
   }
 
   try {
-    console.log('Attempting to connect to database...');
     const { db } = await connectToDatabase();
-    if (!db) {
-      console.error('Failed to connect to database');
-      return res.status(500).json({ error: 'Database connection failed' });
-    }
-    console.log('Successfully connected to database');
-    
     const jobsCollection = db.collection('jobs');
 
-    // Try to find the job by its ID
-    let objectId;
     let job;
     
-    try {
-      objectId = new ObjectId(id);
-      console.log('Looking up job with ObjectId:', objectId);
-      job = await jobsCollection.findOne({ _id: objectId });
-    } catch (error) {
-      console.error('Error with ObjectId, trying string ID lookup:', error);
-      // If ObjectId fails, try looking up by string ID
-      job = await jobsCollection.findOne({ 
+    // Try to find by ObjectId first
+    if (ObjectId.isValid(id)) {
+      job = await jobsCollection.findOne({ _id: new ObjectId(id) });
+    }
+
+    // If not found by ObjectId, try to find by slug or other fields
+    if (!job) {
+      job = await jobsCollection.findOne({
         $or: [
-          { _id: id },
-          { uniqueIdentifier: id }
+          { slug: id },
+          { jobId: id }
         ]
       });
     }
 
     if (!job) {
-      console.error('Job not found for ID:', id);
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    console.log('Successfully found job:', job._id);
-
-    // Return the job
+    // Set cache headers
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
+    
     return res.status(200).json(job);
   } catch (error) {
-    console.error('Error fetching job details:', error);
+    console.error('Error fetching job:', error);
     return res.status(500).json({ 
-      error: 'Failed to fetch job details',
+      error: 'Failed to fetch job', 
       details: error instanceof Error ? error.message : String(error)
     });
   }
