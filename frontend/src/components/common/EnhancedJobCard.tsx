@@ -20,6 +20,7 @@ interface Job {
   softwareRequirements?: string[];
   timezone?: string;
   applicationLink?: string;
+  jobCategory?: string;
 }
 
 interface EnhancedJobCardProps {
@@ -35,17 +36,25 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
   const postedDate = new Date(job.postedDate);
   const timeAgo = formatDistanceToNow(postedDate, { addSuffix: true });
   
-  // Determine if job involves data entry or admin work based on title (this would be more sophisticated in production)
-  const isDataEntry = job.title.toLowerCase().includes('data entry') || 
-                      job.title.toLowerCase().includes('data processing');
-  const isAdmin = job.title.toLowerCase().includes('admin') || 
-                  job.title.toLowerCase().includes('assistant') || 
-                  job.title.toLowerCase().includes('coordinator');
-  
-  // Generate relevant job type badges
+  // Generate job type badges from job data rather than inferring from title
   const jobTypeBadges = [];
-  if (isDataEntry) jobTypeBadges.push('Data Entry');
-  if (isAdmin) jobTypeBadges.push('Administrative');
+  
+  // Use explicit job category if available
+  if (job.jobCategory) {
+    jobTypeBadges.push(job.jobCategory);
+  } 
+  // Only fallback to title-based inference if no explicit category
+  else {
+    const title = job.title.toLowerCase();
+    if (title.includes('data entry') || title.includes('data processing')) {
+      jobTypeBadges.push('Data Entry');
+    }
+    if (title.includes('admin') || title.includes('assistant') || title.includes('coordinator')) {
+      jobTypeBadges.push('Administrative');
+    }
+  }
+  
+  // Add employment type badges from actual data
   if (job.jobType === 'full-time') jobTypeBadges.push('Full-time');
   if (job.jobType === 'part-time') jobTypeBadges.push('Part-time');
   if (job.jobType === 'contract') jobTypeBadges.push('Contract');
@@ -76,7 +85,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
               <svg className="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
                 <circle cx="4" cy="4" r="3" />
               </svg>
-              Verified
+              High Quality
             </span>
           )}
         </div>

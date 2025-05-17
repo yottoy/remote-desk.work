@@ -70,9 +70,6 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
           {displayIcon}
         </div>
         <div className="ml-3 text-sm font-medium text-gray-900">{name}</div>
-        {count !== undefined && (
-          <div className="ml-auto text-xs text-gray-500">{count} jobs</div>
-        )}
       </Link>
     );
   }
@@ -86,9 +83,6 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
         {displayIcon}
       </div>
       <h3 className="text-lg font-medium text-gray-900 mb-1">{name}</h3>
-      {count !== undefined && (
-        <p className="text-sm text-gray-500">{count} jobs available</p>
-      )}
     </Link>
   );
 };

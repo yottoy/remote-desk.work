@@ -14,12 +14,15 @@ interface JobCardProps {
     featured?: boolean;
     description?: string;
     descriptionText?: string;
+    verified?: boolean;
   };
   variant?: 'default' | 'compact' | 'featured';
 }
 
 const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
-  const isVerified = job.qualityScore && job.qualityScore >= 8;
+  // Use explicit verified flag if available, otherwise use a more accurate threshold
+  // with clear indication this is a quality score, not verification of legitimacy
+  const isHighQuality = job.verified || (job.qualityScore && job.qualityScore >= 8);
   
   // Handle potential date formatting errors
   let timeAgo = '';
@@ -48,9 +51,9 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
             </h3>
             <p className="text-sm text-gray-600 line-clamp-1">{job.company}</p>
           </div>
-          {isVerified && (
+          {isHighQuality && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
-              Verified
+              High Quality
             </span>
           )}
         </div>
@@ -76,12 +79,12 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
               </h3>
               <p className="text-base text-gray-700 mt-1 line-clamp-1">{job.company}</p>
             </div>
-            {isVerified && (
+            {isHighQuality && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
                 <svg className="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
                   <circle cx="4" cy="4" r="3" />
                 </svg>
-                Verified
+                High Quality
               </span>
             )}
           </div>
@@ -138,12 +141,12 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
           </h3>
           <p className="text-sm text-gray-600 mt-1 line-clamp-1">{job.company}</p>
         </div>
-        {isVerified && (
+        {isHighQuality && (
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
             <svg className="-ml-0.5 mr-1 h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 12 12">
               <path d="M10.28 4.305L4.989 9.594 1.695 6.3A1 1 0 00.28 7.712l3.708 3.709a1 1 0 001.414 0l6.3-6.3a1 1 0 00-1.42-1.415h-.001z" />
             </svg>
-            Verified
+            High Quality
           </span>
         )}
       </div>

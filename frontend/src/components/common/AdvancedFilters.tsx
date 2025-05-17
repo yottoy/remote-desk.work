@@ -79,9 +79,6 @@ const FilterSection: React.FC<FilterSectionProps> = ({
               />
               <label htmlFor={`${id}-${option.id}`} className="ml-3 text-sm text-gray-600 cursor-pointer flex items-center justify-between w-full">
                 <span>{option.label}</span>
-                {option.count !== undefined && (
-                  <span className="text-xs text-gray-500 ml-1">({option.count})</span>
-                )}
               </label>
             </div>
           ))}
@@ -159,73 +156,73 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       id: 'jobCategory',
       title: 'Job Category',
       options: [
-        { id: 'data-entry', label: 'Data Entry', count: showCounts ? 42 : undefined },
-        { id: 'administrative-assistant', label: 'Administrative Assistant', count: showCounts ? 36 : undefined },
-        { id: 'virtual-assistant', label: 'Virtual Assistant', count: showCounts ? 29 : undefined },
-        { id: 'customer-service', label: 'Customer Service', count: showCounts ? 51 : undefined },
-        { id: 'transcription', label: 'Transcription', count: showCounts ? 18 : undefined },
-        { id: 'bookkeeping', label: 'Bookkeeping', count: showCounts ? 12 : undefined },
+        { id: 'data-entry', label: 'Data Entry' },
+        { id: 'administrative-assistant', label: 'Administrative Assistant' },
+        { id: 'virtual-assistant', label: 'Virtual Assistant' },
+        { id: 'customer-service', label: 'Customer Service' },
+        { id: 'transcription', label: 'Transcription' },
+        { id: 'bookkeeping', label: 'Bookkeeping' },
       ]
     },
     {
       id: 'jobType',
       title: 'Job Type',
       options: [
-        { id: 'full-time', label: 'Full-time', count: showCounts ? 87 : undefined },
-        { id: 'part-time', label: 'Part-time', count: showCounts ? 64 : undefined },
-        { id: 'contract', label: 'Contract', count: showCounts ? 41 : undefined },
-        { id: 'temporary', label: 'Temporary', count: showCounts ? 19 : undefined },
+        { id: 'full-time', label: 'Full-time' },
+        { id: 'part-time', label: 'Part-time' },
+        { id: 'contract', label: 'Contract' },
+        { id: 'temporary', label: 'Temporary' },
       ]
     },
     {
       id: 'experienceLevel',
       title: 'Experience Level',
       options: [
-        { id: 'no-experience', label: 'No Experience', count: showCounts ? 32 : undefined },
-        { id: 'entry-level', label: 'Entry Level', count: showCounts ? 78 : undefined },
-        { id: 'intermediate', label: 'Intermediate', count: showCounts ? 54 : undefined },
-        { id: 'experienced', label: 'Experienced', count: showCounts ? 24 : undefined },
+        { id: 'no-experience', label: 'No Experience' },
+        { id: 'entry-level', label: 'Entry Level' },
+        { id: 'intermediate', label: 'Intermediate' },
+        { id: 'experienced', label: 'Experienced' },
       ]
     },
     {
       id: 'payRange',
       title: 'Pay Range',
       options: [
-        { id: 'under-$15', label: 'Under $15/hr', count: showCounts ? 35 : undefined },
-        { id: '$15-20', label: '$15-20/hr', count: showCounts ? 71 : undefined },
-        { id: '$20-25', label: '$20-25/hr', count: showCounts ? 43 : undefined },
-        { id: '$25+', label: '$25+/hr', count: showCounts ? 22 : undefined },
+        { id: 'under-$15', label: 'Under $15/hr' },
+        { id: '$15-20', label: '$15-20/hr' },
+        { id: '$20-25', label: '$20-25/hr' },
+        { id: '$25+', label: '$25+/hr' },
       ]
     },
     {
       id: 'softwareRequirements',
       title: 'Software',
       options: [
-        { id: 'microsoft-office', label: 'Microsoft Office', count: showCounts ? 98 : undefined },
-        { id: 'google-workspace', label: 'Google Workspace', count: showCounts ? 83 : undefined },
-        { id: 'excel', label: 'Excel', count: showCounts ? 76 : undefined },
-        { id: 'quickbooks', label: 'QuickBooks', count: showCounts ? 41 : undefined },
-        { id: 'data-entry-software', label: 'Data Entry Software', count: showCounts ? 36 : undefined },
-        { id: 'crm-systems', label: 'CRM Systems', count: showCounts ? 29 : undefined },
+        { id: 'microsoft-office', label: 'Microsoft Office' },
+        { id: 'google-workspace', label: 'Google Workspace' },
+        { id: 'excel', label: 'Excel' },
+        { id: 'quickbooks', label: 'QuickBooks' },
+        { id: 'data-entry-software', label: 'Data Entry Software' },
+        { id: 'crm-systems', label: 'CRM Systems' },
       ]
     },
     {
       id: 'location',
       title: 'Location',
       options: [
-        { id: 'worldwide', label: 'Worldwide', count: showCounts ? 64 : undefined },
-        { id: 'us-only', label: 'US Only', count: showCounts ? 89 : undefined },
-        { id: 'us-canada', label: 'US & Canada', count: showCounts ? 95 : undefined },
-        { id: 'europe', label: 'Europe', count: showCounts ? 38 : undefined },
+        { id: 'worldwide', label: 'Worldwide' },
+        { id: 'us-only', label: 'US Only' },
+        { id: 'us-canada', label: 'US & Canada' },
+        { id: 'europe', label: 'Europe' },
       ]
     },
     {
       id: 'datePosted',
       title: 'Date Posted',
       options: [
-        { id: 'today', label: 'Today', count: showCounts ? 27 : undefined },
-        { id: 'this-week', label: 'This Week', count: showCounts ? 118 : undefined },
-        { id: 'this-month', label: 'This Month', count: showCounts ? 167 : undefined },
+        { id: 'today', label: 'Today' },
+        { id: 'this-week', label: 'This Week' },
+        { id: 'this-month', label: 'This Month' },
       ]
     },
   ];

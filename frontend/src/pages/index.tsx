@@ -64,12 +64,12 @@ const featuredJobs = [
 
 // Mock data for job categories
 const jobCategories = [
-  { name: 'Data Entry', slug: 'data-entry', count: 56 },
-  { name: 'Administrative', slug: 'administrative', count: 42 },
-  { name: 'Customer Support', slug: 'customer-service', count: 78 },
-  { name: 'Transcription', slug: 'transcription', count: 34 },
-  { name: 'Virtual Assistant', slug: 'virtual-assistant', count: 29 },
-  { name: 'Data Processing', slug: 'data-processing', count: 23 }
+  { name: 'Data Entry', slug: 'data-entry' },
+  { name: 'Administrative', slug: 'administrative' },
+  { name: 'Customer Support', slug: 'customer-service' },
+  { name: 'Transcription', slug: 'transcription' },
+  { name: 'Virtual Assistant', slug: 'virtual-assistant' },
+  { name: 'Data Processing', slug: 'data-processing' }
 ];
 
 const HomePage = () => {
@@ -121,7 +121,7 @@ const HomePage = () => {
           </div>
           
           <div className="mt-6 text-sm text-blue-700 font-medium">
-            → 127 verified remote opportunities updated today ←
+            → Browse high-quality remote opportunities updated regularly ←
           </div>
         </div>
       </section>
@@ -132,7 +132,7 @@ const HomePage = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
             <span className="mr-3">Featured Jobs</span>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              Verified Opportunities
+              High-Quality Opportunities
             </span>
           </h2>
           
@@ -166,7 +166,6 @@ const HomePage = () => {
                 key={category.slug}
                 name={category.name}
                 slug={category.slug}
-                count={category.count}
               />
             ))}
           </div>
@@ -196,8 +195,8 @@ const HomePage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Verified Jobs</h3>
-              <p className="text-gray-600">All listings manually reviewed by our team to ensure quality</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Quality Listings</h3>
+              <p className="text-gray-600">Listings filtered for relevance to admin and data entry roles</p>
             </div>
             
             <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
@@ -217,8 +216,8 @@ const HomePage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Daily Updates</h3>
-              <p className="text-gray-600">Fresh listings added daily from top employers</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Regular Updates</h3>
+              <p className="text-gray-600">New listings added as they become available</p>
             </div>
             
             <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
@@ -341,7 +340,7 @@ const HomePage = () => {
             Start Your Remote Career Today
           </h2>
           <p className="text-blue-100 mb-8 max-w-3xl mx-auto">
-            Browse through our extensive collection of administrative and data entry remote jobs, carefully verified and updated daily.
+            Browse through our collection of administrative and data entry remote jobs, curated for remote workers seeking quality opportunities.
           </p>
           <Link 
             href="/jobs"

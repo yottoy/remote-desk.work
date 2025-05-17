@@ -78,23 +78,34 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
         <div className="mt-2 text-sm text-blue-700">
           <p>This job has specific application instructions. Please read the full job description carefully.</p>
           <div className="mt-2 flex">
-            <a 
-              href={job.url || '#'} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm leading-5 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Apply on Company Website
-              <svg className="ml-1.5 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-              </svg>
-            </a>
-            <CopyToClipboard 
-              textToCopy={job.url || ''} 
-              label="Copy URL" 
-              className="ml-2" 
-            />
+            {job.url ? (
+              <a 
+                href={job.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm leading-5 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Apply on Company Website
+                <svg className="ml-1.5 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                  <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                </svg>
+              </a>
+            ) : (
+              <span className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm leading-5 font-medium rounded-md text-gray-500 bg-gray-100 cursor-not-allowed">
+                Application Link Unavailable
+                <svg className="ml-1.5 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+            )}
+            {job.url && (
+              <CopyToClipboard 
+                textToCopy={job.url} 
+                label="Copy URL" 
+                className="ml-2" 
+              />
+            )}
           </div>
         </div>
       ) : (
@@ -107,23 +118,34 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
             <li>Ensure your resume highlights relevant experience</li>
           </ol>
           <div className="mt-3 flex">
-            <a 
-              href={job.url || '#'} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm leading-5 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Apply on Company Website
-              <svg className="ml-1.5 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-              </svg>
-            </a>
-            <CopyToClipboard 
-              textToCopy={job.url || ''} 
-              label="Copy URL" 
-              className="ml-2" 
-            />
+            {job.url ? (
+              <a 
+                href={job.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm leading-5 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Apply on Company Website
+                <svg className="ml-1.5 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                  <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                </svg>
+              </a>
+            ) : (
+              <span className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm leading-5 font-medium rounded-md text-gray-500 bg-gray-100 cursor-not-allowed">
+                Application Link Unavailable
+                <svg className="ml-1.5 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+            )}
+            {job.url && (
+              <CopyToClipboard 
+                textToCopy={job.url} 
+                label="Copy URL" 
+                className="ml-2" 
+              />
+            )}
           </div>
         </div>
       )}

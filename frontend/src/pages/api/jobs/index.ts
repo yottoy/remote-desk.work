@@ -2,17 +2,21 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '../../../utils/mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log('Jobs API route called with query:', req.query);
+
   // Only allow GET requests
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    console.log('Attempting to connect to database...');
     const { db } = await connectToDatabase();
     if (!db) {
       console.error('Failed to connect to database');
       return res.status(500).json({ error: 'Database connection failed' });
     }
+    console.log('Successfully connected to database');
     
     const jobsCollection = db.collection('jobs');
 
@@ -37,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       // Build the query filter
       const filter: any = {};
+      console.log('Building query filter...');
 
       // Text search for keywords (across multiple fields)
       if (keyword) {
@@ -111,6 +116,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         filter.hidden = { $ne: true };
       }
 
+      console.log('Final query filter:', JSON.stringify(filter, null, 2));
+
       // Pagination - with validation
       let pageNum = 1;
       let limitNum = 20;
@@ -139,6 +146,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         sortOptions.credibilityScore = -1;
       }
 
+      console.log('Executing query with:', {
+        skip,
+        limit: limitNum,
+        sort: sortOptions
+      });
+
+      // First check total count
+      const totalJobs = await jobsCollection.countDocuments(filter);
+      console.log('Total matching jobs:', totalJobs);
+
       // Execute query with pagination
       const jobs = await jobsCollection
         .find(filter)
@@ -147,8 +164,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .limit(limitNum)
         .toArray();
 
-      // Get total count for pagination
-      const totalJobs = await jobsCollection.countDocuments(filter);
+      console.log(`Found ${jobs.length} jobs for current page`);
 
       // Calculate pagination metadata
       const totalPages = Math.ceil(totalJobs / limitNum);
