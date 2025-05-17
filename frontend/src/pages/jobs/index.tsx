@@ -8,9 +8,6 @@ import AdvancedFilters from '../../components/common/AdvancedFilters';
 import AdBanner from '../../components/ads/AdBanner';
 import analytics from '../../utils/analytics';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
-
-// Import the mock data and types
-import { mockJobs } from '../../mocks/jobData';
 import type { Job } from '../../types/job';
 
 interface JobsPageProps {
@@ -18,6 +15,7 @@ interface JobsPageProps {
   totalJobs: number;
   searchQuery?: string;
   initialFilters?: Record<string, string[]>;
+  error?: string;
 }
 
 export const getServerSideProps: GetServerSideProps<JobsPageProps> = async (context) => {
@@ -29,8 +27,6 @@ export const getServerSideProps: GetServerSideProps<JobsPageProps> = async (cont
     // Parse filters from query string if present
     if (context.query.filters && typeof context.query.filters === 'string') {
       const filterValues = context.query.filters.split(',');
-      // In a real app, you would parse these into categories
-      // For now we'll just add them to a 'keywords' category
       filters.keywords = filterValues;
     }
     
@@ -41,62 +37,55 @@ export const getServerSideProps: GetServerSideProps<JobsPageProps> = async (cont
         filters[filter] = (context.query[filter] as string).split(',');
       }
     });
+
+    // Get the absolute URL base
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.VERCEL_URL || 
+      (process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3002'
+        : `https://${context.req.headers.host}`);
     
-    // In a real app, we would fetch from API here
-    // For demo, we'll filter the mock jobs
-    let filteredJobs = [...mockJobs];
-    
-    // Apply search if present
+    // Fetch jobs from API
+    const queryParams = new URLSearchParams();
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filteredJobs = filteredJobs.filter(job => 
-        job.title.toLowerCase().includes(query) || 
-        job.company.toLowerCase().includes(query) || 
-        job.descriptionText?.toLowerCase().includes(query)
-      );
+      queryParams.append('search', searchQuery);
     }
-    
-    // Apply filters if present
     if (Object.keys(filters).length > 0) {
-      filteredJobs = filteredJobs.filter(job => {
-        for (const [sectionId, selectedOptions] of Object.entries(filters)) {
-          if (selectedOptions.length > 0) {
-            // Special handling for keywords which could be in title/description
-            if (sectionId === 'keywords') {
-              const jobText = `${job.title} ${job.company} ${job.descriptionText || ''}`.toLowerCase();
-              const hasKeyword = selectedOptions.some(keyword => 
-                jobText.includes(keyword.toLowerCase())
-              );
-              if (!hasKeyword) return false;
-              continue;
-            }
-            
-            // @ts-ignore - we know these properties might exist on our mock jobs
-            const jobValue = job[sectionId];
-            
-            // Handle array values (like skills or softwareRequirements)
-            if (Array.isArray(jobValue)) {
-              const hasMatch = selectedOptions.some(option => jobValue.includes(option));
-              if (!hasMatch) return false;
-            } 
-            // Handle string values
-            else if (!jobValue || !selectedOptions.includes(jobValue)) {
-              return false;
-            }
-          }
-        }
-        return true;
+      Object.entries(filters).forEach(([key, values]) => {
+        queryParams.append(key, values.join(','));
       });
     }
     
-    return {
-      props: {
-        initialJobs: filteredJobs,
-        totalJobs: filteredJobs.length,
-        searchQuery: searchQuery || '',
-        initialFilters: filters
+    const apiUrl = `${baseUrl}/api/jobs?${queryParams.toString()}`;
+    console.log('Fetching jobs from:', apiUrl);
+    
+    try {
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'ClickClickJob/1.0'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
       }
-    };
+      
+      const result = await response.json();
+      const jobs = result.jobs || [];
+      const total = result.pagination?.totalJobs || jobs.length;
+      
+      return {
+        props: {
+          initialJobs: jobs,
+          totalJobs: total,
+          searchQuery: searchQuery || '',
+          initialFilters: filters
+        }
+      };
+    } catch (networkError) {
+      console.error('Network error fetching jobs:', networkError);
+      throw new Error('Network error fetching jobs. Please try again later.');
+    }
   } catch (error) {
     console.error('Error in getServerSideProps:', error);
     return {
@@ -104,24 +93,30 @@ export const getServerSideProps: GetServerSideProps<JobsPageProps> = async (cont
         initialJobs: [],
         totalJobs: 0,
         searchQuery: '',
-        initialFilters: {}
+        initialFilters: {},
+        error: error instanceof Error ? error.message : 'Failed to load jobs'
       }
     };
   }
 };
 
+interface CustomError extends Error {
+  message: string;
+}
+
 const JobListingsPage: React.FC<JobsPageProps> = ({ 
   initialJobs, 
   totalJobs, 
   searchQuery = '',
-  initialFilters = {} 
+  initialFilters = {},
+  error = undefined
 }) => {
   const router = useRouter();
   
   const [jobs, setJobs] = useState<Job[]>(initialJobs);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(initialJobs);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [apiError, setApiError] = useState<Error | null>(error ? new Error(error) : null);
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>(initialFilters);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'relevance'>('newest');
@@ -132,60 +127,43 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
       try {
         setIsLoading(true);
         
-        // In a real app, we would fetch from API here
-        // For the demo, we'll filter the mock jobs client-side
-        let result = [...mockJobs];
+        // Get the absolute URL base
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || (
+          process.env.NODE_ENV === 'development' 
+            ? 'http://localhost:3002'
+            : window.location.origin
+        );
         
-        // Apply search
+        // Build query params
+        const queryParams = new URLSearchParams();
         if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          result = result.filter(job => 
-            job.title.toLowerCase().includes(query) || 
-            job.company.toLowerCase().includes(query) || 
-            job.descriptionText?.toLowerCase().includes(query)
-          );
+          queryParams.append('q', searchQuery);
         }
-        
-        // Apply filters
         if (Object.keys(activeFilters).length > 0) {
-          result = result.filter(job => {
-            for (const [sectionId, selectedOptions] of Object.entries(activeFilters)) {
-              if (selectedOptions.length > 0) {
-                // Special handling for keywords which could be in title/description
-                if (sectionId === 'keywords') {
-                  const jobText = `${job.title} ${job.company} ${job.descriptionText || ''}`.toLowerCase();
-                  const hasKeyword = selectedOptions.some(keyword => 
-                    jobText.includes(keyword.toLowerCase())
-                  );
-                  if (!hasKeyword) return false;
-                  continue;
-                }
-                
-                // @ts-ignore - we know these properties exist on our mock jobs
-                const jobValue = job[sectionId];
-                
-                // Handle array values (like skills or softwareRequirements)
-                if (Array.isArray(jobValue)) {
-                  const hasMatch = selectedOptions.some(option => jobValue.includes(option));
-                  if (!hasMatch) return false;
-                } 
-                // Handle string values
-                else if (!jobValue || !selectedOptions.includes(jobValue)) {
-                  return false;
-                }
-              }
+          Object.entries(activeFilters).forEach(([key, values]) => {
+            if (values.length > 0) {
+              queryParams.append(key, values.join(','));
             }
-            return true;
           });
         }
         
-        // Apply sorting
-        if (sortBy === 'newest') {
-          result.sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime());
-        } else if (sortBy === 'relevance') {
-          // In a real app, this would use a more sophisticated relevance algorithm
-          result.sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
+        // Add sorting
+        queryParams.append('sort', sortBy);
+        
+        // Fetch jobs from API
+        console.log('Fetching jobs from:', `${baseUrl}/api/jobs?${queryParams.toString()}`);
+        const response = await fetch(`${baseUrl}/api/jobs?${queryParams.toString()}`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'ClickClickJob/1.0'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
         }
+        
+        const result = await response.json();
         
         // Track search/filter analytics
         if (searchQuery || Object.keys(activeFilters).length > 0) {
@@ -212,11 +190,11 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
         }
         
         setFilteredJobs(result);
-        setJobs(mockJobs);
-        setError(null);
+        setJobs(result);
+        setApiError(null);
       } catch (err) {
-        console.error('Error filtering jobs:', err);
-        setError(err as Error);
+        console.error('Error fetching jobs:', err);
+        setApiError(err instanceof Error ? err : new Error('Failed to load jobs'));
       } finally {
         setIsLoading(false);
       }
@@ -367,7 +345,7 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
                   jobs={filteredJobs} 
                   title={`${filteredJobs.length} Remote Admin & Data Entry Jobs`}
                   isLoading={isLoading}
-                  error={error}
+                  error={apiError}
                 />
                 
                 {/* Between listings ad */}

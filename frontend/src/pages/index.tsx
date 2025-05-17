@@ -1,68 +1,15 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { GetStaticProps } from 'next';
 import Layout from '../components/layout/Layout';
 import SearchBar from '../components/common/SearchBar';
 import EnhancedJobCard from '../components/common/EnhancedJobCard';
 import CategoryCard from '../components/common/CategoryCard';
 import { useRouter } from 'next/router';
+import type { Job } from '../types/job';
 
-// Mock data for featured jobs (in a real app, these would come from an API)
-const featuredJobs = [
-  {
-    _id: 'job1',
-    title: 'Remote Data Entry Specialist',
-    company: 'TechCorp Solutions',
-    location: 'Remote (US Only)',
-    description: 'We are looking for a detail-oriented Data Entry Specialist to join our team...',
-    descriptionText: 'We are looking for a detail-oriented Data Entry Specialist to join our team. You will be responsible for entering data from various sources into company database, maintaining data accuracy and integrity.',
-    salary: '$18-22/hr',
-    postedDate: new Date(),
-    qualityScore: 9.2,
-    featured: true,
-    jobType: 'full-time',
-    experienceLevel: 'entry-level',
-    payRange: '$15-20',
-    skills: ['Fast typing', 'Attention to detail', 'Data verification'],
-    softwareRequirements: ['Microsoft Office', 'Excel']
-  },
-  {
-    _id: 'job2',
-    title: 'Virtual Administrative Assistant',
-    company: 'Global Services LLC',
-    location: 'Remote (Worldwide)',
-    description: 'Support executives by managing schedules, preparing reports, and handling correspondence...',
-    descriptionText: 'Support executives by managing schedules, preparing reports, and handling correspondence. Must have excellent communication skills and be proficient in Microsoft Office suite.',
-    salary: '$15-17/hr',
-    postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    qualityScore: 8.5,
-    featured: true,
-    jobType: 'part-time',
-    experienceLevel: 'entry-level',
-    payRange: '$15-20',
-    skills: ['Calendar management', 'Email management', 'Travel arrangements'],
-    softwareRequirements: ['Microsoft Office', 'Google Workspace']
-  },
-  {
-    _id: 'job3',
-    title: 'Customer Service Representative',
-    company: 'Support Heroes',
-    location: 'Remote (US Only)',
-    description: 'Answer customer inquiries via phone, email, and chat. Resolve issues and provide information...',
-    descriptionText: 'Answer customer inquiries via phone, email, and chat. Resolve issues and provide information about our products and services. Must have excellent communication skills and a customer-first attitude.',
-    salary: '$16-19/hr',
-    postedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-    qualityScore: 8.8,
-    featured: true,
-    jobType: 'full-time', 
-    experienceLevel: 'experienced',
-    payRange: '$15-20',
-    skills: ['Customer support', 'Problem solving', 'Phone etiquette'],
-    softwareRequirements: ['CRM Systems']
-  }
-];
-
-// Mock data for job categories
+// Job categories
 const jobCategories = [
   { name: 'Data Entry', slug: 'data-entry' },
   { name: 'Administrative', slug: 'administrative' },
@@ -72,7 +19,49 @@ const jobCategories = [
   { name: 'Data Processing', slug: 'data-processing' }
 ];
 
-const HomePage = () => {
+interface HomePageProps {
+  featuredJobs: Job[];
+}
+
+export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
+  try {
+    // Get the absolute URL base from environment
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.VERCEL_URL || 'https://clickclickjob.vercel.app';
+    
+    // Fetch featured jobs from API
+    console.log('Fetching featured jobs from:', `${baseUrl}/api/jobs?limit=6`);
+    const response = await fetch(`${baseUrl}/api/jobs?limit=6`, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'ClickClickJob/1.0'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    
+    const result = await response.json();
+    const jobs = result.jobs || [];
+    
+    return {
+      props: {
+        featuredJobs: jobs.slice(0, 6) // Ensure we only get at most 6 jobs
+      },
+      revalidate: 60 // Revalidate every minute
+    };
+  } catch (error) {
+    console.error('Error in getStaticProps:', error);
+    return {
+      props: {
+        featuredJobs: []
+      },
+      revalidate: 30 // Try again more quickly if there was an error
+    };
+  }
+};
+
+const HomePage: React.FC<HomePageProps> = ({ featuredJobs }) => {
   const router = useRouter();
   
   const filterChips = [
