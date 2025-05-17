@@ -176,8 +176,8 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
   
   const [jobs, setJobs] = useState<Job[]>(initialJobs);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(initialJobs);
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState<Error | null>(error ? new Error(error) : null);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading state
+  const [apiError, setApiError] = useState<Error | null>(null); // Don't show initial error
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>(initialFilters);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'relevance'>('newest');

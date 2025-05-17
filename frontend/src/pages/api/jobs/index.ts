@@ -16,6 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+  
+  // Log the incoming request URL for debugging
+  console.log('API Jobs Request URL:', req.url);
 
   try {
     const { db } = await connectToDatabase();
@@ -46,8 +49,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const pageNum = Math.max(1, parseInt(page as string));
       let limitNum = parseInt(limit as string);
       
-      // Build filter object
-      let filter: any = { isRemote: true };
+      // Build filter object - start with an AND condition list
+      const filterConditions = [];
+      
+      // Always filter for remote jobs
+      filterConditions.push({ isRemote: true });
       
       console.log('Query params received:', req.query);
       
@@ -56,11 +62,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // Add text search if specified
       if (searchQuery && typeof searchQuery === 'string') {
-        filter.$or = [
-          { title: { $regex: searchQuery, $options: 'i' } },
-          { company: { $regex: searchQuery, $options: 'i' } },
-          { description: { $regex: searchQuery, $options: 'i' } }
-        ];
+        filterConditions.push({
+          $or: [
+            { title: { $regex: searchQuery, $options: 'i' } },
+            { company: { $regex: searchQuery, $options: 'i' } },
+            { description: { $regex: searchQuery, $options: 'i' } }
+          ]
+        });
       }
       
       // Process category filter
@@ -68,18 +76,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const categories = category.split(',');
         if (categories.length === 1) {
           // Single category - look for exact match or pattern match
-          filter.jobCategory = { $regex: category, $options: 'i' };
+          filterConditions.push({ jobCategory: { $regex: category, $options: 'i' } });
         } else if (categories.length > 1) {
           // Multiple categories - use $or to match any of them
           const categoryFilters = categories.map(cat => ({ 
             jobCategory: { $regex: cat, $options: 'i' } 
           }));
           
-          if (filter.$and) {
-            filter.$and.push({ $or: categoryFilters });
-          } else {
-            filter.$and = [{ $or: categoryFilters }];
-          }
+          filterConditions.push({ $or: categoryFilters });
         }
       }
 
@@ -87,9 +91,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (jobType && typeof jobType === 'string') {
         const jobTypes = jobType.split(',');
         if (jobTypes.length === 1) {
-          filter.jobType = jobType;
+          filterConditions.push({ jobType: jobType });
         } else if (jobTypes.length > 1) {
-          filter.jobType = { $in: jobTypes };
+          filterConditions.push({ jobType: { $in: jobTypes } });
         }
       }
 
@@ -97,9 +101,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (experienceLevel && typeof experienceLevel === 'string') {
         const expLevels = experienceLevel.split(',');
         if (expLevels.length === 1) {
-          filter.experienceLevel = experienceLevel;
+          filterConditions.push({ experienceLevel: experienceLevel });
         } else if (expLevels.length > 1) {
-          filter.experienceLevel = { $in: expLevels };
+          filterConditions.push({ experienceLevel: { $in: expLevels } });
         }
       }
       
@@ -108,26 +112,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const ranges = payRange.split(',');
         if (ranges.length > 0) {
           // Handle different pay range values
-          const payRangeFilter: any[] = [];
+          const payRangeFilters: Array<{ salary: { $regex: string, $options: string } }> = [];
           
           ranges.forEach(range => {
             if (range === 'under-$15') {
-              payRangeFilter.push({ salary: { $regex: "under \\$15|^\\$\\d{1,2}\\/hr|\\$\\d{1,2}-\\d{1,2}\\/hr", $options: "i" } });
+              payRangeFilters.push({ 
+                salary: { $regex: "(under.*\\$15|^\\$\\d{1,2}\\/hr|\\$\\d{1,2}-\\d{1,2}\\/hr)", $options: "i" } 
+              });
             } else if (range === '$15-20') {
-              payRangeFilter.push({ salary: { $regex: "\\$15|\\$16|\\$17|\\$18|\\$19|\\$20|\\$15-20\\/hr|\\$15-\\$20", $options: "i" } });
+              payRangeFilters.push({ 
+                salary: { $regex: "(\\$15|\\$16|\\$17|\\$18|\\$19|\\$20|\\$15.*\\$20)", $options: "i" } 
+              });
             } else if (range === '$20-25') {
-              payRangeFilter.push({ salary: { $regex: "\\$2[0-5]|\\$20-25\\/hr|\\$20-\\$25", $options: "i" } });
+              payRangeFilters.push({ 
+                salary: { $regex: "(\\$2[0-5]|\\$20.*\\$25)", $options: "i" } 
+              });
             } else if (range === '$25+') {
-              payRangeFilter.push({ salary: { $regex: "\\$2[5-9]|\\$[3-9]\\d|\\$\\d{3,}|\\$25\\+\\/hr|\\$25\\+", $options: "i" } });
+              payRangeFilters.push({ 
+                salary: { $regex: "(\\$2[5-9]|\\$[3-9]\\d|\\$\\d{3,}|\\$25\\+)", $options: "i" } 
+              });
             }
           });
           
-          if (payRangeFilter.length > 0) {
-            if (filter.$and) {
-              filter.$and.push({ $or: payRangeFilter });
-            } else {
-              filter.$and = [{ $or: payRangeFilter }];
-            }
+          if (payRangeFilters.length > 0) {
+            filterConditions.push({ $or: payRangeFilters });
           }
         }
       }
@@ -136,26 +144,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (location && typeof location === 'string') {
         const locations = location.split(',');
         if (locations.length > 0) {
-          const locationFilter: any[] = [];
+          const locationFilters: Array<{ location: { $regex: string, $options: string } }> = [];
           
           locations.forEach(loc => {
             if (loc === 'worldwide') {
-              locationFilter.push({ location: { $regex: "worldwide|global|international|remote", $options: "i" } });
+              locationFilters.push({ 
+                location: { $regex: "(worldwide|global|international|remote)", $options: "i" } 
+              });
             } else if (loc === 'us-only') {
-              locationFilter.push({ location: { $regex: "united states|usa|us only|america", $options: "i" } });
+              locationFilters.push({ 
+                location: { $regex: "(united.*states|usa|us.*only|america)", $options: "i" } 
+              });
             } else if (loc === 'us-canada') {
-              locationFilter.push({ location: { $regex: "us|united states|canada|north america", $options: "i" } });
+              locationFilters.push({ 
+                location: { $regex: "(us|united.*states|canada|north.*america)", $options: "i" } 
+              });
             } else if (loc === 'europe') {
-              locationFilter.push({ location: { $regex: "europe|eu|european", $options: "i" } });
+              locationFilters.push({ 
+                location: { $regex: "(europe|eu|european)", $options: "i" } 
+              });
             }
           });
           
-          if (locationFilter.length > 0) {
-            if (filter.$and) {
-              filter.$and.push({ $or: locationFilter });
-            } else {
-              filter.$and = [{ $or: locationFilter }];
-            }
+          if (locationFilters.length > 0) {
+            filterConditions.push({ $or: locationFilters });
           }
         }
       }
@@ -164,25 +176,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (datePosted && typeof datePosted === 'string') {
         const dates = datePosted.split(',');
         if (dates.length > 0) {
-          // Create a date filter
           if (dates.includes('today')) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            filter.postedDate = { $gte: today };
+            filterConditions.push({ postedDate: { $gte: today } });
           } else if (dates.includes('this-week')) {
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
-            filter.postedDate = { $gte: weekAgo };
+            filterConditions.push({ postedDate: { $gte: weekAgo } });
           } else if (dates.includes('this-month')) {
             const monthAgo = new Date();
             monthAgo.setMonth(monthAgo.getMonth() - 1);
-            filter.postedDate = { $gte: monthAgo };
+            filterConditions.push({ postedDate: { $gte: monthAgo } });
           }
         }
       }
       
+      // Build the final filter object using $and to combine all conditions
+      let filter: any = {};
+      if (filterConditions.length > 0) {
+        filter.$and = filterConditions;
+      } else {
+        filter = { isRemote: true };
+      }
+      
       // Print the filter for debugging
-      console.log('API Query Filter:', JSON.stringify(filter));
+      console.log('API Query Filter:', JSON.stringify(filter, null, 2));
+      
+      // Log all the active conditions
+      console.log('Active Filter Conditions:', filterConditions.length);
       
       // Cap limit to reasonable number
       limitNum = Math.min(100, Math.max(1, limitNum));
