@@ -172,7 +172,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                   </div>
                 </div>
               </div>
-              <div className="mt-5 flex lg:mt-0 lg:ml-4">
+              <div className="mt-5 flex flex-col sm:flex-row gap-3 lg:mt-0 lg:ml-4">
                 {job.url && job.url.startsWith('http') ? (
                   <a
                     href={job.url}
@@ -235,12 +235,17 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
         </div>
 
         <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          {/* Sidebar for mobile - will be hidden on desktop */}
+          <div className="lg:hidden mb-8">
+            <TrustIndicators job={job} showAll={false} />
+          </div>
+          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main job content */}
             <div className="lg:col-span-2">
               <article 
                 ref={descriptionRef} 
-                className="prose max-w-none bg-white p-6 rounded-lg shadow-sm border border-gray-200 max-h-[70vh] overflow-y-auto"
+                className="prose max-w-none bg-white p-6 rounded-lg shadow-sm border border-gray-200"
                 itemProp="description"
               >
                 {/* Preserve formatting by using pre-wrap for plain text descriptions */}
@@ -268,6 +273,63 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                 )}
               </article>
 
+              {/* Job Details Section */}
+              <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Details</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {job.jobType && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Job Type</h3>
+                      <p className="mt-1 text-sm text-gray-900">{job.jobType}</p>
+                    </div>
+                  )}
+                  {job.experienceLevel && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Experience Level</h3>
+                      <p className="mt-1 text-sm text-gray-900">{job.experienceLevel}</p>
+                    </div>
+                  )}
+                  {job.jobCategory && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Category</h3>
+                      <p className="mt-1 text-sm text-gray-900">{job.jobCategory}</p>
+                    </div>
+                  )}
+                  {job.salary && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Salary</h3>
+                      <p className="mt-1 text-sm text-green-600 font-medium">{job.salary}</p>
+                    </div>
+                  )}
+                </div>
+                
+                {job.skills && job.skills.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-sm font-medium text-gray-500 mb-2">Required Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {job.skills.map((skill, index) => (
+                        <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-blue-100 text-blue-800">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {job.softwareRequirements && job.softwareRequirements.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-sm font-medium text-gray-500 mb-2">Software Requirements</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {job.softwareRequirements.map((software, index) => (
+                        <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                          {software}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               <div className="mt-8">
                 <ApplicationInstructions job={job} />
               </div>
@@ -293,8 +355,8 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
               </div>
             </div>
 
-            {/* Sidebar */}
-            <div className="space-y-6">
+            {/* Sidebar - desktop only */}
+            <div className="hidden lg:block space-y-6">
               <TrustIndicators job={job} showAll={true} />
               
               <RelatedCategories 
@@ -400,6 +462,40 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Ensure apply URL is valid
     if (!job.url || job.url.includes('example.com') || !job.url.startsWith('http')) {
       job.url = job.sourceUrl || (job.company?.careerUrl ? job.company.careerUrl : '');
+    }
+    
+    // Ensure job skills are populated
+    if (!job.skills || !Array.isArray(job.skills) || job.skills.length === 0) {
+      // Generate some reasonable default skills based on job title
+      const defaultSkills = [];
+      
+      if (job.title.toLowerCase().includes('data entry')) {
+        defaultSkills.push('Data Entry', 'Typing', 'Attention to Detail', 'Microsoft Office');
+      } else if (job.title.toLowerCase().includes('assistant')) {
+        defaultSkills.push('Communication', 'Organization', 'Time Management', 'Microsoft Office');
+      } else if (job.title.toLowerCase().includes('bookkeeping')) {
+        defaultSkills.push('QuickBooks', 'Accounting', 'Financial Reporting', 'Data Entry');
+      } else if (job.title.toLowerCase().includes('customer')) {
+        defaultSkills.push('Customer Service', 'Communication', 'Problem Solving', 'CRM Software');
+      } else {
+        defaultSkills.push('Remote Work', 'Communication', 'Time Management', 'Organization');
+      }
+      
+      job.skills = defaultSkills;
+    }
+    
+    // Ensure job type is populated
+    if (!job.jobType) {
+      // Try to infer job type from the title or description
+      if (job.title.toLowerCase().includes('part-time') || 
+          (job.description && job.description.toLowerCase().includes('part-time'))) {
+        job.jobType = 'Part-time';
+      } else if (job.title.toLowerCase().includes('contract') || 
+                (job.description && job.description.toLowerCase().includes('contract'))) {
+        job.jobType = 'Contract';
+      } else {
+        job.jobType = 'Full-time';
+      }
     }
     
     console.log(`Successfully fetched job: ${job.title}`);
