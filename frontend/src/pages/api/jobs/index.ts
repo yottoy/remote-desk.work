@@ -113,8 +113,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
           
           if (payRangeFilter.length > 0) {
-            filter.$or = filter.$or || [];
-            filter.$or = [...filter.$or, ...payRangeFilter];
+            // Create a separate $or for salary filters only
+            filter.salary = { $or: payRangeFilter };
           }
         }
       }
@@ -138,8 +138,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
           
           if (locationFilter.length > 0) {
-            filter.$or = filter.$or || [];
-            filter.$or = [...filter.$or, ...locationFilter];
+            // Use $or specifically for location
+            filter.locationMatch = { $or: locationFilter };
           }
         }
       }

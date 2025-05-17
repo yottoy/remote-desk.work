@@ -183,7 +183,7 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
   const [sortBy, setSortBy] = useState<'newest' | 'relevance'>('newest');
   
   // Create a stable job list title that won't be undefined
-  const jobListTitle = `${filteredJobs.length || 0} Remote Admin & Data Entry Jobs`;
+  const jobListTitle = `Remote Admin & Data Entry Jobs`;
   
   // Apply filters and search when dependencies change
   useEffect(() => {
