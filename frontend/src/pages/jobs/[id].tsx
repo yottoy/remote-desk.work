@@ -422,28 +422,41 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params || {};
   
+  if (!id || typeof id !== 'string') {
+    return { notFound: true };
+  }
+
   try {
     // Get the absolute URL base from request headers or environment variables
     const protocol = context.req.headers['x-forwarded-proto'] || 'http';
     const host = context.req.headers.host;
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || `${protocol}://${host}`;
     
-    // Fetch job details from real API endpoint
+    // Fetch job details
+    console.log('Fetching job details from:', `${baseUrl}/api/jobs/${id}`);
     const jobResponse = await fetch(`${baseUrl}/api/jobs/${id}`);
     
     if (!jobResponse.ok) {
+      console.error('Failed to fetch job:', jobResponse.status);
       throw new Error(`Failed to fetch job: ${jobResponse.status}`);
     }
     
     const job = await jobResponse.json();
     
+    // Validate job data
+    if (!job || !job._id) {
+      console.error('Invalid job data received:', job);
+      throw new Error('Invalid job data received');
+    }
+
     // Check and filter out example.com URLs
-    if (job && job.url && job.url.includes('example.com')) {
+    if (job.url && job.url.includes('example.com')) {
       job.url = ''; // Clear invalid URL
       job.urlValidationFailed = true;
     }
     
     // Fetch similar jobs
+    console.log('Fetching similar jobs...');
     const similarJobsResponse = await fetch(`${baseUrl}/api/jobs?limit=3&excludeId=${id}`);
     const similarJobsData = await similarJobsResponse.json();
     const similarJobs = similarJobsData.jobs || [];
@@ -473,9 +486,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     };
   } catch (error) {
-    console.error('Error fetching job details:', error);
+    console.error('Error in getServerSideProps:', error);
     return {
-      notFound: true
+      notFound: true,
+      revalidate: 60 // Try again after 60 seconds
     };
   }
 };
