@@ -191,13 +191,14 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
           jobTitle: job.title,
           company: job.company,
           source: job.source,
-          referrer: document.referrer
+          referrer: typeof window !== 'undefined' ? document.referrer : ''
         }),
       }).catch(err => console.error('Analytics error:', err));
     }
   }, [job, addJobToRecentlyViewed]);
 
   const isVerified = job?.qualityScore >= 8;
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   if (!job) {
     return (
@@ -226,7 +227,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
         items={[
           { name: 'Home', url: 'https://clickclickjob.com' },
           { name: 'Job Listings', url: 'https://clickclickjob.com/jobs' },
-          { name: job.title, url: typeof window !== 'undefined' ? window.location.href : '' }
+          { name: job.title, url: currentUrl }
         ]} 
       />
       <FAQSchema 
@@ -357,7 +358,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                   </button>
                 )}
                 <CopyToClipboard 
-                  textToCopy={window.location.href} 
+                  textToCopy={currentUrl} 
                   label="Share Job" 
                   className="inline-flex justify-center" 
                 />

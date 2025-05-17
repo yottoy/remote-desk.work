@@ -15,6 +15,11 @@ export const CopyToClipboard: React.FC<CopyButtonProps> = ({
   className = ''
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Reset the "copied" state after 2 seconds
   useEffect(() => {
@@ -25,13 +30,31 @@ export const CopyToClipboard: React.FC<CopyButtonProps> = ({
   }, [copied]);
 
   const handleCopy = async () => {
+    if (!isClient) return;
+    
     try {
       await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
     } catch (err) {
       console.error('Failed to copy text: ', err);
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = textToCopy;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopied(true);
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+      }
+      document.body.removeChild(textArea);
     }
   };
+
+  if (!isClient) {
+    return null; // Don't render anything during SSR
+  }
 
   return (
     <button
