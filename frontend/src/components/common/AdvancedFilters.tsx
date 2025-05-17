@@ -102,7 +102,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   
   // Helper to handle filter changes from any section
   const handleFilterChange = (sectionId: string, optionId: string, checked: boolean) => {
-    const currentValues = appliedFilters[sectionId] || [];
+    const currentValues = [...(appliedFilters[sectionId] || [])];
     let newValues: string[];
     
     if (checked) {
@@ -111,10 +111,13 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       newValues = currentValues.filter(val => val !== optionId);
     }
     
-    setAppliedFilters({
+    // Create a new reference to trigger proper re-render
+    const newAppliedFilters = {
       ...appliedFilters,
       [sectionId]: newValues
-    });
+    };
+    
+    setAppliedFilters(newAppliedFilters);
     
     if (!mobileView) {
       onFilterChange(sectionId, newValues);
@@ -124,7 +127,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   // Apply all filters at once (for mobile view)
   const applyFilters = () => {
     Object.entries(appliedFilters).forEach(([key, values]) => {
-      onFilterChange(key, values);
+      // Only update if there are values to apply or the filter was previously set
+      if (values.length > 0 || selectedFilters[key]?.length > 0) {
+        onFilterChange(key, values);
+      }
     });
     setIsMobileFiltersOpen(false);
   };

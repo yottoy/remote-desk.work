@@ -9,17 +9,18 @@ const nextConfig = {
   },
   env: {
     // Environment variables that will be available on the client side
-    API_URL: process.env.API_URL || 'http://localhost:3000/api',
+    API_URL: process.env.API_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/api` : 'http://localhost:3000/api',
     SITE_NAME: 'ClickClickJob.com',
     MONGODB_URI: process.env.MONGODB_URI,
     MONGODB_DB: process.env.MONGODB_DB || 'clickclickjob'
   },
-  // Remove custom distDir to use Next.js default (.next)
-  // distDir: 'build',
   
-  // Remove the experimental config that's causing path duplication
-  experimental: {
-    // outputFileTracingRoot removed to fix deployment path issues
+  // Fix for dynamic routes
+  onDemandEntries: {
+    // Keep the dynamic pages in memory for longer
+    maxInactiveAge: 60 * 60 * 1000, // 1 hour
+    // Number of pages to keep in memory
+    pagesBufferLength: 5,
   },
   
   compiler: {
@@ -30,8 +31,8 @@ const nextConfig = {
   },
   output: 'standalone',
   
-  // Changed to true to ensure consistent URL patterns
-  trailingSlash: true,
+  // Changed to false to ensure clean URLs
+  trailingSlash: false,
   
   // Add headers for CORS and caching
   async headers() {
@@ -65,12 +66,12 @@ const nextConfig = {
         ],
       },
       {
-        // Add caching for API routes
+        // Reduce caching for API routes
         source: '/api/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+            value: 'public, max-age=0, s-maxage=30, stale-while-revalidate=60',
           }
         ],
       }
@@ -80,18 +81,11 @@ const nextConfig = {
   // Add custom rewrites and redirects to handle 404s more gracefully
   async rewrites() {
     return [
+      // Ensure API requests are handled correctly
       {
-        // Rewrite any unmatched routes to the 404 page without changing the URL
-        source: '/:path*',
-        destination: '/_404',
-        has: [
-          {
-            type: 'header',
-            key: 'x-matched-path',
-            value: '((?!_next|api).*)'
-          }
-        ]
-      }
+        source: '/api/jobs/:id',
+        destination: '/api/jobs/:id',
+      },
     ];
   }
 };

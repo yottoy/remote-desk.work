@@ -170,12 +170,17 @@ const AdBanner: React.FC<AdBannerProps> = ({
     ...style,
     minHeight: adDimensions.height || style.height || '250px',
     minWidth: adDimensions.width || style.width || '100%',
+    height: adDimensions.height || style.height || '250px', // Explicitly set height to prevent CLS
+    width: responsive ? '100%' : (adDimensions.width || style.width || '100%'), // Handle responsive vs fixed width
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     background: '#f9f9f9',
     overflow: 'hidden',
     position: 'relative',
+    margin: '0 auto', // Center the ad
+    boxSizing: 'border-box', // Make sure padding doesn't affect dimensions
+    transition: 'height 0.3s ease-in-out', // Smooth transition for any height changes
   };
 
   if (!adClient) {
@@ -199,7 +204,8 @@ const AdBanner: React.FC<AdBannerProps> = ({
           style={{ 
             display: 'block', 
             width: adDimensions.width ? `${adDimensions.width}px` : '100%',
-            height: adDimensions.height ? `${adDimensions.height}px` : 'auto',
+            height: adDimensions.height ? `${adDimensions.height}px` : '100%', // Use 100% instead of auto
+            maxWidth: '100%', // Prevent overflow
             ...style 
           }}
           data-ad-client={adClient}

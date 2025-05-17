@@ -15,17 +15,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { db } = await connectToDatabase();
+    if (!db) {
+      console.error('Failed to connect to database');
+      return res.status(500).json({ error: 'Database connection failed' });
+    }
+    
     const jobsCollection = db.collection('jobs');
+    console.log(`Looking up job with ID: ${id}`);
 
     let job;
     
     // Try to find by ObjectId first if it's a valid ObjectId
-    if (ObjectId.isValid(id) && /^[0-9a-fA-F]{24}$/.test(id)) {
+    if (ObjectId.isValid(id)) {
+      console.log(`Searching by ObjectId: ${id}`);
       job = await jobsCollection.findOne({ _id: new ObjectId(id) });
     }
 
     // If not found by ObjectId, try other fields with a single query
     if (!job) {
+      console.log(`Searching by alternative fields for: ${id}`);
       job = await jobsCollection.findOne({
         $or: [
           { slug: id },
@@ -37,17 +45,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (!job) {
+      console.log(`Job not found for ID: ${id}`);
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Set enhanced cache headers for better performance
-    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600, stale-while-revalidate=86400');
+    console.log(`Found job: ${job.title} (${job._id})`);
+    
+    // Set cache headers that allow revalidation
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     
     return res.status(200).json(job);
   } catch (error) {
     console.error('Error fetching job:', error);
     return res.status(500).json({ 
-      error: 'Failed to fetch job'
+      error: 'Failed to fetch job',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 } 

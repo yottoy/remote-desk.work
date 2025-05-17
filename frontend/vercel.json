@@ -1,4 +1,22 @@
 {
   "version": 2,
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_SITE_URL": "https://www.clickclickjob.com",
+    "MONGODB_DB": "clickclickjob"
+  },
+  "routes": [
+    {
+      "src": "/api/jobs/?(.*)", 
+      "dest": "/api/jobs/$1",
+      "headers": {
+        "cache-control": "public, max-age=0, s-maxage=30, stale-while-revalidate=60",
+        "Access-Control-Allow-Origin": "*"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
 } 

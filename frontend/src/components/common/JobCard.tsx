@@ -20,19 +20,34 @@ interface JobCardProps {
 }
 
 const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
-  // Use explicit verified flag if available, otherwise use a more accurate threshold
-  // with clear indication this is a quality score, not verification of legitimacy
-  const isHighQuality = job.verified || (job.qualityScore && job.qualityScore >= 8);
+  // Use explicit verified flag if available, otherwise use qualityScore as a fallback
+  const isVerified = job.verified || (job.qualityScore && job.qualityScore >= 8);
   
   // Handle potential date formatting errors
   let timeAgo = '';
   try {
-    const postedDate = new Date(job.postedDate);
-    timeAgo = formatDistanceToNow(postedDate, { addSuffix: true });
+    // Ensure postedDate is a proper Date object
+    const postedDate = job.postedDate instanceof Date ? 
+      job.postedDate : 
+      new Date(job.postedDate);
+    
+    if (isNaN(postedDate.getTime())) {
+      // If date is invalid, fall back to a generic message
+      timeAgo = 'recently';
+    } else {
+      timeAgo = formatDistanceToNow(postedDate, { addSuffix: true });
+    }
   } catch (error) {
     timeAgo = 'recently';
     console.error('Date formatting error:', error);
   }
+  
+  // Format salary to be more visible/prominent if available
+  const formattedSalary = job.salary ? (
+    <span className="font-medium text-green-700 whitespace-nowrap">
+      {job.salary}
+    </span>
+  ) : null;
   
   // Extract a short description snippet if available
   const descriptionSnippet = job.descriptionText
@@ -51,15 +66,20 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
             </h3>
             <p className="text-sm text-gray-600 line-clamp-1">{job.company}</p>
           </div>
-          {isHighQuality && (
+          {isVerified && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
-              High Quality
+              <svg className="-ml-0.5 mr-1 h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+              </svg>
+              Verified
             </span>
           )}
         </div>
         <div className="mt-2 text-sm text-gray-500 flex flex-wrap gap-2">
           <span className="line-clamp-1">{job.location}</span>
-          {job.salary && <span className="whitespace-nowrap">• {job.salary}</span>}
+          {formattedSalary && (
+            <span className="whitespace-nowrap">• {formattedSalary}</span>
+          )}
           <span className="whitespace-nowrap">• Posted {timeAgo}</span>
         </div>
       </div>
@@ -77,14 +97,17 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
                   {job.title}
                 </Link>
               </h3>
-              <p className="text-base text-gray-700 mt-1 line-clamp-1">{job.company}</p>
+              <p className="text-sm text-gray-600 mt-1 line-clamp-1">{job.company}</p>
+              {formattedSalary && (
+                <p className="mt-1">{formattedSalary}</p>
+              )}
             </div>
-            {isHighQuality && (
+            {isVerified && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
-                <svg className="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                  <circle cx="4" cy="4" r="3" />
+                <svg className="-ml-0.5 mr-1.5 h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                 </svg>
-                High Quality
+                Verified
               </span>
             )}
           </div>
@@ -97,14 +120,6 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
                 </svg>
                 <span className="line-clamp-1">{job.location}</span>
               </span>
-              {job.salary && (
-                <span className="inline-flex items-center whitespace-nowrap">
-                  <svg className="h-4 w-4 mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {job.salary}
-                </span>
-              )}
               <span className="inline-flex items-center whitespace-nowrap">
                 <svg className="h-4 w-4 mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -140,20 +155,22 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
             </Link>
           </h3>
           <p className="text-sm text-gray-600 mt-1 line-clamp-1">{job.company}</p>
+          {formattedSalary && (
+            <p className="mt-1">{formattedSalary}</p>
+          )}
         </div>
-        {isHighQuality && (
+        {isVerified && (
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
-            <svg className="-ml-0.5 mr-1 h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 12 12">
-              <path d="M10.28 4.305L4.989 9.594 1.695 6.3A1 1 0 00.28 7.712l3.708 3.709a1 1 0 001.414 0l6.3-6.3a1 1 0 00-1.42-1.415h-.001z" />
+            <svg className="-ml-0.5 mr-1 h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
             </svg>
-            High Quality
+            Verified
           </span>
         )}
       </div>
       <div className="mt-2 text-sm text-gray-500">
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
           <span className="line-clamp-1">{job.location}</span>
-          {job.salary && <span className="whitespace-nowrap">• {job.salary}</span>}
           <span className="whitespace-nowrap">• Posted {timeAgo}</span>
         </div>
       </div>

@@ -31,7 +31,7 @@ interface JobListProps {
 const JobList: React.FC<JobListProps> = ({
   jobs,
   showFilters = true,
-  title = 'Remote Admin & Data Entry Jobs',
+  title = 'Available Remote Jobs',
   emptyMessage = 'No jobs match your criteria. Try adjusting your filters.',
   isLoading = false,
   error = null
@@ -39,10 +39,16 @@ const JobList: React.FC<JobListProps> = ({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'newest' | 'relevance'>('newest');
 
+  // Make sure jobs is always an array even if we receive null/undefined
+  const safeJobs = Array.isArray(jobs) ? jobs : [];
+
   // Dynamic classes based on view mode
   const containerClasses = viewMode === 'grid' 
     ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' 
     : 'space-y-4';
+
+  // Format the title properly, ensuring no undefined values
+  const formattedTitle = title.replace('undefined', '');
 
   // If there's an error, show error state
   if (error) {
@@ -73,11 +79,11 @@ const JobList: React.FC<JobListProps> = ({
     <ErrorBoundary>
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header with filtering options */}
-        {(title || showFilters) && (
+        {(formattedTitle || showFilters) && (
           <div className="border-b border-gray-200 p-4 sm:px-6 sm:py-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              {title && (
-                <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+              {formattedTitle && (
+                <h2 className="text-xl font-semibold text-gray-800">{formattedTitle}</h2>
               )}
               
               {showFilters && (
@@ -162,9 +168,9 @@ const JobList: React.FC<JobListProps> = ({
                 </div>
               ))}
             </div>
-          ) : jobs.length > 0 ? (
+          ) : jobs && jobs.length > 0 ? (
             <div className={containerClasses}>
-              {jobs.map((job) => (
+              {safeJobs.map((job) => (
                 <JobCard 
                   key={job._id} 
                   job={job} 
@@ -188,6 +194,7 @@ const JobList: React.FC<JobListProps> = ({
                 />
               </svg>
               <p className="mt-4 text-lg font-medium text-gray-600">{emptyMessage}</p>
+              <p className="mt-2 text-sm text-gray-500">Try refreshing the page or checking back later.</p>
             </div>
           )}
         </div>

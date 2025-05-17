@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { JobListing, EnhancedJobListing } from '../../types/job';
+import { JobListing, EnhancedJobListing, isVerified } from '../../types/job';
 
 interface CopyButtonProps {
   textToCopy: string;
@@ -92,18 +92,23 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
   const hasSpecificInstructions = job.description?.toLowerCase().includes('apply') || 
                                  job.description?.toLowerCase().includes('application') || 
                                  job.description?.toLowerCase().includes('submit');
+                                 
+  const jobIsVerified = isVerified(job);
+  
+  const applicationUrl = job.url || (job.source === 'linkedin' && job.sourceId ? 
+    `https://www.linkedin.com/jobs/view/${job.sourceId}` : null);
 
   return (
     <div className={`bg-blue-50 rounded-lg p-4 ${className}`}>
-      <h3 className="text-lg font-medium text-blue-800">How to Apply</h3>
+      <h3 className="text-lg font-medium text-blue-800 mb-1">How to Apply</h3>
       
       {hasSpecificInstructions ? (
         <div className="mt-2 text-sm text-blue-700">
           <p>This job has specific application instructions. Please read the full job description carefully.</p>
-          <div className="mt-2 flex">
-            {job.url ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {applicationUrl ? (
               <a 
-                href={job.url} 
+                href={applicationUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm leading-5 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -116,17 +121,18 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
               </a>
             ) : (
               <span className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm leading-5 font-medium rounded-md text-gray-500 bg-gray-100 cursor-not-allowed">
-                Application Link Unavailable
+                Contact Company Directly
                 <svg className="ml-1.5 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
               </span>
             )}
-            {job.url && (
+            {applicationUrl && (
               <CopyToClipboard 
-                textToCopy={job.url} 
+                textToCopy={applicationUrl} 
                 label="Copy URL" 
-                className="ml-2" 
+                className="inline-flex" 
               />
             )}
           </div>
@@ -135,15 +141,15 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
         <div className="mt-2 text-sm text-blue-700">
           <p>To apply for this position, please follow these steps:</p>
           <ol className="list-decimal list-inside mt-1 space-y-1">
-            <li>Click the "Apply on Company Website" button below</li>
+            <li>Click the "Apply Now" button or visit the company website</li>
             <li>Review the job requirements carefully</li>
             <li>Follow the application instructions on the company's website</li>
             <li>Ensure your resume highlights relevant experience</li>
           </ol>
-          <div className="mt-3 flex">
-            {job.url ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {applicationUrl ? (
               <a 
-                href={job.url} 
+                href={applicationUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm leading-5 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -155,23 +161,36 @@ export const ApplicationInstructions: React.FC<ApplicationInstructionsProps> = (
                 </svg>
               </a>
             ) : (
-              <span className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm leading-5 font-medium rounded-md text-gray-500 bg-gray-100 cursor-not-allowed">
-                Application Link Unavailable
+              <span className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm leading-5 font-medium rounded-md text-gray-500 bg-gray-100">
+                Contact for Details
                 <svg className="ml-1.5 w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
               </span>
             )}
-            {job.url && (
+            {applicationUrl && (
               <CopyToClipboard 
-                textToCopy={job.url} 
+                textToCopy={applicationUrl} 
                 label="Copy URL" 
-                className="ml-2" 
+                className="inline-flex" 
               />
             )}
           </div>
         </div>
       )}
+      
+      {!jobIsVerified && (
+        <div className="mt-3 text-xs text-yellow-800 bg-yellow-50 p-2 rounded border border-yellow-100">
+          <p className="font-semibold">Company Verification</p>
+          <p>This company has not been fully verified. Research the company before submitting personal information.</p>
+        </div>
+      )}
+      
+      <div className="mt-3 text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-100">
+        <p className="font-semibold">Remote Job Safety Tip</p>
+        <p>Check company reviews on sites like Glassdoor or LinkedIn before applying.</p>
+      </div>
     </div>
   );
 };

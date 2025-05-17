@@ -21,19 +21,22 @@ const jobCategories = [
 
 interface HomePageProps {
   featuredJobs: Job[];
+  error?: string;
 }
 
-export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
+export const getServerSideProps = async () => {
   try {
-    // Get the absolute URL base from environment
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.VERCEL_URL || 'https://clickclickjob.vercel.app';
+    // Use the production API URL directly to avoid URL construction issues
+    const apiUrl = 'https://clickclickjob.vercel.app/api/jobs/';
+    console.log('Fetching jobs from:', apiUrl);
     
-    // Fetch featured jobs from API
-    console.log('Fetching featured jobs from:', `${baseUrl}/api/jobs?limit=6`);
-    const response = await fetch(`${baseUrl}/api/jobs?limit=6`, {
+    const response = await fetch(apiUrl, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'ClickClickJob/1.0'
+        'Content-Type': 'application/json',
+        'User-Agent': 'ClickClickJob/1.0',
+        'Cache-Control': 'no-cache'
       }
     });
     
@@ -42,27 +45,57 @@ export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
     }
     
     const result = await response.json();
-    const jobs = result.jobs || [];
+    console.log('API Response structure:', Object.keys(result));
+    
+    // Extract jobs from the response, handling both array and object formats
+    let jobs = [];
+    if (Array.isArray(result)) {
+      console.log('Result is an array with length:', result.length);
+      jobs = result;
+    } else if (result.jobs && Array.isArray(result.jobs)) {
+      console.log('Result contains jobs array with length:', result.jobs.length);
+      jobs = result.jobs;
+    } else {
+      console.warn('Unexpected API response format:', result);
+      jobs = [];
+    }
+    
+    console.log(`Processed ${jobs.length} jobs for display`);
+    if (jobs.length > 0) {
+      console.log('First job sample:', {
+        id: jobs[0]._id,
+        title: jobs[0].title,
+        company: jobs[0].company,
+        fields: Object.keys(jobs[0])
+      });
+    }
     
     return {
       props: {
         featuredJobs: jobs.slice(0, 6) // Ensure we only get at most 6 jobs
-      },
-      revalidate: 60 // Revalidate every minute
+      }
     };
   } catch (error) {
-    console.error('Error in getStaticProps:', error);
+    console.error('Error in getServerSideProps:', error);
     return {
       props: {
-        featuredJobs: []
-      },
-      revalidate: 30 // Try again more quickly if there was an error
+        featuredJobs: [],
+        error: error instanceof Error ? error.message : 'Failed to load jobs'
+      }
     };
   }
 };
 
-const HomePage: React.FC<HomePageProps> = ({ featuredJobs }) => {
+const HomePage: React.FC<HomePageProps> = ({ featuredJobs, error }) => {
   const router = useRouter();
+  
+  // Display error if present
+  if (error) {
+    console.error('Error loading jobs:', error);
+  }
+  
+  // Log the number of jobs received for debugging
+  console.log(`Rendering homepage with ${featuredJobs.length} featured jobs`);
   
   const filterChips = [
     { label: 'Entry-Level', value: 'entry-level' },
@@ -125,11 +158,43 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs }) => {
             </span>
           </h2>
           
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {featuredJobs.map(job => (
-              <EnhancedJobCard key={job._id} job={job} />
-            ))}
-          </div>
+          {/* Add error message display if needed */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Error loading jobs</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{error}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Show empty state if no jobs */}
+          {featuredJobs.length === 0 && !error ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">No jobs available</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                We're currently updating our job listings. Please check back soon.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {featuredJobs.map(job => (
+                <EnhancedJobCard key={job._id} job={job} />
+              ))}
+            </div>
+          )}
           
           <div className="mt-10 text-center">
             <Link 
