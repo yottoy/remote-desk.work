@@ -67,9 +67,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (category && typeof category === 'string') {
         const categories = category.split(',');
         if (categories.length === 1) {
-          filter.jobCategory = category;
+          // Single category - look for exact match or pattern match
+          filter.jobCategory = { $regex: category, $options: 'i' };
         } else if (categories.length > 1) {
-          filter.jobCategory = { $in: categories };
+          // Multiple categories - use $or to match any of them
+          const categoryFilters = categories.map(cat => ({ 
+            jobCategory: { $regex: cat, $options: 'i' } 
+          }));
+          
+          if (filter.$and) {
+            filter.$and.push({ $or: categoryFilters });
+          } else {
+            filter.$and = [{ $or: categoryFilters }];
+          }
         }
       }
 
@@ -102,19 +112,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           
           ranges.forEach(range => {
             if (range === 'under-$15') {
-              payRangeFilter.push({ salary: /under \$15|^\$\d{1,2}\/hr|\$\d{1,2}-\d{1,2}\/hr/ });
+              payRangeFilter.push({ salary: { $regex: "under \\$15|^\\$\\d{1,2}\\/hr|\\$\\d{1,2}-\\d{1,2}\\/hr", $options: "i" } });
             } else if (range === '$15-20') {
-              payRangeFilter.push({ salary: /\$15|\$16|\$17|\$18|\$19|\$20|\$15-20\/hr|\$15-\$20/ });
+              payRangeFilter.push({ salary: { $regex: "\\$15|\\$16|\\$17|\\$18|\\$19|\\$20|\\$15-20\\/hr|\\$15-\\$20", $options: "i" } });
             } else if (range === '$20-25') {
-              payRangeFilter.push({ salary: /\$2[0-5]|\$20-25\/hr|\$20-\$25/ });
+              payRangeFilter.push({ salary: { $regex: "\\$2[0-5]|\\$20-25\\/hr|\\$20-\\$25", $options: "i" } });
             } else if (range === '$25+') {
-              payRangeFilter.push({ salary: /\$2[5-9]|\$[3-9]\d|\$\d{3,}|\$25\+\/hr|\$25\+/ });
+              payRangeFilter.push({ salary: { $regex: "\\$2[5-9]|\\$[3-9]\\d|\\$\\d{3,}|\\$25\\+\\/hr|\\$25\\+", $options: "i" } });
             }
           });
           
           if (payRangeFilter.length > 0) {
-            // Create a separate $or for salary filters only
-            filter.salary = { $or: payRangeFilter };
+            if (filter.$and) {
+              filter.$and.push({ $or: payRangeFilter });
+            } else {
+              filter.$and = [{ $or: payRangeFilter }];
+            }
           }
         }
       }
@@ -127,19 +140,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           
           locations.forEach(loc => {
             if (loc === 'worldwide') {
-              locationFilter.push({ location: /worldwide|global|international|remote/i });
+              locationFilter.push({ location: { $regex: "worldwide|global|international|remote", $options: "i" } });
             } else if (loc === 'us-only') {
-              locationFilter.push({ location: /united states|usa|us only|america/i });
+              locationFilter.push({ location: { $regex: "united states|usa|us only|america", $options: "i" } });
             } else if (loc === 'us-canada') {
-              locationFilter.push({ location: /us|united states|canada|north america/i });
+              locationFilter.push({ location: { $regex: "us|united states|canada|north america", $options: "i" } });
             } else if (loc === 'europe') {
-              locationFilter.push({ location: /europe|eu|european/i });
+              locationFilter.push({ location: { $regex: "europe|eu|european", $options: "i" } });
             }
           });
           
           if (locationFilter.length > 0) {
-            // Use $or specifically for location
-            filter.locationMatch = { $or: locationFilter };
+            if (filter.$and) {
+              filter.$and.push({ $or: locationFilter });
+            } else {
+              filter.$and = [{ $or: locationFilter }];
+            }
           }
         }
       }

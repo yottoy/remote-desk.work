@@ -171,6 +171,9 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
       <div className="mt-2 text-sm text-gray-500">
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
           <span className="line-clamp-1">{job.location}</span>
+          {formattedSalary && (
+            <span className="whitespace-nowrap">• {formattedSalary}</span>
+          )}
           <span className="whitespace-nowrap">• Posted {timeAgo}</span>
         </div>
       </div>
