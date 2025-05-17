@@ -22,10 +22,10 @@ async function connectWithRetry(retries = 3, delay = 1000): Promise<MongoClient>
     console.log('Connecting to MongoDB...');
     const client = new MongoClient(MONGODB_URI as string, {
       // Add connection options for better reliability
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      serverSelectionTimeoutMS: 10000,
-      maxPoolSize: 10
+      connectTimeoutMS: 5000,
+      socketTimeoutMS: 30000,
+      serverSelectionTimeoutMS: 5000,
+      maxPoolSize: 20
     });
     
     await client.connect();
@@ -50,24 +50,21 @@ export async function connectToDatabase() {
   try {
     // If we're already connecting, wait for that to complete
     if (isConnecting) {
-      console.log('Connection attempt already in progress, waiting...');
       await new Promise(resolve => setTimeout(resolve, 100));
       return connectToDatabase();
     }
 
-    // If the connection already exists, verify it's still alive
+    // If the connection already exists, verify it's still alive with a simple ping
     if (cachedClient && cachedDb) {
       try {
         await cachedClient.db().command({ ping: 1 });
-        console.log('Using cached database connection');
         return { client: cachedClient, db: cachedDb };
       } catch (error) {
-        console.warn('Cached MongoDB connection is stale, reconnecting...', error);
-        // Clean up stale connection
+        console.warn('Cached MongoDB connection is stale, reconnecting...');
         try {
           await cachedClient.close();
         } catch (closeError) {
-          console.warn('Error closing stale connection:', closeError);
+          console.warn('Error closing stale connection');
         }
         cachedClient = null;
         cachedDb = null;
@@ -80,24 +77,16 @@ export async function connectToDatabase() {
       const client = await connectWithRetry();
       const db = client.db(MONGODB_DB);
 
-      // Verify we can access the jobs collection
-      const collections = await db.listCollections().toArray();
-      const hasJobsCollection = collections.some(c => c.name === 'jobs');
-      if (!hasJobsCollection) {
-        throw new Error(`Database ${MONGODB_DB} does not have a jobs collection`);
-      }
-
       // Cache the connection
       cachedClient = client;
       cachedDb = db;
 
-      console.log(`Connected to database: ${MONGODB_DB}`);
       return { client, db };
     } finally {
       isConnecting = false;
     }
   } catch (error) {
     console.error('Failed to connect to MongoDB:', error);
-    throw new Error('Database connection failed. Please check your MongoDB connection settings.');
+    throw new Error('Database connection failed');
   }
 } 

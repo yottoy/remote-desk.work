@@ -3,7 +3,6 @@ import { connectToDatabase } from '../../../utils/mongodb';
 import { ObjectId } from 'mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('Job details API route called with query:', req.query);
   const { id } = req.query;
   
   if (req.method !== 'GET') {
@@ -15,47 +14,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    console.log('Attempting to connect to database...');
     const { db } = await connectToDatabase();
-    console.log('Connected to MongoDB successfully');
     const jobsCollection = db.collection('jobs');
 
     let job;
     
-    // Try to find by ObjectId first
-    if (ObjectId.isValid(id)) {
-      console.log('Looking up job by ObjectId');
+    // Try to find by ObjectId first if it's a valid ObjectId
+    if (ObjectId.isValid(id) && /^[0-9a-fA-F]{24}$/.test(id)) {
       job = await jobsCollection.findOne({ _id: new ObjectId(id) });
     }
 
-    // If not found by ObjectId, try other fields
+    // If not found by ObjectId, try other fields with a single query
     if (!job) {
-      console.log('Job not found by ObjectId, trying alternative IDs');
       job = await jobsCollection.findOne({
         $or: [
           { slug: id },
           { jobId: id },
           { uniqueIdentifier: id },
-          { url: { $regex: id, $options: 'i' } },
-          { 'sourceId': id }
+          { url: { $regex: id.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), $options: 'i' } }
         ]
       });
     }
 
     if (!job) {
-      console.log('Job not found for ID:', id);
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Set cache headers
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
+    // Set enhanced cache headers for better performance
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600, stale-while-revalidate=86400');
     
     return res.status(200).json(job);
   } catch (error) {
     console.error('Error fetching job:', error);
     return res.status(500).json({ 
-      error: 'Failed to fetch job', 
-      details: error instanceof Error ? error.message : String(error)
+      error: 'Failed to fetch job'
     });
   }
 } 

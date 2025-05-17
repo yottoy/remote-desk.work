@@ -2,33 +2,28 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '../../../utils/mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('Jobs API route called with query:', req.query);
-
   // Only allow GET requests
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    console.log('Attempting to connect to database...');
     const { db } = await connectToDatabase();
     if (!db) {
       console.error('Failed to connect to database');
       return res.status(500).json({ error: 'Database connection failed' });
     }
-    console.log('Successfully connected to database');
     
     const jobsCollection = db.collection('jobs');
 
     // Extract query parameters with defaults
     const {
       page = '1',
-      limit = '20',
+      limit = '50',  // Increased limit for better initial load
       category = '',
       search = '',
       jobType = '',
-      experienceLevel = '',
-      remote = 'true'
+      experienceLevel = ''
     } = req.query;
 
     try {
@@ -36,45 +31,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const pageNum = Math.max(1, parseInt(page as string));
       let limitNum = parseInt(limit as string);
       
-      // Build filter object
-      const filter: any = {
-        $or: [
-          { remote: true },
-          { location: { $regex: 'Remote', $options: 'i' } }
-        ]
-      };
-
-      // Add category filter if specified
-      if (category) {
+      // Build lightweight filter object
+      let filter: any = {};
+      
+      // Simplified category filtering
+      if (category && typeof category === 'string') {
         filter.jobCategory = category;
       }
 
       // Add job type filter if specified
-      if (jobType) {
+      if (jobType && typeof jobType === 'string') {
         filter.jobType = jobType;
       }
 
       // Add experience level filter if specified
-      if (experienceLevel) {
+      if (experienceLevel && typeof experienceLevel === 'string') {
         filter.experienceLevel = experienceLevel;
       }
 
       // Add text search if specified
-      if (search) {
-        filter.$and = [
-          filter,
-          {
-            $or: [
-              { title: { $regex: search, $options: 'i' } },
-              { company: { $regex: search, $options: 'i' } },
-              { description: { $regex: search, $options: 'i' } }
-            ]
-          }
+      if (search && typeof search === 'string') {
+        filter.$or = [
+          { title: { $regex: search, $options: 'i' } },
+          { company: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } }
         ];
       }
-
-      // Ensure we're not filtering out valid jobs unintentionally
-      console.log('Using filter:', JSON.stringify(filter, null, 2));
       
       // Cap limit to reasonable number
       limitNum = Math.min(100, Math.max(1, limitNum));
@@ -91,20 +73,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Get total count for pagination
       const totalJobs = await jobsCollection.countDocuments(filter);
 
-      console.log(`Found ${totalJobs} total jobs matching filter`);
-
-      // Calculate pagination metadata
-      const totalPages = Math.ceil(totalJobs / limitNum);
-
-      // Set cache headers
-      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
-
+      // Enhanced caching for better performance
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+      
       // Return jobs with pagination metadata
       return res.status(200).json({
         jobs,
         pagination: {
           totalJobs,
-          totalPages,
+          totalPages: Math.ceil(totalJobs / limitNum),
           currentPage: pageNum,
           limit: limitNum
         }
