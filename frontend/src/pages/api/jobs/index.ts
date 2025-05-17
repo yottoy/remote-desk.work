@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase } from '../../utils/mongodb';
+import { connectToDatabase } from '../../../utils/mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow GET requests
@@ -60,12 +60,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Salary range filter
       if (minSalary) {
         filter.salary = filter.salary || {};
-        filter.salary.$gte = parseInt(minSalary as string);
+        try {
+          filter.salary.$gte = parseInt(minSalary as string);
+        } catch (e) {
+          console.error('Invalid minSalary value:', e);
+        }
       }
 
       if (maxSalary) {
         filter.salary = filter.salary || {};
-        filter.salary.$lte = parseInt(maxSalary as string);
+        try {
+          filter.salary.$lte = parseInt(maxSalary as string);
+        } catch (e) {
+          console.error('Invalid maxSalary value:', e);
+        }
       }
 
       // Employment type filter (full-time/part-time)
