@@ -75,11 +75,14 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
             </span>
           )}
         </div>
+        {/* Ensure salary is visible in a separate line */}
+        {formattedSalary && (
+          <div className="mt-1 text-sm">
+            {formattedSalary}
+          </div>
+        )}
         <div className="mt-2 text-sm text-gray-500 flex flex-wrap gap-2">
           <span className="line-clamp-1">{job.location}</span>
-          {formattedSalary && (
-            <span className="whitespace-nowrap">• {formattedSalary}</span>
-          )}
           <span className="whitespace-nowrap">• Posted {timeAgo}</span>
         </div>
       </div>

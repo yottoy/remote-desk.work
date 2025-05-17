@@ -36,9 +36,10 @@ const JobList: React.FC<JobListProps> = ({
   isLoading = false,
   error = null
 }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  // Default view mode is 'list' to ensure salary is clearly visible
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [sortBy, setSortBy] = useState<'newest' | 'relevance'>('newest');
-
+  
   // Make sure jobs is always an array even if we receive null/undefined
   const safeJobs = Array.isArray(jobs) ? jobs : [];
 
@@ -168,7 +169,7 @@ const JobList: React.FC<JobListProps> = ({
                 </div>
               ))}
             </div>
-          ) : jobs && jobs.length > 0 ? (
+          ) : safeJobs && safeJobs.length > 0 ? (
             <div className={containerClasses}>
               {safeJobs.map((job) => (
                 <JobCard 
