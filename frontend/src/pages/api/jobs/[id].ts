@@ -3,6 +3,7 @@ import { connectToDatabase } from '../../../utils/mongodb';
 import { ObjectId } from 'mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log('Job details API route called with query:', req.query);
   const { id } = req.query;
   
   if (req.method !== 'GET') {
@@ -14,27 +15,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    console.log('Attempting to connect to database...');
     const { db } = await connectToDatabase();
+    console.log('Connected to MongoDB successfully');
     const jobsCollection = db.collection('jobs');
 
     let job;
     
     // Try to find by ObjectId first
     if (ObjectId.isValid(id)) {
+      console.log('Looking up job by ObjectId');
       job = await jobsCollection.findOne({ _id: new ObjectId(id) });
     }
 
-    // If not found by ObjectId, try to find by slug or other fields
+    // If not found by ObjectId, try other fields
     if (!job) {
+      console.log('Job not found by ObjectId, trying alternative IDs');
       job = await jobsCollection.findOne({
         $or: [
           { slug: id },
-          { jobId: id }
+          { jobId: id },
+          { uniqueIdentifier: id },
+          { url: { $regex: id, $options: 'i' } },
+          { 'sourceId': id }
         ]
       });
     }
 
     if (!job) {
+      console.log('Job not found for ID:', id);
       return res.status(404).json({ error: 'Job not found' });
     }
 

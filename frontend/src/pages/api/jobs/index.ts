@@ -25,57 +25,73 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       page = '1',
       limit = '20',
       category = '',
-      search = ''
+      search = '',
+      jobType = '',
+      experienceLevel = '',
+      remote = 'true'
     } = req.query;
 
     try {
-      // Build base filter
-      const filter: any = {};
+      // Parse pagination parameters
+      const pageNum = Math.max(1, parseInt(page as string));
+      let limitNum = parseInt(limit as string);
+      
+      // Build filter object
+      const filter: any = {
+        $or: [
+          { remote: true },
+          { location: { $regex: 'Remote', $options: 'i' } }
+        ]
+      };
 
       // Add category filter if specified
-      if (category && typeof category === 'string') {
-        try {
-          const categoryPattern = new RegExp(category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-          filter.category = { $regex: categoryPattern };
-        } catch (error) {
-          console.warn('Invalid category pattern:', error);
-        }
+      if (category) {
+        filter.jobCategory = category;
       }
 
-      // Add search filter if specified
-      if (search && typeof search === 'string') {
-        try {
-          const searchPattern = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-          filter.$or = [
-            { title: { $regex: searchPattern } },
-            { description: { $regex: searchPattern } },
-            { company: { $regex: searchPattern } }
-          ];
-        } catch (error) {
-          console.warn('Invalid search pattern:', error);
-        }
+      // Add job type filter if specified
+      if (jobType) {
+        filter.jobType = jobType;
       }
 
+      // Add experience level filter if specified
+      if (experienceLevel) {
+        filter.experienceLevel = experienceLevel;
+      }
+
+      // Add text search if specified
+      if (search) {
+        filter.$and = [
+          filter,
+          {
+            $or: [
+              { title: { $regex: search, $options: 'i' } },
+              { company: { $regex: search, $options: 'i' } },
+              { description: { $regex: search, $options: 'i' } }
+            ]
+          }
+        ];
+      }
+
+      // Ensure we're not filtering out valid jobs unintentionally
       console.log('Using filter:', JSON.stringify(filter, null, 2));
-
-      // Pagination
-      let pageNum = Math.max(1, parseInt(typeof page === 'string' ? page : '1'));
-      let limitNum = Math.min(100, Math.max(1, parseInt(typeof limit === 'string' ? limit : '20')));
+      
+      // Cap limit to reasonable number
+      limitNum = Math.min(100, Math.max(1, limitNum));
       const skip = (pageNum - 1) * limitNum;
-
-      // First check total count
-      const totalJobs = await jobsCollection.countDocuments(filter);
-      console.log('Total matching jobs:', totalJobs);
 
       // Execute query with pagination
       const jobs = await jobsCollection
         .find(filter)
-        .sort({ postedDate: -1 }) // Sort by newest first
+        .sort({ postedDate: -1 })
         .skip(skip)
         .limit(limitNum)
         .toArray();
 
-      console.log(`Found ${jobs.length} jobs for current page`);
+      // Get total count for pagination
+      const totalJobs = await jobsCollection.countDocuments(filter);
+
+      console.log(`Found ${totalJobs} total jobs matching filter`);
 
       // Calculate pagination metadata
       const totalPages = Math.ceil(totalJobs / limitNum);
@@ -94,17 +110,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       });
     } catch (error) {
-      console.error('Error processing query:', error);
-      return res.status(400).json({ 
-        error: 'Query processing error', 
-        details: error instanceof Error ? error.message : String(error)
-      });
+      console.error('Error processing query parameters:', error);
+      return res.status(400).json({ error: 'Invalid query parameters' });
     }
   } catch (error) {
     console.error('Error fetching jobs:', error);
-    return res.status(500).json({ 
-      error: 'Failed to fetch jobs', 
-      details: error instanceof Error ? error.message : String(error)
-    });
+    return res.status(500).json({ error: 'Failed to fetch jobs' });
   }
 } 
