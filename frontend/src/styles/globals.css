@@ -50,4 +50,16 @@ a:hover {
   padding: 0 1rem;
   margin: 0 auto;
   max-width: 1200px;
+}
+
+/* Hide all TechCorp Solutions jobs */
+[data-company="TechCorp Solutions"],
+div:has(h3:contains("TechCorp")),
+div:has(p:contains("TechCorp")) {
+  display: none !important;
+}
+
+/* Hide specific mock jobs by their known content */
+div:has(h3:contains("Remote Data Entry Specialist"):has(+ p:contains("TechCorp Solutions"))) {
+  display: none !important;
 } 
