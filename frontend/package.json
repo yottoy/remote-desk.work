@@ -3,16 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=18.x"
+    "node": ">=18"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "node vercel-build.js && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "verify-mongodb": "node scripts/verify-mongodb.js",
     "verify-env": "node scripts/verify-build-env.js",
-    "verify-vercel": "node vercel-build.js"
+    "vercel-build": "next build"
   },
   "dependencies": {
     "@vercel/analytics": "^1.2.2",
