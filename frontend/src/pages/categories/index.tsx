@@ -2,28 +2,29 @@ import React from 'react';
 import Layout from '../../components/layout/Layout';
 import CategoryCard from '../../components/common/CategoryCard';
 import SearchBar from '../../components/common/SearchBar';
+import { GetServerSideProps } from 'next';
 
-// Mock data for all job categories
-const jobCategories = [
-  { name: 'Data Entry Jobs', slug: 'data-entry', count: 56 },
-  { name: 'Administrative Jobs', slug: 'administrative', count: 42 },
-  { name: 'Customer Service Jobs', slug: 'customer-service', count: 78 },
-  { name: 'Transcription Jobs', slug: 'transcription', count: 34 },
-  { name: 'Virtual Assistant Jobs', slug: 'virtual-assistant', count: 29 },
-  { name: 'Data Processing Jobs', slug: 'data-processing', count: 23 },
-  { name: 'Customer Support Jobs', slug: 'customer-support', count: 65 },
-  { name: 'Bookkeeping Jobs', slug: 'bookkeeping', count: 18 },
-  { name: 'Content Writing Jobs', slug: 'content-writing', count: 31 },
-  { name: 'Social Media Jobs', slug: 'social-media', count: 27 },
-  { name: 'Project Management Jobs', slug: 'project-management', count: 16 },
-  { name: 'Quality Assurance Jobs', slug: 'quality-assurance', count: 22 }
+// Define the job categories without counts (will be populated from API)
+const jobCategoryDefinitions = [
+  { name: 'Data Entry Jobs', slug: 'data-entry' },
+  { name: 'Administrative Jobs', slug: 'administrative' },
+  { name: 'Customer Service Jobs', slug: 'customer-service' },
+  { name: 'Transcription Jobs', slug: 'transcription' },
+  { name: 'Virtual Assistant Jobs', slug: 'virtual-assistant' },
+  { name: 'Data Processing Jobs', slug: 'data-processing' },
+  { name: 'Customer Support Jobs', slug: 'customer-support' },
+  { name: 'Bookkeeping Jobs', slug: 'bookkeeping' },
+  { name: 'Content Writing Jobs', slug: 'content-writing' },
+  { name: 'Social Media Jobs', slug: 'social-media' },
+  { name: 'Project Management Jobs', slug: 'project-management' },
+  { name: 'Quality Assurance Jobs', slug: 'quality-assurance' }
 ];
 
 // Group categories by first letter
-const groupCategoriesByLetter = () => {
-  const grouped: Record<string, typeof jobCategories> = {};
+const groupCategoriesByLetter = (categories: Array<{name: string, slug: string, count: number}>) => {
+  const grouped: Record<string, Array<{name: string, slug: string, count: number}>> = {};
   
-  jobCategories.forEach(category => {
+  categories.forEach(category => {
     const firstLetter = category.name.charAt(0).toUpperCase();
     if (!grouped[firstLetter]) {
       grouped[firstLetter] = [];
@@ -34,8 +35,81 @@ const groupCategoriesByLetter = () => {
   return grouped;
 };
 
-const CategoriesPage = () => {
-  const groupedCategories = groupCategoriesByLetter();
+interface CategoriesPageProps {
+  jobCategories: Array<{
+    name: string;
+    slug: string;
+    count: number;
+  }>;
+}
+
+export const getServerSideProps: GetServerSideProps<CategoriesPageProps> = async () => {
+  try {
+    // We'll fetch counts for each category
+    const categoriesWithCounts = await Promise.all(
+      jobCategoryDefinitions.map(async (category) => {
+        try {
+          // Fetch job count for this category
+          const apiUrl = `https://clickclickjob.vercel.app/api/jobs/count?jobCategory=${category.slug}`;
+          
+          // Use AbortController for timeout functionality
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+          
+          const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache'
+            },
+            signal: controller.signal
+          });
+          
+          // Clear the timeout
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            // If there's an error, return the category with count 0
+            return { ...category, count: 0 };
+          }
+          
+          const result = await response.json();
+          const count = result.count || 0;
+          
+          return {
+            ...category,
+            count
+          };
+        } catch (error) {
+          console.error(`Error fetching count for ${category.slug}:`, error);
+          return { ...category, count: 0 };
+        }
+      })
+    );
+    
+    return {
+      props: {
+        jobCategories: categoriesWithCounts
+      }
+    };
+  } catch (error) {
+    console.error('Failed to fetch category counts:', error);
+    
+    // If there's an error, return the categories with count 0
+    return {
+      props: {
+        jobCategories: jobCategoryDefinitions.map(category => ({
+          ...category,
+          count: 0
+        }))
+      }
+    };
+  }
+};
+
+const CategoriesPage: React.FC<CategoriesPageProps> = ({ jobCategories }) => {
+  const groupedCategories = groupCategoriesByLetter(jobCategories);
   const alphabetLetters = Object.keys(groupedCategories).sort();
   
   return (
@@ -133,6 +207,7 @@ const CategoriesPage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {jobCategories
+              .filter(category => category.count > 0)  // Only show categories with jobs
               .sort((a, b) => b.count - a.count)
               .slice(0, 4)
               .map(category => (

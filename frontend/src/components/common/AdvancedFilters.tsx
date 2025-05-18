@@ -34,7 +34,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   const [isOpen, setIsOpen] = useState(true);
   
   // Check if any options in this section are selected
-  const hasSelectedOptions = selectedOptions.length > 0;
+  const hasSelectedOptions = selectedOptions && selectedOptions.length > 0;
   
   return (
     <div className="py-3 border-b border-gray-200 last:border-b-0">
@@ -111,6 +111,9 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       newValues = currentValues.filter(val => val !== optionId);
     }
     
+    console.log(`Filter changed in UI: ${sectionId} -> ${optionId}, checked: ${checked}`);
+    console.log(`New filter values for ${sectionId}:`, newValues);
+    
     // Create a new reference to trigger proper re-render
     const newAppliedFilters = {
       ...appliedFilters,
@@ -120,6 +123,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
     setAppliedFilters(newAppliedFilters);
     
     if (!mobileView) {
+      console.log(`Propagating filter change to parent: ${sectionId} ->`, newValues);
       onFilterChange(sectionId, newValues);
     }
   };
@@ -163,11 +167,17 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       title: 'Job Category',
       options: [
         { id: 'data-entry', label: 'Data Entry' },
-        { id: 'administrative-assistant', label: 'Administrative Assistant' },
+        { id: 'administrative', label: 'Administrative' },
         { id: 'virtual-assistant', label: 'Virtual Assistant' },
         { id: 'customer-service', label: 'Customer Service' },
+        { id: 'customer-support', label: 'Customer Support' },
         { id: 'transcription', label: 'Transcription' },
+        { id: 'data-processing', label: 'Data Processing' },
         { id: 'bookkeeping', label: 'Bookkeeping' },
+        { id: 'content-writing', label: 'Content Writing' },
+        { id: 'social-media', label: 'Social Media' },
+        { id: 'project-management', label: 'Project Management' },
+        { id: 'quality-assurance', label: 'Quality Assurance' }
       ]
     },
     {
@@ -220,6 +230,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
         { id: 'us-only', label: 'US Only' },
         { id: 'us-canada', label: 'US & Canada' },
         { id: 'europe', label: 'Europe' },
+        { id: 'asia', label: 'Asia' },
       ]
     },
     {

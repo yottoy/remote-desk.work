@@ -7,8 +7,92 @@ import SearchBar from '../../components/common/SearchBar';
 import JobCard from '../../components/common/JobCard';
 import CategoryCard from '../../components/common/CategoryCard';
 
-// Mock category data
-const categoryData = {
+// List of valid category slugs (matching the ones in CategoryCard component)
+const validCategorySlugs = [
+  'data-entry',
+  'administrative',
+  'customer-service',
+  'transcription',
+  'virtual-assistant',
+  'data-processing',
+  'customer-support',
+  'bookkeeping',
+  'content-writing',
+  'social-media',
+  'project-management',
+  'quality-assurance'
+];
+
+// Helper function to generate a generic category if specific data isn't available
+const createGenericCategory = (slug: string) => {
+  const nameMap: Record<string, string> = {
+    'data-entry': 'Remote Data Entry Jobs',
+    'administrative': 'Remote Administrative Jobs',
+    'customer-service': 'Remote Customer Service Jobs',
+    'transcription': 'Remote Transcription Jobs',
+    'virtual-assistant': 'Remote Virtual Assistant Jobs',
+    'data-processing': 'Remote Data Processing Jobs',
+    'customer-support': 'Remote Customer Support Jobs',
+    'bookkeeping': 'Remote Bookkeeping Jobs',
+    'content-writing': 'Remote Content Writing Jobs',
+    'social-media': 'Remote Social Media Jobs',
+    'project-management': 'Remote Project Management Jobs',
+    'quality-assurance': 'Remote Quality Assurance Jobs'
+  };
+
+  const name = nameMap[slug] || `Remote ${slug.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())} Jobs`;
+  const formattedName = name.replace('Remote ', '');
+  
+  return {
+    name,
+    description: `${formattedName} involve working remotely on projects related to ${slug.replace(/-/g, ' ')}. These positions typically require attention to detail, good communication skills, and familiarity with relevant tools and technologies.
+
+Remote ${slug.replace(/-/g, ' ')} positions offer flexibility and the ability to work from anywhere with a reliable internet connection. Many companies are increasingly hiring remote workers for these roles, recognizing the benefits of accessing talent regardless of geographic location.
+
+Pay for these positions varies based on experience, specific skills, and employer, but typically ranges from $15-30 per hour depending on specialization and complexity of work.
+
+If you're looking for opportunities in this field, ensure you highlight relevant experience, technical skills, and your ability to work independently while maintaining strong communication with remote teams.`,
+    count: 0, // Default to 0 since we don't know if actual jobs exist
+    requirements: [
+      { title: 'Technical Skills', description: `Proficiency in ${slug.replace(/-/g, ' ')} related tools` },
+      { title: 'Communication', description: 'Strong written and verbal skills' },
+      { title: 'Organization', description: 'Ability to manage tasks independently' },
+      { title: 'Technical Setup', description: 'Reliable computer and internet connection' }
+    ],
+    faqs: [
+      {
+        question: `What does a remote ${slug.replace(/-/g, ' ')} professional do?`,
+        answer: `Remote ${slug.replace(/-/g, ' ')} professionals handle various tasks related to ${slug.replace(/-/g, ' ')} for their employers or clients. This typically includes tasks relevant to the field, using specialized software and tools to deliver high-quality work from a home office environment.`
+      },
+      {
+        question: `What qualifications do I need for ${slug.replace(/-/g, ' ')} jobs?`,
+        answer: `Qualifications vary by employer, but most positions require some combination of relevant education, experience with industry-standard tools, and demonstrated skills in the field. Many employers value strong communication skills and the ability to work independently.`
+      },
+      {
+        question: `How much do remote ${slug.replace(/-/g, ' ')} jobs pay?`,
+        answer: `Pay varies widely based on experience, specific skills, and employer. Entry-level positions typically start around $15-20 per hour, while more experienced professionals can earn $25-40+ per hour depending on specialization.`
+      },
+      {
+        question: `Are remote ${slug.replace(/-/g, ' ')} jobs full-time or part-time?`,
+        answer: `Both full-time and part-time positions are available. Many employers offer flexible scheduling options, and there are also contract or freelance opportunities in this field.`
+      }
+    ],
+    relatedCategories: validCategorySlugs
+      .filter(s => s !== slug)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3)
+      .map(s => {
+        const relatedName = s.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+        return {
+          name: `${relatedName} Jobs`,
+          slug: s
+        };
+      })
+  };
+};
+
+// Catalog of detailed category descriptions (not job data)
+const categoryDescriptions = {
   'data-entry': {
     name: 'Remote Data Entry Jobs',
     description: `Data entry jobs involve inputting information from various sources into company databases, spreadsheets, or other management systems. Remote data entry positions typically require accuracy, attention to detail, and moderate typing speed (usually 40-60 WPM).
@@ -18,7 +102,6 @@ These roles are popular among work-from-home seekers because they often require 
 Companies typically pay between $14-20 per hour for data entry specialists, with experienced professionals commanding higher rates. While many positions are full-time, you'll also find numerous part-time and flexible schedule opportunities in this category.
 
 Common employers include insurance companies, healthcare providers, e-commerce businesses, and third-party business service providers. The tools most frequently used include Microsoft Excel, Google Sheets, and proprietary data management systems.`,
-    count: 56,
     requirements: [
       { title: 'Typing Speed', description: '40-60 WPM' },
       { title: 'Software', description: 'Microsoft Office, Google Workspace' },
@@ -45,8 +128,8 @@ Common employers include insurance companies, healthcare providers, e-commerce b
     ],
     relatedCategories: [
       { name: 'Transcription Jobs', slug: 'transcription' },
-      { name: 'Data Processing', slug: 'data-processing' },
-      { name: 'Administrative Assistant', slug: 'administrative' }
+      { name: 'Data Processing Jobs', slug: 'data-processing' },
+      { name: 'Administrative Jobs', slug: 'administrative' }
     ]
   },
   'administrative': {
@@ -58,7 +141,6 @@ Remote administrative positions are ideal for organized, detail-oriented profess
 Typical salaries range from $15-25 per hour, with virtual executive assistants earning $20-30+ per hour. Most positions require intermediate to advanced proficiency with office productivity tools including email management, calendar systems, video conferencing, and document preparation.
 
 Companies across all industries hire remote administrative professionals, including startups, established corporations, non-profits, and individual executives or entrepreneurs seeking support.`,
-    count: 42,
     requirements: [
       { title: 'Organization Skills', description: 'Essential for managing multiple tasks' },
       { title: 'Software', description: 'Microsoft Office, Google Workspace, project management tools' },
@@ -86,67 +168,88 @@ Companies across all industries hire remote administrative professionals, includ
     relatedCategories: [
       { name: 'Virtual Assistant Jobs', slug: 'virtual-assistant' },
       { name: 'Data Entry Jobs', slug: 'data-entry' },
-      { name: 'Customer Service', slug: 'customer-service' }
+      { name: 'Customer Service Jobs', slug: 'customer-service' }
     ]
   },
-  // Add more categories as needed
-};
+  'customer-service': {
+    name: 'Remote Customer Service Jobs',
+    description: `Customer service jobs involve directly assisting customers with inquiries, issues, and requests across various channels including phone, email, chat, and social media. Remote customer service positions require excellent communication skills, patience, and problem-solving abilities.
 
-// Mock data for jobs (in a real app, these would come from an API)
-const mockJobs = [
-  {
-    _id: 'job1',
-    title: 'Remote Data Entry Specialist',
-    company: 'TechCorp Solutions',
-    location: 'Remote (US Only)',
-    description: 'We are looking for a detail-oriented Data Entry Specialist to join our team...',
-    descriptionText: 'We are looking for a detail-oriented Data Entry Specialist to join our team. You will be responsible for entering data from various sources into company database, maintaining data accuracy and integrity.',
-    salary: '$18-22/hr',
-    postedDate: new Date(),
-    qualityScore: 9.2,
-    featured: true,
-    categories: ['data-entry']
+These roles are abundant in the remote work market as many companies have shifted their customer support operations to distributed teams. Positions range from entry-level representatives to specialized support roles and team leaders.
+
+Salaries typically range from $14-22 per hour depending on experience, technical knowledge, and required language skills. Most remote customer service positions require reliable internet, a quiet workspace, and sometimes specific technical setups like dual monitors or landline phones.
+
+Industries hiring remote customer service representatives include e-commerce, technology, healthcare, financial services, travel, and telecommunications. Many positions offer flexible scheduling options including part-time, full-time, and sometimes alternate shifts.`,
+    requirements: [
+      { title: 'Communication', description: 'Excellent verbal and written skills' },
+      { title: 'Problem Solving', description: 'Ability to resolve customer issues efficiently' },
+      { title: 'Technical Setup', description: 'Reliable internet, headset, quiet workspace' },
+      { title: 'Software Knowledge', description: 'CRM systems, ticket management tools' }
+    ],
+    faqs: [
+      {
+        question: 'What skills do I need for remote customer service jobs?',
+        answer: 'Essential skills include clear communication, active listening, problem-solving, patience, and basic computer proficiency. Depending on the role, you may also need experience with specific software platforms, typing speed requirements, or industry knowledge. Empathy and the ability to maintain a positive attitude when dealing with challenging situations are highly valued.'
+      },
+      {
+        question: 'Do I need previous experience for remote customer service jobs?',
+        answer: 'Many entry-level remote customer service positions require little or no previous experience in the field. Companies often provide training on their specific products, services, and procedures. However, any customer-facing experience (retail, hospitality, etc.) can be beneficial. For specialized customer service roles, relevant experience or knowledge may be required.'
+      },
+      {
+        question: 'What is the work schedule like for remote customer service?',
+        answer: 'Schedules vary widely by employer. Some companies offer standard business hours, while others require coverage for evening, overnight, or weekend shifts. Many remote customer service jobs offer flexible scheduling options, part-time positions, or the ability to pick up shifts. Companies that provide 24/7 support may require some non-standard hours.'
+      },
+      {
+        question: 'What equipment do I need for remote customer service jobs?',
+        answer: 'Requirements typically include a reliable computer, high-speed internet connection, and a quality headset. Some companies may require a landline phone, dual monitors, wired (not Wi-Fi) internet connection, or specific security software. Most employers will specify their technical requirements in the job listing and may perform a technical check before hiring.'
+      }
+    ],
+    relatedCategories: [
+      { name: 'Customer Support Jobs', slug: 'customer-support' },
+      { name: 'Virtual Assistant Jobs', slug: 'virtual-assistant' },
+      { name: 'Administrative Jobs', slug: 'administrative' }
+    ]
   },
-  {
-    _id: 'job2',
-    title: 'Virtual Administrative Assistant',
-    company: 'Global Services LLC',
-    location: 'Remote (Worldwide)',
-    description: 'Support executives by managing schedules, preparing reports, and handling correspondence...',
-    descriptionText: 'Support executives by managing schedules, preparing reports, and handling correspondence. Must have excellent communication skills and be proficient in Microsoft Office suite.',
-    salary: '$15-17/hr',
-    postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    qualityScore: 8.5,
-    featured: true,
-    categories: ['administrative', 'virtual-assistant']
+  'quality-assurance': {
+    name: 'Remote Quality Assurance Jobs',
+    description: `Quality Assurance jobs involve testing, monitoring, and ensuring the quality of products or services before they reach customers. Remote QA positions focus on identifying defects, verifying functionality, and helping maintain high standards across various industries.
+
+These roles typically require attention to detail, critical thinking, and the ability to document findings clearly. Remote QA professionals work with various testing methodologies and tools to validate that products meet specified requirements and user expectations.
+
+Salaries for remote QA positions typically range from $18-35 per hour depending on experience, technical skills, and industry specialization. Entry-level positions may focus on manual testing, while more advanced roles often involve automated testing, test planning, and quality process improvement.
+
+Industries hiring remote QA professionals include software development, e-commerce, manufacturing, healthcare technology, and financial services. These positions may be titled Quality Assurance Analyst, QA Tester, Software Tester, or Quality Control Specialist.`,
+    requirements: [
+      { title: 'Attention to Detail', description: 'Ability to identify issues and inconsistencies' },
+      { title: 'Documentation', description: 'Clear reporting of findings and test results' },
+      { title: 'Testing Tools', description: 'Familiarity with relevant QA software and methodologies' },
+      { title: 'Technical Skills', description: 'Basic understanding of the systems being tested' }
+    ],
+    faqs: [
+      {
+        question: 'What does a remote quality assurance professional do?',
+        answer: 'Remote QA professionals test products, applications, or services to ensure they meet quality standards before release. This typically includes executing test cases, identifying and documenting bugs or issues, verifying fixes, and providing feedback to development teams. Depending on the role, they may also develop test plans, create automated tests, or help establish quality standards and processes.'
+      },
+      {
+        question: 'Do I need a specific degree for quality assurance jobs?',
+        answer: 'While a degree in computer science, engineering, or a related field can be helpful, many QA positions focus more on relevant skills and experience than formal education. Entry-level positions often require basic technical aptitude, attention to detail, and strong communication skills. Certifications in quality assurance methodologies (like ISTQB) can be valuable, especially for advancing in the field.'
+      },
+      {
+        question: 'What tools do remote QA professionals use?',
+        answer: 'Common tools include test management systems (like TestRail, Zephyr), bug tracking software (Jira, Bugzilla), automation tools (Selenium, Cypress, TestComplete), performance testing tools (JMeter, LoadRunner), and various specialized testing software depending on the industry. Familiarity with communication and collaboration tools is also essential for remote work.'
+      },
+      {
+        question: 'Is quality assurance a good remote career?',
+        answer: 'Yes, quality assurance is well-suited for remote work as most testing activities can be performed from anywhere with the right technical setup. The field offers various entry points, opportunities for specialization, and paths for career growth. As companies continue to prioritize quality and user experience, demand for skilled QA professionals remains strong across many industries.'
+      }
+    ],
+    relatedCategories: [
+      { name: 'Data Entry Jobs', slug: 'data-entry' },
+      { name: 'Project Management Jobs', slug: 'project-management' },
+      { name: 'Content Writing Jobs', slug: 'content-writing' }
+    ]
   },
-  {
-    _id: 'job3',
-    title: 'Entry-Level Data Entry Clerk',
-    company: 'DataFlow Inc',
-    location: 'Remote (US Only)',
-    description: 'Input data from various sources into our proprietary system...',
-    descriptionText: 'Input data from various sources into our proprietary system. Ensure accuracy and completeness of data. Flag discrepancies and errors. No prior experience needed - we provide training!',
-    salary: '$14-16/hr',
-    postedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-    qualityScore: 7.9,
-    featured: false,
-    categories: ['data-entry']
-  },
-  {
-    _id: 'job4',
-    title: 'Administrative Coordinator',
-    company: 'Executive Support Co',
-    location: 'Remote (US Only)',
-    description: 'Provide administrative support to C-level executives...',
-    descriptionText: 'Provide administrative support to C-level executives. Manage calendars, arrange travel, and handle correspondence. Must be highly organized and professional.',
-    salary: '$22-25/hr',
-    postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    qualityScore: 9.1,
-    featured: false,
-    categories: ['administrative']
-  },
-];
+};
 
 type CategoryPageProps = {
   category: {
@@ -157,11 +260,12 @@ type CategoryPageProps = {
     faqs: { question: string; answer: string }[];
     relatedCategories: { name: string; slug: string }[];
   };
-  jobs: typeof mockJobs;
+  jobs: any[]; // Using any[] since we don't have a fixed schema for real jobs
   slug: string;
+  hasJobs: boolean;
 };
 
-const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug }) => {
+const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug, hasJobs }) => {
   const router = useRouter();
   const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
 
@@ -222,29 +326,53 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug }) => 
         </div>
       </section>
 
-      {/* Featured Jobs Section */}
-      <section className="py-12 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">
-            FEATURED {slug.toUpperCase().replace('-', ' ')} JOBS
-          </h2>
-          
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {jobs.filter(job => job.featured).map(job => (
-              <JobCard key={job._id} job={job} variant="featured" />
-            ))}
+      {/* Jobs Section - Only displayed if real jobs exist */}
+      {hasJobs ? (
+        <section className="py-12 bg-gray-50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-8">
+              AVAILABLE {slug.toUpperCase().replace('-', ' ')} JOBS
+            </h2>
+            
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {jobs.map(job => (
+                <JobCard key={job._id} job={job} />
+              ))}
+            </div>
+            
+            <div className="mt-10 text-center">
+              <Link 
+                href={`/jobs?category=${slug}`}
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Browse All {category.name.replace('Remote ', '')}
+              </Link>
+            </div>
           </div>
-          
-          <div className="mt-10 text-center">
-            <Link 
-              href={`/jobs?category=${slug}`}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Browse All {category.name.replace('Remote ', '')}
-            </Link>
+        </section>
+      ) : (
+        <section className="py-12 bg-gray-50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
+              <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                No {category.name} Available
+              </h3>
+              <p className="text-gray-600 mb-6">
+                We don't have any {category.name.toLowerCase()} available right now. New opportunities are added frequently, so check back soon!
+              </p>
+              <Link 
+                href="/jobs"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Browse All Jobs
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Requirements Section */}
       <section className="py-12 bg-white">
@@ -330,47 +458,100 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug }) => 
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // Get all possible category slugs
-  const slugs = Object.keys(categoryData);
-  
+  // Get all valid category slugs instead of just the ones with defined data
   return {
-    paths: slugs.map(slug => ({ params: { slug } })),
-    fallback: true // Show a loading state for categories that don't exist yet
+    paths: validCategorySlugs.map(slug => ({ params: { slug } })),
+    fallback: true // Show a loading state and generate pages on demand
   };
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const slug = params?.slug as string;
   
-  // Get category data
-  const category = categoryData[slug as keyof typeof categoryData];
-  
-  // Get jobs for this category
-  const categoryJobs = mockJobs.filter(job => job.categories.includes(slug));
-
-  // Format dates to avoid serialization errors
-  const formatJobForSerialization = (job: any) => {
-    return {
-      ...job,
-      postedDate: job.postedDate?.toISOString() || new Date().toISOString()
-    };
-  };
-  
-  // If category doesn't exist, return 404
-  if (!category) {
+  // Check if the slug is in our valid list
+  if (!validCategorySlugs.includes(slug)) {
     return {
       notFound: true
     };
   }
   
-  return {
-    props: {
-      category,
-      jobs: categoryJobs.map(formatJobForSerialization),
-      slug
-    },
-    revalidate: 60 * 60 // Revalidate every hour
-  };
+  try {
+    // Fetch actual jobs for this category from the API
+    // Use the correct API endpoint for job categories - this was part of the issue
+    // Change from category= to jobCategory= to match what the jobs page is using
+    const apiUrl = `https://clickclickjob.vercel.app/api/jobs/?jobCategory=${slug}`;
+    console.log('Fetching jobs for category:', slug, 'from:', apiUrl);
+    
+    // Use AbortController for timeout functionality
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      },
+      signal: controller.signal
+    });
+    
+    // Clear the timeout
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    // Extract jobs from the response
+    let jobs = [];
+    if (Array.isArray(result)) {
+      console.log('Result is an array with length:', result.length);
+      jobs = result;
+    } else if (result.jobs && Array.isArray(result.jobs)) {
+      console.log('Result contains jobs array with length:', result.jobs.length);
+      jobs = result.jobs;
+    } else {
+      console.warn('Unexpected API response format:', result);
+      jobs = [];
+    }
+    
+    // Get category description (preferred) or generate one
+    const categoryDescription = categoryDescriptions[slug as keyof typeof categoryDescriptions] || createGenericCategory(slug);
+    
+    // Include the job count from the API
+    const categoryWithCount = {
+      ...categoryDescription,
+      count: jobs.length
+    };
+    
+    return {
+      props: {
+        category: categoryWithCount,
+        jobs: jobs,
+        slug,
+        hasJobs: jobs.length > 0
+      },
+      revalidate: 60 * 10 // Revalidate every 10 minutes
+    };
+  } catch (error) {
+    console.error(`Failed to fetch jobs for category ${slug}:`, error);
+    
+    // If API fetch fails, still return the page but with no jobs
+    const categoryDescription = categoryDescriptions[slug as keyof typeof categoryDescriptions] || createGenericCategory(slug);
+    
+    return {
+      props: {
+        category: categoryDescription,
+        jobs: [],
+        slug,
+        hasJobs: false
+      },
+      revalidate: 60 * 5 // Retry more frequently if there was an error
+    };
+  }
 };
 
 export default CategoryPage; 
