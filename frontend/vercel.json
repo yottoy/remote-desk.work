@@ -2,21 +2,34 @@
   "version": 2,
   "framework": "nextjs",
   "env": {
+    "NEXT_PUBLIC_API_URL": "https://www.clickclickjob.com",
     "NEXT_PUBLIC_SITE_URL": "https://www.clickclickjob.com",
     "MONGODB_DB": "clickclickjob"
   },
   "routes": [
     {
-      "src": "/api/jobs/?(.*)", 
+      "src": "/api/jobs/?(.*)",
       "dest": "/api/jobs/$1",
       "headers": {
-        "cache-control": "public, max-age=0, s-maxage=30, stale-while-revalidate=60",
+        "cache-control": "public, max-age=0, s-maxage=10, stale-while-revalidate=30",
         "Access-Control-Allow-Origin": "*"
+      }
+    },
+    {
+      "src": "/categories/(.*)",
+      "dest": "/categories/$1",
+      "headers": {
+        "cache-control": "public, max-age=0, s-maxage=10, stale-while-revalidate=20",
+        "x-vercel-cache-tags": "categories, jobs"
       }
     },
     {
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ]
-} 
+  ],
+  "github": {
+    "silent": true,
+    "autoJobCancelation": true
+  }
+}
