@@ -6,7 +6,7 @@ import Layout from '../../components/layout/Layout';
 import SearchBar from '../../components/common/SearchBar';
 import JobCard from '../../components/common/JobCard';
 import CategoryCard from '../../components/common/CategoryCard';
-import { connectToDatabase, isValidJob } from '../../utils/mongodb';
+import { connectToDatabase, isValidJob, serializeJobForNextJS } from '../../utils/mongodb';
 import type { Job } from '../../types/job';
 import { isMockJob } from '../../types/job';
 
@@ -547,8 +547,11 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
         if (dbJobs && dbJobs.length > 0) {
           console.log(`Found ${dbJobs.length} jobs directly from database for category: ${slug}`);
           
+          // Ensure all jobs are properly serialized for Next.js static generation
+          const serializedJobs = dbJobs.map((job: any) => serializeJobForNextJS(job));
+          
           // Filter out any invalid/mock jobs
-          const validJobs = filterMockJobs(dbJobs.filter((job: any) => isValidJob(job) && !isMockJob(job)));
+          const validJobs = filterMockJobs(serializedJobs.filter((job: any) => isValidJob(job) && !isMockJob(job)));
           console.log(`After filtering, ${validJobs.length} valid jobs remain`);
           
           // Get category description
@@ -616,8 +619,11 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       jobs = [];
     }
     
+    // Ensure all jobs are properly serialized for Next.js static generation
+    const serializedJobs = jobs.map((job: any) => serializeJobForNextJS(job));
+    
     // Filter out any mock/invalid jobs
-    const validJobs = filterMockJobs(jobs.filter((job: any) => isValidJob(job) && !isMockJob(job)));
+    const validJobs = filterMockJobs(serializedJobs.filter((job: any) => isValidJob(job) && !isMockJob(job)));
     console.log(`After filtering, ${validJobs.length} valid jobs remain from API response`);
     
     // Get category description (preferred) or generate one
@@ -647,7 +653,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     return {
       props: {
         category: categoryDescription,
-        jobs: [],
+        jobs: [], // Empty array of jobs
         slug,
         hasJobs: false
       },

@@ -99,4 +99,32 @@ if (process.env.NODE_ENV === 'production') {
   cleanupMockEntries().catch(error => {
     console.error('Failed to run mock cleanup on startup:', error);
   });
+}
+
+// Add this helper function to serialize jobs for Next.js static generation
+export function serializeJobForNextJS(job: any): any {
+  if (!job) return null;
+  
+  const serialized: any = {};
+  
+  // Process each field in the job object
+  Object.keys(job).forEach(key => {
+    const value = job[key];
+    
+    if (value instanceof Date) {
+      // Convert Date objects to ISO strings
+      serialized[key] = value.toISOString();
+    } else if (key === '_id' && typeof value === 'object') {
+      // Convert ObjectId to string
+      serialized[key] = value.toString();
+    } else if (typeof value === 'object' && value !== null) {
+      // Recursively serialize nested objects
+      serialized[key] = serializeJobForNextJS(value);
+    } else {
+      // Keep primitive values as is
+      serialized[key] = value;
+    }
+  });
+  
+  return serialized;
 } 
