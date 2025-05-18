@@ -1,6 +1,6 @@
-/* Forcing rebuild - v2 */
+/* Forcing rebuild - v3 */
 /* This comment helps trigger a Vercel rebuild */
-/* Last updated: May 18, 2025 */
+/* Last updated: May 19, 2025 - TechCorp fix */
 
 @tailwind base;
 @tailwind components;
@@ -59,7 +59,13 @@ div:has(p:contains("TechCorp")) {
   display: none !important;
 }
 
-/* Hide specific mock jobs by their known content */
-div:has(h3:contains("Remote Data Entry Specialist"):has(+ p:contains("TechCorp Solutions"))) {
+/* Hide specific mock jobs by their known content - AGGRESSIVE TARGETING */
+div:has(h3:contains("Remote Data Entry Specialist"):has(+ p:contains("TechCorp Solutions"))),
+div:has(h3:contains("Remote Data Entry Specialist")),
+div:has(a[href*="/jobs/job1"]),
+div:has(div:has(h3:contains("Remote Data Entry Specialist"))),
+div:has(span:contains("Verified")):has(p:contains("TechCorp")),
+div:has(p:contains("$18-22/hr")):has(p:contains("TechCorp")),
+.job-card:has(h3:contains("Remote Data Entry Specialist")) {
   display: none !important;
 } 

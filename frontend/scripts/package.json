@@ -1,0 +1,7 @@
+{
+  "name": "clickclickjob-admin-scripts",
+  "version": "1.0.0",
+  "description": "Admin scripts for ClickClickJob",
+  "type": "module",
+  "private": true
+} 

@@ -10,8 +10,8 @@
  * node delete-techcorp-jobs.js
  */
 
-require('dotenv').config();
-const { MongoClient } = require('mongodb');
+import 'dotenv/config';
+import { MongoClient } from 'mongodb';
 
 async function connectToDatabase() {
   const uri = process.env.MONGODB_URI;

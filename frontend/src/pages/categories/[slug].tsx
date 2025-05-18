@@ -675,15 +675,33 @@ function ClientOnlyJobsSection({ category, jobs, slug }: ClientOnlyJobsSectionPr
   const [hasJobs, setHasJobs] = useState(false);
   
   useEffect(() => {
-    // One last attempt to filter out any remaining mock jobs
+    // Super aggressive filtering to remove any trace of mock jobs
     const safeJobs = jobs.filter((job: Job) => {
+      // Basic null check
       if (!job) return false;
+      
+      // Filter out TechCorp Solutions completely
       if (job.company === 'TechCorp Solutions') return false;
+      if (job.company && typeof job.company === 'string' && job.company.includes('TechCorp')) return false;
+      
+      // Filter out mock IDs
       if (job._id === 'job1' || job._id === 'mock') return false;
       if (typeof job._id === 'string' && /^job\d+$/.test(job._id)) return false;
+      
+      // Filter specific mock content
+      if (job.title === 'Remote Data Entry Specialist' && job.company === 'TechCorp Solutions') return false;
+      
+      // Filter mock URLs
+      if (job.url && typeof job.url === 'string' && 
+          /example\.com|placeholder|test|mock/.test(job.url)) return false;
+      
+      // Filter based on flags
+      if (job.isMock || job.is_mock_data) return false;
+      
       return true;
     });
     
+    console.log(`ClientOnly filtering: ${jobs.length} jobs reduced to ${safeJobs.length} safe jobs`);
     setFilteredJobs(safeJobs);
     setHasJobs(safeJobs.length > 0);
   }, [jobs]);
