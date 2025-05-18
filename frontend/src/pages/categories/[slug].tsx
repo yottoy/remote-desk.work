@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GetStaticProps, GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -329,62 +329,12 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug, hasJo
         </div>
       </section>
 
-      {/* Jobs Section - Only displayed if real jobs exist */}
-      {hasJobs && !jobs.some(job => job._id === 'job1' || job.company === 'TechCorp Solutions') ? (
-        <section className="py-12 bg-gray-50">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">
-              AVAILABLE {slug.toUpperCase().replace('-', ' ')} JOBS
-            </h2>
-            
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {jobs
-                // Extra safety filter to prevent mock jobs in the UI
-                .filter(job => 
-                  job && 
-                  job.company !== 'TechCorp Solutions' && 
-                  !job._id.toString().startsWith('job') && 
-                  !job._id.toString().includes('job')
-                )
-                .map(job => (
-                  <JobCard key={job._id} job={job} />
-                ))
-              }
-            </div>
-            
-            <div className="mt-10 text-center">
-              <Link 
-                href={`/jobs?category=${slug}`}
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Browse All {category.name.replace('Remote ', '')}
-              </Link>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="py-12 bg-gray-50">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
-              <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">
-                No {category.name} Available
-              </h3>
-              <p className="text-gray-600 mb-6">
-                We don't have any {category.name.toLowerCase()} available right now. New opportunities are added frequently, so check back soon!
-              </p>
-              <Link 
-                href="/jobs"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Browse All Jobs
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Featured Jobs Section - Client-side filtered for maximum safety */}
+      <ClientOnlyJobsSection 
+        category={category}
+        jobs={jobs}
+        slug={slug}
+      />
 
       {/* Requirements Section */}
       <section className="py-12 bg-white">
@@ -704,4 +654,89 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   }
 };
 
-export default CategoryPage; 
+export default CategoryPage;
+
+// ClientOnly wrapper component to filter mock jobs client-side as a final safeguard
+interface ClientOnlyJobsSectionProps {
+  category: {
+    name: string;
+    description: string;
+    count: number;
+    requirements: { title: string; description: string }[];
+    faqs: { question: string; answer: string }[];
+    relatedCategories: { name: string; slug: string }[];
+  };
+  jobs: Job[];
+  slug: string;
+}
+
+function ClientOnlyJobsSection({ category, jobs, slug }: ClientOnlyJobsSectionProps) {
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  const [hasJobs, setHasJobs] = useState(false);
+  
+  useEffect(() => {
+    // One last attempt to filter out any remaining mock jobs
+    const safeJobs = jobs.filter((job: Job) => {
+      if (!job) return false;
+      if (job.company === 'TechCorp Solutions') return false;
+      if (job._id === 'job1' || job._id === 'mock') return false;
+      if (typeof job._id === 'string' && /^job\d+$/.test(job._id)) return false;
+      return true;
+    });
+    
+    setFilteredJobs(safeJobs);
+    setHasJobs(safeJobs.length > 0);
+  }, [jobs]);
+  
+  // Show FEATURED JOBS section only if we have valid jobs
+  if (!hasJobs) {
+    return (
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
+            <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              No {category.name} Available
+            </h3>
+            <p className="text-gray-600 mb-6">
+              We don't have any {category.name.toLowerCase()} available right now. New opportunities are added frequently, so check back soon!
+            </p>
+            <Link 
+              href="/jobs"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Browse All Jobs
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  return (
+    <section className="py-12 bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-8">
+          FEATURED {slug.toUpperCase().replace('-', ' ')} JOBS
+        </h2>
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredJobs.map(job => (
+            <JobCard key={job._id} job={job} />
+          ))}
+        </div>
+        
+        <div className="mt-10 text-center">
+          <Link 
+            href={`/jobs?category=${slug}`}
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Browse All {category.name.replace('Remote ', '')}
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+} 
