@@ -1,22 +1,29 @@
-import { mockJobs } from './jobData';
+/**
+ * MOCK DATA REMOVED
+ * 
+ * We've removed all mock job data from the application as it's no longer needed.
+ * All job data should now come from the live API endpoints.
+ * 
+ * This file contains only the category definitions without any mock job functionality.
+ */
 
-// Mock data for job categories
+// Job categories (without mock count data)
 export const jobCategories = [
-  { name: 'Data Entry', slug: 'data-entry', count: 56 },
-  { name: 'Administrative', slug: 'administrative', count: 42 },
-  { name: 'Customer Support', slug: 'customer-service', count: 78 },
-  { name: 'Transcription', slug: 'transcription', count: 34 },
-  { name: 'Virtual Assistant', slug: 'virtual-assistant', count: 29 },
-  { name: 'Data Processing', slug: 'data-processing', count: 23 },
-  { name: 'Customer Service', slug: 'customer-service', count: 65 },
-  { name: 'Bookkeeping', slug: 'bookkeeping', count: 18 },
-  { name: 'Content Writing', slug: 'content-writing', count: 31 },
-  { name: 'Social Media', slug: 'social-media', count: 27 },
-  { name: 'Project Management', slug: 'project-management', count: 16 },
-  { name: 'Quality Assurance', slug: 'quality-assurance', count: 22 }
+  { name: 'Data Entry', slug: 'data-entry' },
+  { name: 'Administrative', slug: 'administrative' },
+  { name: 'Customer Support', slug: 'customer-service' },
+  { name: 'Transcription', slug: 'transcription' },
+  { name: 'Virtual Assistant', slug: 'virtual-assistant' },
+  { name: 'Data Processing', slug: 'data-processing' },
+  { name: 'Customer Service', slug: 'customer-service' },
+  { name: 'Bookkeeping', slug: 'bookkeeping' },
+  { name: 'Content Writing', slug: 'content-writing' },
+  { name: 'Social Media', slug: 'social-media' },
+  { name: 'Project Management', slug: 'project-management' },
+  { name: 'Quality Assurance', slug: 'quality-assurance' }
 ];
 
-// Mock category detail data
+// Category detail data (without mock job counts)
 export const categoryDetails = {
   'data-entry': {
     name: 'Remote Data Entry Jobs',
@@ -99,32 +106,21 @@ Companies across all industries hire remote administrative professionals, includ
   // Additional categories can be added as needed
 };
 
-// Mock function to get a category by slug
+// Get category by slug without mock jobs
 export const getCategoryBySlug = (slug: string) => {
+  console.warn('Using mock category data without jobs - all job data should come from the API');
+  
   const category = categoryDetails[slug as keyof typeof categoryDetails];
   if (!category) {
     throw new Error(`Category with slug "${slug}" not found`);
   }
   
-  // Add count from the jobCategories list
+  // Return category info without any mock job counts
   const categoryInfo = jobCategories.find(c => c.slug === slug);
   
   return {
     ...category,
     slug,
-    count: categoryInfo?.count || 0
-  };
-};
-
-// Mock function to get jobs by category
-export const getJobsByCategory = (slug: string) => {
-  const jobs = mockJobs.filter(job => 
-    job.categories?.includes(slug)
-  );
-  
-  return {
-    jobs,
-    total: jobs.length,
-    category: getCategoryBySlug(slug)
+    count: 0 // Default to 0 as we should get real counts from the API
   };
 }; 

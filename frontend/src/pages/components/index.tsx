@@ -56,10 +56,10 @@ const ComponentsIndexPage = () => {
 
           <div className="mt-12 bg-blue-50 p-6 rounded-lg">
             <h2 className="text-lg font-medium text-gray-900">Complete Example</h2>
-            <p className="mt-2 text-gray-600">See all components in action on a complete job details page example.</p>
+            <p className="mt-2 text-gray-600">See all components in action on a full job listing page.</p>
             <div className="mt-4">
-              <Link href="/jobs/job1" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                View Example Job
+              <Link href="/jobs" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                View Job Listings
               </Link>
             </div>
           </div>

@@ -56,4 +56,47 @@ export function isValidJob(job: any): boolean {
   if (job.url && /example\.com|placeholder|test|mock/.test(job.url)) return false;
   
   return true;
+}
+
+// Special function to clean up any remaining mock jobs from the database
+// This runs automatically when the server starts in production
+export async function cleanupMockEntries() {
+  console.log('Running mock job cleanup...');
+  
+  try {
+    const { db } = await connectToDatabase();
+    if (!db) {
+      console.error('Failed to connect to the database for cleanup');
+      return;
+    }
+    
+    const jobsCollection = db.collection('jobs');
+    
+    // Define patterns for identifying mock jobs
+    // These are various patterns that might indicate mock jobs
+    const mockPatterns = [
+      { _id: { $regex: /^job\d+$/ } },
+      { url: { $regex: /example\.com|placeholder|test|mock/ } },
+      { isMock: true },
+      { is_mock_data: true },
+      { title: { $regex: /^\[MOCK\]/ } },
+      { company: { $regex: /^\[MOCK\]/ } }
+    ];
+    
+    // Find and delete all mock jobs
+    const result = await jobsCollection.deleteMany({
+      $or: mockPatterns
+    });
+    
+    console.log(`Removed ${result.deletedCount} mock job entries from the database`);
+  } catch (error) {
+    console.error('Error cleaning up mock entries:', error);
+  }
+}
+
+// Run the cleanup on server start if in production
+if (process.env.NODE_ENV === 'production') {
+  cleanupMockEntries().catch(error => {
+    console.error('Failed to run mock cleanup on startup:', error);
+  });
 } 
