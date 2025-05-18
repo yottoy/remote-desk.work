@@ -15,6 +15,8 @@ interface JobCardProps {
     description?: string;
     descriptionText?: string;
     verified?: boolean;
+    isMock?: boolean;
+    is_mock_data?: boolean;
   };
   variant?: 'default' | 'compact' | 'featured';
 }
@@ -32,6 +34,13 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
   
   // Use explicit verified flag if available, otherwise use qualityScore as a fallback
   const isVerified = job.verified || (job.qualityScore && job.qualityScore >= 8);
+  
+  // Prepare data attributes for CSS-based filtering as a last defense mechanism
+  const dataAttributes = {
+    'data-job-id': job._id,
+    'data-company': job.company,
+    'data-mock': job.isMock || job.is_mock_data || job._id === 'job1' || (typeof job._id === 'string' && /^job\d+$/.test(job._id)) || job.company === 'TechCorp Solutions' ? 'true' : 'false',
+  };
   
   // Handle potential date formatting errors
   let timeAgo = '';
@@ -66,7 +75,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
   
   if (variant === 'compact') {
     return (
-      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white min-h-[140px] flex flex-col">
+      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white min-h-[140px] flex flex-col" {...dataAttributes}>
         <div className="flex justify-between items-start">
           <div className="w-4/5">
             <h3 className="text-lg font-medium text-gray-900 line-clamp-1">
@@ -101,7 +110,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
   
   if (variant === 'featured') {
     return (
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-lg transition-shadow">
+      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-lg transition-shadow" {...dataAttributes}>
         <div className="border-l-4 border-blue-500 px-4 py-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="mb-2 sm:mb-0 sm:w-4/5">
@@ -159,7 +168,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
   
   // Default variant
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+    <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white" {...dataAttributes}>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
         <div className="mb-2 sm:mb-0 sm:w-4/5">
           <h3 className="text-lg font-medium text-gray-900 line-clamp-2">

@@ -21,6 +21,8 @@ interface Job {
   timezone?: string;
   applicationLink?: string;
   jobCategory?: string;
+  isMock?: boolean;
+  is_mock_data?: boolean;
 }
 
 interface EnhancedJobCardProps {
@@ -101,8 +103,15 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
   const jobDetailLink = getJobDetailLink();
   const applicationLink = getApplicationLink();
 
+  // Prepare data attributes for CSS-based filtering as a last defense mechanism
+  const dataAttributes = {
+    'data-job-id': job._id,
+    'data-company': job.company,
+    'data-mock': job.isMock || job.is_mock_data || job._id === 'job1' || (typeof job._id === 'string' && /^job\d+$/.test(job._id)) || job.company === 'TechCorp Solutions' ? 'true' : 'false',
+  };
+
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
+    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow" {...dataAttributes}>
       {/* Card Header - Job Title, Company, Verification Badge */}
       <div className={`px-4 py-3 ${job.featured ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}>
         <div className="flex items-start justify-between">
