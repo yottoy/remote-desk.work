@@ -40,7 +40,9 @@ export const getServerSideProps: GetServerSideProps<JobsPageProps> = async (cont
     });
 
     // Direct production API URL to avoid URL construction issues
-    const apiUrl = '/api/jobs/?limit=100';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/?limit=100` 
+      : 'https://www.clickclickjob.com/api/jobs/?limit=100';
     console.log('Fetching jobs from:', apiUrl);
     
     try {
@@ -97,41 +99,7 @@ export const getServerSideProps: GetServerSideProps<JobsPageProps> = async (cont
       
       console.log(`Processed ${jobs.length} jobs for jobs listing page`);
       
-      // Provide a fallback set of jobs if our API didn't return any
-      if (jobs.length === 0) {
-        console.log('No jobs returned, using fallback data');
-        jobs = [
-          {
-            _id: 'fallback-1',
-            title: 'Virtual Executive Assistant',
-            company: 'Remote Admin Solutions',
-            location: 'Remote, United States',
-            salary: '$20-30/hr',
-            postedDate: new Date(),
-            jobType: 'full-time'
-          },
-          {
-            _id: 'fallback-2',
-            title: 'Data Entry Specialist',
-            company: 'Global Data Services',
-            location: 'Remote, Worldwide',
-            salary: '$15-25/hr',
-            postedDate: new Date(),
-            jobType: 'contract'
-          },
-          {
-            _id: 'fallback-3',
-            title: 'Administrative Coordinator',
-            company: 'Tech Solutions Inc.',
-            location: 'Remote, US/Canada',
-            salary: '$45,000-55,000/year',
-            postedDate: new Date(),
-            jobType: 'full-time'
-          }
-        ];
-        total = jobs.length;
-      }
-      
+      // Return jobs (or empty array if no jobs found)
       return {
         props: {
           initialJobs: jobs,
@@ -181,6 +149,10 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>(initialFilters);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'relevance'>('newest');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [jobsPerPage, setJobsPerPage] = useState<number>(24);
+  const [hasMoreJobs, setHasMoreJobs] = useState<boolean>(true);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   
   // Create a stable job list title that won't be undefined
   const jobListTitle = `Remote Admin & Data Entry Jobs`;
@@ -188,8 +160,21 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
   // Apply filters and search when dependencies change
   useEffect(() => {
     const applyFiltersAndSearch = async () => {
+      console.log('Applying filters:', activeFilters);
+      
+      // Log all active filters to help with debugging
+      Object.entries(activeFilters).forEach(([key, values]) => {
+        if (values && values.length > 0) {
+          console.log(`Active filter ${key}:`, values.join(', '));
+        }
+      });
+      
       // Skip client-side fetching if this is the initial render and we have enough jobs already
-      if (!searchQuery && Object.keys(activeFilters).length === 0 && initialJobs.length > 50 && !isLoading) {
+      // and we're not trying to apply any filters
+      if (!searchQuery && 
+          Object.values(activeFilters).every(values => !values || values.length === 0) && 
+          initialJobs.length > 50 && 
+          !isLoading) {
         console.log('Using server-provided initialJobs, skipping client-side fetch');
         // Sort initial jobs by verified status, quality score, and then date
         const sortedJobs = [...initialJobs].sort((a, b) => {
@@ -218,20 +203,36 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
         return;
       }
 
+      // Always fetch from API when filters are active
       try {
         setIsLoading(true);
         
         // Use direct production API URL
-        const baseUrl = '';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://www.clickclickjob.com';
         
         // Build query params
         const queryParams = new URLSearchParams();
         if (searchQuery) {
           queryParams.append('q', searchQuery);
         }
+        
+        // Add pagination parameters
+        queryParams.append('page', currentPage.toString());
+        queryParams.append('limit', jobsPerPage.toString());
+        
+        // Add all active filters as query parameters with better debugging
         if (Object.keys(activeFilters).length > 0) {
           Object.entries(activeFilters).forEach(([key, values]) => {
-            if (values.length > 0) {
+            if (values && values.length > 0) {
+              console.log(`Adding filter ${key}:`, values);
+              
+              // For jobCategory, also add as 'category' parameter since API primarily looks for that
+              if (key === 'jobCategory') {
+                queryParams.append('category', values.join(','));
+                console.log('Added as category parameter:', values.join(','));
+              }
+              
+              // Always add with original key as well
               queryParams.append(key, values.join(','));
             }
           });
@@ -240,12 +241,9 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
         // Add sorting
         queryParams.append('sort', sortBy);
         
-        // Request a larger number of jobs to show
-        queryParams.append('limit', '100');
-        
         // Fetch jobs from API
         const apiUrl = `${baseUrl}/api/jobs?${queryParams.toString()}`;
-        console.log('Fetching jobs from:', apiUrl);
+        console.log('Fetching jobs with filters from:', apiUrl);
         
         try {
           const response = await fetch(apiUrl, {
@@ -268,14 +266,27 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
           console.log('Client-side API response structure:', Object.keys(result));
           
           // Extract jobs from the response, handling both array and object formats
-          let fetchedJobs = [];
+          let fetchedJobs: Job[] = [];
+          let totalJobsCount = 0;
+          
           if (Array.isArray(result)) {
             console.log('API returned array of jobs with length:', result.length);
             fetchedJobs = result;
+            totalJobsCount = result.length;
           } else if (result.jobs && Array.isArray(result.jobs)) {
             console.log('API returned jobs array with length:', result.jobs.length);
             console.log('First 3 fetched jobs:', result.jobs.slice(0, 3).map((j: any) => `${j.title} at ${j.company}`));
             fetchedJobs = result.jobs;
+            
+            // Get pagination data from the API response
+            if (result.pagination) {
+              totalJobsCount = result.pagination.totalJobs || fetchedJobs.length;
+              const totalPages = result.pagination.totalPages || 1;
+              setHasMoreJobs(currentPage < totalPages);
+            } else {
+              totalJobsCount = fetchedJobs.length;
+              setHasMoreJobs(fetchedJobs.length >= jobsPerPage);
+            }
           } else {
             console.warn('Unexpected API response format:', result);
             // Try to extract any job-like objects from the response
@@ -292,87 +303,32 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
             }
           }
           
-          // ONLY use fallback data if we actually didn't get ANY jobs after trying everything
-          if (fetchedJobs.length === 0) {
-            console.log('No jobs returned from API, using fallback data');
-            fetchedJobs = [
-              {
-                _id: 'fallback-1',
-                title: 'Virtual Executive Assistant',
-                company: 'Remote Admin Solutions',
-                location: 'Remote, United States',
-                salary: '$20-30/hr',
-                postedDate: new Date(),
-                jobType: 'full-time'
-              },
-              {
-                _id: 'fallback-2',
-                title: 'Data Entry Specialist',
-                company: 'Global Data Services',
-                location: 'Remote, Worldwide',
-                salary: '$15-25/hr',
-                postedDate: new Date(),
-                jobType: 'contract'
-              },
-              {
-                _id: 'fallback-3',
-                title: 'Administrative Coordinator',
-                company: 'Tech Solutions Inc.',
-                location: 'Remote, US/Canada',
-                salary: '$45,000-55,000/year',
-                postedDate: new Date(),
-                jobType: 'full-time'
-              }
-            ];
+          // Set jobs based on whether we're loading more or doing a new search
+          if (currentPage > 1 && isLoadingMore) {
+            // Append new jobs to existing ones
+            setFilteredJobs(prev => [...prev, ...fetchedJobs]);
+            setJobs(prev => [...prev, ...fetchedJobs]);
+          } else {
+            // New search, replace all jobs
+            setFilteredJobs(fetchedJobs);
+            setJobs(fetchedJobs);
           }
           
-          console.log(`Setting ${fetchedJobs.length} jobs for display`);
-          setFilteredJobs(fetchedJobs);
-          setJobs(fetchedJobs);
+          // Update the total jobs count
           setApiError(null);
+          setIsLoadingMore(false);
         } catch (fetchError) {
           console.error('Error fetching from API:', fetchError);
           
-          // Use initial jobs as fallback if they exist, otherwise use emergency fallback
-          if (initialJobs.length > 3) {
+          // Use initial jobs as fallback if they exist, otherwise show empty state
+          if (initialJobs.length > 0) {
             console.log(`Using ${initialJobs.length} initialJobs as fallback instead of showing error`);
             setFilteredJobs(initialJobs);
             setJobs(initialJobs);
           } else {
-            // Use fallback data instead of showing error
-            const fallbackJobs: Job[] = [
-              {
-                _id: 'emergency-fallback-1',
-                title: 'Customer Service Representative',
-                company: 'Remote Work Solutions',
-                location: 'Remote, United States',
-                salary: '$18-25/hr',
-                postedDate: new Date(),
-                jobType: 'full-time'
-              },
-              {
-                _id: 'emergency-fallback-2',
-                title: 'Administrative Assistant',
-                company: 'Virtual Office Inc.',
-                location: 'Remote, Worldwide',
-                salary: '$20-28/hr',
-                postedDate: new Date(),
-                jobType: 'full-time'
-              },
-              {
-                _id: 'emergency-fallback-3',
-                title: 'Data Entry Clerk',
-                company: 'Global Data Services',
-                location: 'Remote, Worldwide',
-                salary: '$15-22/hr',
-                postedDate: new Date(),
-                jobType: 'contract'
-              }
-            ];
-            
-            console.log('Using emergency fallback jobs instead of showing error');
-            setFilteredJobs(fallbackJobs);
-            setJobs(fallbackJobs);
+            console.log('No jobs available to display');
+            setFilteredJobs([]);
+            setJobs([]);
           }
           
           // Don't set the error so we don't show the error message
@@ -382,45 +338,14 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
         console.error('Unexpected error in job fetching:', err);
         
         // Always prefer initialJobs if available
-        if (initialJobs.length > 3) {
-          console.log(`Using ${initialJobs.length} initialJobs as emergency fallback`);
+        if (initialJobs.length > 0) {
+          console.log(`Using ${initialJobs.length} initialJobs as fallback`);
           setFilteredJobs(initialJobs);
           setJobs(initialJobs);
         } else {
-          // Always use fallback data instead of showing error
-          const emergencyJobs: Job[] = [
-            {
-              _id: 'final-fallback-1',
-              title: 'Virtual Assistant',
-              company: 'Remote Desk Solutions',
-              location: 'Remote, Global',
-              salary: '$18-28/hr',
-              postedDate: new Date(),
-              jobType: 'full-time'
-            },
-            {
-              _id: 'final-fallback-2',
-              title: 'Customer Support Specialist',
-              company: 'Global Support Team',
-              location: 'Remote, Worldwide',
-              salary: '$16-25/hr',
-              postedDate: new Date(),
-              jobType: 'full-time'
-            },
-            {
-              _id: 'final-fallback-3',
-              title: 'Office Administrator',
-              company: 'Virtual Workspace',
-              location: 'Remote, US/Canada',
-              salary: '$40,000-50,000/year',
-              postedDate: new Date(),
-              jobType: 'full-time'
-            }
-          ];
-          
-          console.log('Using emergency fallback jobs instead of showing error');
-          setFilteredJobs(emergencyJobs);
-          setJobs(emergencyJobs);
+          console.log('No jobs available to display');
+          setFilteredJobs([]);
+          setJobs([]);
         }
         
         setApiError(null);
@@ -430,10 +355,17 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
     };
     
     applyFiltersAndSearch();
-  }, [searchQuery, activeFilters, sortBy]);
+  }, [searchQuery, activeFilters, sortBy, currentPage, jobsPerPage]);
   
   // Handle filter changes
   const handleFilterChange = (filterType: string, values: string[]) => {
+    console.log(`Filter changed: ${filterType}`, values);
+    
+    // Reset pagination when filters change
+    setCurrentPage(1);
+    setHasMoreJobs(true);
+    
+    // Update the active filters state
     setActiveFilters(prev => ({
       ...prev,
       [filterType]: values
@@ -452,6 +384,7 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
       }
     });
     
+    // Use shallow routing to avoid full page reload
     router.push({
       pathname: router.pathname,
       query: newQuery
@@ -461,6 +394,10 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
   // Handle search
   const handleSearch = (query: string) => {
     if (query !== searchQuery) {
+      // Reset pagination when search query changes
+      setCurrentPage(1);
+      setHasMoreJobs(true);
+      
       router.push({
         pathname: router.pathname,
         query: {
@@ -487,6 +424,12 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
   const pageDescription = searchQuery 
     ? `Browse ${filteredJobs.length} remote ${searchQuery} jobs. Work from home opportunities updated daily.` 
     : "Find verified remote data entry & administrative jobs. Work from home opportunities updated daily.";
+
+  // Function to load more jobs
+  const loadMoreJobs = () => {
+    setIsLoadingMore(true);
+    setCurrentPage(prevPage => prevPage + 1);
+  };
 
   return (
     <Layout 
@@ -545,6 +488,10 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
                   title={jobListTitle}
                   isLoading={isLoading}
                   error={apiError}
+                  onLoadMore={loadMoreJobs}
+                  hasMore={hasMoreJobs}
+                  isLoadingMore={isLoadingMore}
+                  totalJobs={totalJobs}
                 />
               </ErrorBoundary>
               

@@ -1,53 +1,75 @@
-const axios = require('axios');
-const fs = require('fs').promises;
-const path = require('path');
+// Test script for the API endpoints
+require('dotenv').config();
+const https = require('https');
+const http = require('http');
 
-async function testJobSpyAPI() {
-  console.log("Testing JobSpy Bridge API");
-  
-  const bridgeUrl = "http://localhost:8000";
+// Function to make HTTP/HTTPS requests
+function makeRequest(url) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('https') ? https : http;
+    client.get(url, (resp) => {
+      let data = '';
+      resp.on('data', (chunk) => {
+        data += chunk;
+      });
+      resp.on('end', () => {
+        try {
+          const parsedData = JSON.parse(data);
+          resolve({ status: resp.statusCode, data: parsedData });
+        } catch (err) {
+          reject(new Error(`Failed to parse response: ${err.message}`));
+        }
+      });
+    }).on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+async function testApi() {
+  const baseUrl = 'http://localhost:3001';
+  console.log(`Testing API at: ${baseUrl}`);
   
   try {
-    console.log("Checking if bridge is running...");
-    const statusResponse = await axios.get(bridgeUrl);
-    console.log("Bridge status:", statusResponse.data);
+    // Test the jobs list API
+    console.log('\nTesting jobs list API...');
+    const jobsResponse = await makeRequest(`${baseUrl}/api/jobs?limit=3`);
     
-    console.log("Sending search request...");
-    const requestData = {
-      search_terms: ["remote data entry"],
-      location: "Remote",
-      results_wanted: 5,
-      hours_old: 72,
-      country_indeed: "USA",
-      is_remote: true
-    };
-    
-    const searchResponse = await axios.post(`${bridgeUrl}/scrape-indeed`, requestData);
-    const { jobs, count, metadata } = searchResponse.data;
-    
-    console.log(`Found ${count} jobs in ${metadata.duration_seconds.toFixed(2)} seconds`);
-    
-    if (count > 0) {
-      console.log("Sample job:");
-      console.log(`Title: ${jobs[0].title}`);
-      console.log(`Company: ${jobs[0].company}`);
-      console.log(`URL: ${jobs[0].job_url}`);
+    if (jobsResponse.status === 200 && jobsResponse.data.jobs && jobsResponse.data.jobs.length > 0) {
+      console.log(`✅ Jobs list API working - found ${jobsResponse.data.jobs.length} jobs`);
+      console.log('Sample jobs:');
+      jobsResponse.data.jobs.forEach((job, i) => {
+        console.log(`Job ${i+1}: ${job.title} | ID: ${job._id} | URL: ${job.url || 'N/A'}`);
+      });
       
-      const outputDir = path.join(process.cwd(), "test-results");
-      await fs.mkdir(outputDir, { recursive: true });
+      // Test the job detail API with the first job ID
+      const jobId = jobsResponse.data.jobs[0]._id;
+      console.log(`\nTesting job detail API with ID: ${jobId}...`);
       
-      const outputPath = path.join(outputDir, "jobspy-api-test.json");
-      await fs.writeFile(outputPath, JSON.stringify(jobs, null, 2));
-      
-      console.log(`Results saved to ${outputPath}`);
+      try {
+        const jobDetailResponse = await makeRequest(`${baseUrl}/api/jobs/${jobId}`);
+        
+        if (jobDetailResponse.status === 200) {
+          console.log('✅ Job detail API working - found job details');
+          console.log(`Title: ${jobDetailResponse.data.title}`);
+          console.log(`Company: ${jobDetailResponse.data.company}`);
+          console.log(`URL: ${jobDetailResponse.data.url || 'N/A'}`);
+        } else {
+          console.log(`❌ Job detail API failed - status: ${jobDetailResponse.status}`);
+          console.log('Response:', jobDetailResponse.data);
+        }
+      } catch (detailError) {
+        console.error('Error testing job detail API:', detailError.message);
+      }
+    } else {
+      console.log('❌ Jobs list API not working as expected');
+      console.log('Status:', jobsResponse.status);
+      console.log('Response:', jobsResponse.data);
     }
   } catch (error) {
-    console.error("Error:", error.message);
-    if (error.response) {
-      console.error("Status:", error.response.status);
-      console.error("Data:", JSON.stringify(error.response.data));
-    }
+    console.error('API test error:', error.message);
   }
 }
 
-testJobSpyAPI(); 
+// Run the tests
+testApi(); 

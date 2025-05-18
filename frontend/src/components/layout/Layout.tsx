@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -15,6 +15,7 @@ const Layout: React.FC<LayoutProps> = ({
   description = 'Find verified remote data entry & administrative jobs. 100+ work-from-home opportunities updated daily. No experience options available.'
 }) => {
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
   
   return (
     <>
@@ -48,12 +49,14 @@ const Layout: React.FC<LayoutProps> = ({
                   About
                 </Link>
               </nav>
-              <div className="md:hidden">
-                <button className="text-gray-700 hover:text-blue-600 p-2">
-                  <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
+              {/* Mobile menu - Show simplified menu instead of hamburger icon */}
+              <div className="md:hidden flex space-x-2">
+                <Link href="/jobs" className={`text-gray-700 hover:text-blue-600 px-2 py-1 text-sm font-medium ${router.pathname.startsWith('/jobs') ? 'text-blue-600' : ''}`}>
+                  Jobs
+                </Link>
+                <Link href="/categories" className={`text-gray-700 hover:text-blue-600 px-2 py-1 text-sm font-medium ${router.pathname.startsWith('/categories') ? 'text-blue-600' : ''}`}>
+                  Categories
+                </Link>
               </div>
             </div>
           </div>

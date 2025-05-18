@@ -9,7 +9,8 @@ const nextConfig = {
   },
   env: {
     // Environment variables that will be available on the client side
-    API_URL: process.env.API_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/api` : 'http://localhost:3000/api',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://www.clickclickjob.com',
+    NEXT_PUBLIC_SITE_URL: 'https://www.clickclickjob.com',
     SITE_NAME: 'ClickClickJob.com',
     MONGODB_URI: process.env.MONGODB_URI,
     MONGODB_DB: process.env.MONGODB_DB || 'clickclickjob'
@@ -70,8 +71,7 @@ const nextConfig = {
         source: '/api/:path*',
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, s-maxage=30, stale-while-revalidate=60',
+            key: 'Cache-Control', value: 'public, max-age=0, s-maxage=30, stale-while-revalidate=60',
           }
         ],
       }
