@@ -20,6 +20,16 @@ interface JobCardProps {
 }
 
 const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
+  // SAFETY: Never render TechCorp jobs or jobs with ID job1, etc.
+  if (!job || 
+      job.company === 'TechCorp Solutions' || 
+      (job.company && job.company.includes('TechCorp')) ||
+      job._id === 'job1' ||
+      (typeof job._id === 'string' && /^job\d+$/.test(job._id))
+  ) {
+    return null; // Don't render anything for mock jobs
+  }
+  
   // Use explicit verified flag if available, otherwise use qualityScore as a fallback
   const isVerified = job.verified || (job.qualityScore && job.qualityScore >= 8);
   

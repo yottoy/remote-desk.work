@@ -32,6 +32,16 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
   job, 
   showDetails = false 
 }) => {
+  // SAFETY: Never render TechCorp jobs or jobs with ID job1, etc.
+  if (!job || 
+      job.company === 'TechCorp Solutions' || 
+      (job.company && job.company.includes('TechCorp')) ||
+      job._id === 'job1' ||
+      (typeof job._id === 'string' && /^job\d+$/.test(job._id))
+  ) {
+    return null; // Don't render anything for mock jobs
+  }
+
   const isVerified = job.qualityScore && job.qualityScore >= 8;
   const postedDate = new Date(job.postedDate);
   const timeAgo = formatDistanceToNow(postedDate, { addSuffix: true });
@@ -66,6 +76,31 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
     ? job.descriptionText.substring(0, 150) + (job.descriptionText.length > 150 ? '...' : '')
     : '';
 
+  // Check if application link is valid or use job details page instead
+  const getApplicationLink = () => {
+    // If we have a valid application link that's external, use it
+    if (job.applicationLink && 
+        (job.applicationLink.startsWith('http://') || 
+         job.applicationLink.startsWith('https://'))) {
+      return job.applicationLink;
+    }
+    
+    // Otherwise fallback to the job details page
+    return `/jobs/${job._id}`;
+  };
+
+  // For job detail links, ensure we have a valid ID
+  const getJobDetailLink = () => {
+    if (job._id && typeof job._id === 'string' && job._id.length > 0) {
+      return `/jobs/${job._id}`;
+    }
+    // If no valid ID, fallback to jobs listing
+    return '/jobs';
+  };
+
+  const jobDetailLink = getJobDetailLink();
+  const applicationLink = getApplicationLink();
+
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
       {/* Card Header - Job Title, Company, Verification Badge */}
@@ -73,7 +108,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-medium text-gray-900 hover:text-blue-600">
-              <Link href={`/jobs/${job._id}`}>
+              <Link href={jobDetailLink}>
                 {job.title}
               </Link>
             </h3>
@@ -191,7 +226,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
       <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
         <div className="flex justify-between items-center">
           <Link 
-            href={`/jobs/${job._id}`}
+            href={jobDetailLink}
             className="inline-flex items-center justify-center text-sm font-medium text-blue-600 hover:text-blue-800"
           >
             View Details
@@ -201,7 +236,9 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
           </Link>
           
           <Link
-            href={job.applicationLink || `/jobs/${job._id}/apply`}
+            href={applicationLink}
+            target={applicationLink !== jobDetailLink ? "_blank" : undefined}
+            rel={applicationLink !== jobDetailLink ? "noopener noreferrer" : undefined}
             className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Apply Now

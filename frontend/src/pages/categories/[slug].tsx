@@ -338,9 +338,18 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug, hasJo
             </h2>
             
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {jobs.map(job => (
-                <JobCard key={job._id} job={job} />
-              ))}
+              {jobs
+                // Extra safety filter to prevent mock jobs in the UI
+                .filter(job => 
+                  job && 
+                  job.company !== 'TechCorp Solutions' && 
+                  !job._id.toString().startsWith('job') && 
+                  !job._id.toString().includes('job')
+                )
+                .map(job => (
+                  <JobCard key={job._id} job={job} />
+                ))
+              }
             </div>
             
             <div className="mt-10 text-center">
@@ -460,7 +469,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug, hasJo
   );
 };
 
-// Function to ensure no mock jobs are ever displayed
+// First enhance the filterMockJobs function with more aggressive filtering:
 function filterMockJobs(jobs: any[]): any[] {
   if (!jobs || jobs.length === 0) return [];
   
@@ -468,8 +477,10 @@ function filterMockJobs(jobs: any[]): any[] {
     // If job doesn't exist or is missing critical data, filter it out
     if (!job || !job._id || !job.title || !job.company) return false;
     
-    // Explicitly filter out TechCorp Solutions (known mock company)
-    if (job.company === 'TechCorp Solutions') return false;
+    // HIGHEST PRIORITY: Explicitly filter out any TechCorp Solutions or job1 examples
+    // This is the most important filter to ensure example jobs don't show
+    if (job._id === 'job1' || job._id === 'mock' || job._id.includes('job')) return false;
+    if (job.company === 'TechCorp Solutions' || job.company.includes('TechCorp')) return false;
     
     // Filter out mock job IDs
     if (typeof job._id === 'string' && /^job\d+$/.test(job._id)) return false;
@@ -557,15 +568,27 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
           // Get category description
           const categoryDescription = categoryDescriptions[slug as keyof typeof categoryDescriptions] || createGenericCategory(slug);
           
+          // Special code to ensure NO TechCorp jobs can ever be returned
+          // This is a last layer of defense to ensure cached/static builds don't include mock jobs
+          const finalSanitizedJobs = validJobs.filter((job: any) => {
+            // Remove any remaining TechCorp jobs (absolute fallback) 
+            if (job._id === 'job1' || 
+                (job.company && job.company.includes('TechCorp')) || 
+                (typeof job._id === 'string' && /^job\d+$/.test(job._id))) {
+              return false;
+            }
+            return true;
+          });
+          
           return {
             props: {
               category: {
                 ...categoryDescription,
-                count: validJobs.length
+                count: finalSanitizedJobs.length
               },
-              jobs: validJobs,
+              jobs: finalSanitizedJobs,
               slug,
-              hasJobs: validJobs.length > 0
+              hasJobs: finalSanitizedJobs.length > 0
             },
             revalidate: 60 * 10 // Revalidate every 10 minutes
           };
@@ -629,18 +652,30 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     // Get category description (preferred) or generate one
     const categoryDescription = categoryDescriptions[slug as keyof typeof categoryDescriptions] || createGenericCategory(slug);
     
+    // Special code to ensure NO TechCorp jobs can ever be returned
+    // This is a last layer of defense to ensure cached/static builds don't include mock jobs
+    const finalSanitizedJobs = validJobs.filter((job: any) => {
+      // Remove any remaining TechCorp jobs (absolute fallback) 
+      if (job._id === 'job1' || 
+          (job.company && job.company.includes('TechCorp')) || 
+          (typeof job._id === 'string' && /^job\d+$/.test(job._id))) {
+        return false;
+      }
+      return true;
+    });
+    
     // Include the job count from the API
     const categoryWithCount = {
       ...categoryDescription,
-      count: validJobs.length
+      count: finalSanitizedJobs.length
     };
     
     return {
       props: {
         category: categoryWithCount,
-        jobs: validJobs,
+        jobs: finalSanitizedJobs,
         slug,
-        hasJobs: validJobs.length > 0
+        hasJobs: finalSanitizedJobs.length > 0
       },
       revalidate: 60 * 10 // Revalidate every 10 minutes
     };

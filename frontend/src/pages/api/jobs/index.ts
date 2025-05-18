@@ -62,8 +62,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         $and: [
           // Exclude jobs with ID like "job1", "job2", etc.
           { _id: { $not: { $regex: /^job\d+$/ } } },
-          // Exclude mock company
+          // Explicitly block any TechCorp jobs
           { company: { $ne: "TechCorp Solutions" } },
+          // Extra safety: block anything with TechCorp in the name
+          { company: { $not: { $regex: /TechCorp/ } } },
           // Exclude jobs explicitly marked as mock
           { $or: [
               { isMock: { $ne: true } },
