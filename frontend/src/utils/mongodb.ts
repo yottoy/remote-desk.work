@@ -1,92 +1,59 @@
 import { MongoClient } from 'mongodb';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clickclickjob';
 const MONGODB_DB = process.env.MONGODB_DB || 'clickclickjob';
 
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env');
-}
-
-// Global MongoDB client - prevents connections from being created on every request
+// Handle caching of the MongoDB connection
 let cachedClient: MongoClient | null = null;
 let cachedDb: any = null;
-let isConnecting = false;
 
-/**
- * Connect to MongoDB with retries
- * @param retries Number of retry attempts
- * @param delay Delay between retries in milliseconds
- */
-async function connectWithRetry(retries = 3, delay = 1000): Promise<MongoClient> {
+// Connect to MongoDB and cache the connection
+export async function connectToDatabase() {
+  // If we have cached values, use them
+  if (cachedClient && cachedDb) {
+    return { client: cachedClient, db: cachedDb };
+  }
+
+  // Connect to MongoDB
   try {
-    console.log('Connecting to MongoDB...');
-    const client = new MongoClient(MONGODB_URI as string, {
-      // Add connection options for better reliability
-      connectTimeoutMS: 5000,
-      socketTimeoutMS: 30000,
-      serverSelectionTimeoutMS: 5000,
-      maxPoolSize: 20
-    });
-    
-    await client.connect();
-    console.log('Connected to MongoDB successfully');
-    return client;
-  } catch (error) {
-    if (retries <= 0) {
-      console.error('Failed to connect to MongoDB after multiple attempts:', error);
-      throw error;
+    if (!MONGODB_URI) {
+      throw new Error(
+        'Please define the MONGODB_URI environment variable'
+      );
     }
-    console.warn(`Failed to connect to MongoDB, retrying in ${delay}ms...`, error);
-    await new Promise(resolve => setTimeout(resolve, delay));
-    return connectWithRetry(retries - 1, delay * 1.5);
+
+    const client = new MongoClient(MONGODB_URI);
+    await client.connect();
+    
+    // Get the database
+    const db = client.db(MONGODB_DB);
+    
+    // Cache the client and connection
+    cachedClient = client;
+    cachedDb = db;
+    
+    return { client, db };
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error);
+    return { client: null, db: null };
   }
 }
 
-/**
- * Connect to MongoDB and return the client and database
- * Uses connection pooling to avoid creating a new connection for each request
- */
-export async function connectToDatabase() {
-  try {
-    // If we're already connecting, wait for that to complete
-    if (isConnecting) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      return connectToDatabase();
-    }
-
-    // If the connection already exists, verify it's still alive with a simple ping
-    if (cachedClient && cachedDb) {
-      try {
-        await cachedClient.db().command({ ping: 1 });
-        return { client: cachedClient, db: cachedDb };
-      } catch (error) {
-        console.warn('Cached MongoDB connection is stale, reconnecting...');
-        try {
-          await cachedClient.close();
-        } catch (closeError) {
-          console.warn('Error closing stale connection');
-        }
-        cachedClient = null;
-        cachedDb = null;
-      }
-    }
-
-    // Start new connection
-    isConnecting = true;
-    try {
-      const client = await connectWithRetry();
-      const db = client.db(MONGODB_DB);
-
-      // Cache the connection
-      cachedClient = client;
-      cachedDb = db;
-
-      return { client, db };
-    } finally {
-      isConnecting = false;
-    }
-  } catch (error) {
-    console.error('Failed to connect to MongoDB:', error);
-    throw new Error('Database connection failed');
-  }
+// Validate a job object to ensure it's not a mock/invalid job
+export function isValidJob(job: any): boolean {
+  if (!job) return false;
+  
+  // Basic validation - job must have these fields
+  if (!job._id || !job.title || !job.company) return false;
+  
+  // Validate job ID to ensure it's not a mock ID pattern
+  if (/^job\d+$/.test(job._id)) return false;
+  
+  // Check that the job doesn't have any mock flags
+  if (job.isMock || job.is_mock_data) return false;
+  
+  // Check for suspicious URLs
+  if (job.url && /example\.com|placeholder|test|mock/.test(job.url)) return false;
+  
+  return true;
 } 

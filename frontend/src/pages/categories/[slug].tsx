@@ -6,6 +6,8 @@ import Layout from '../../components/layout/Layout';
 import SearchBar from '../../components/common/SearchBar';
 import JobCard from '../../components/common/JobCard';
 import CategoryCard from '../../components/common/CategoryCard';
+import { connectToDatabase, isValidJob } from '../../utils/mongodb';
+import type { Job } from '../../types/job';
 
 // List of valid category slugs (matching the ones in CategoryCard component)
 const validCategorySlugs = [
@@ -476,9 +478,59 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   }
   
   try {
-    // Fetch actual jobs for this category from the API
-    // Use the correct API endpoint for job categories - this was part of the issue
-    // Change from category= to jobCategory= to match what the jobs page is using
+    // Try to fetch jobs directly from the database first if possible
+    try {
+      const { db } = await connectToDatabase();
+      
+      if (db) {
+        console.log('Connected to database, fetching jobs directly');
+        const jobsCollection = db.collection('jobs');
+        
+        // Query the database for jobs in this category
+        const dbJobs = await jobsCollection.find({
+          $or: [
+            { jobCategory: slug },
+            { jobCategory: { $regex: `^${slug}$`, $options: 'i' } },
+            { title: { $regex: slug.replace(/-/g, ' '), $options: 'i' } }
+          ]
+        })
+        .sort({ postedDate: -1 })
+        .limit(10)
+        .toArray();
+        
+        if (dbJobs && dbJobs.length > 0) {
+          console.log(`Found ${dbJobs.length} jobs directly from database for category: ${slug}`);
+          
+          // Filter out any invalid/mock jobs
+          const validJobs = dbJobs.filter((job: any) => isValidJob(job));
+          console.log(`After filtering, ${validJobs.length} valid jobs remain`);
+          
+          // Get category description
+          const categoryDescription = categoryDescriptions[slug as keyof typeof categoryDescriptions] || createGenericCategory(slug);
+          
+          return {
+            props: {
+              category: {
+                ...categoryDescription,
+                count: validJobs.length
+              },
+              jobs: validJobs,
+              slug,
+              hasJobs: validJobs.length > 0
+            },
+            revalidate: 60 * 10 // Revalidate every 10 minutes
+          };
+        } else {
+          console.log(`No jobs found directly in database for category: ${slug}, falling back to API`);
+        }
+      }
+    } catch (dbError) {
+      console.error('Error fetching directly from database:', dbError);
+      // Continue to API fallback
+    }
+    
+    // Fallback to API if direct DB access fails or returns no results
+    // Use the correct API endpoint for job categories
     const apiUrl = `https://clickclickjob.vercel.app/api/jobs/?jobCategory=${slug}`;
     console.log('Fetching jobs for category:', slug, 'from:', apiUrl);
     
@@ -518,21 +570,25 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       jobs = [];
     }
     
+    // Filter out any mock/invalid jobs
+    const validJobs = jobs.filter((job: any) => isValidJob(job));
+    console.log(`After filtering, ${validJobs.length} valid jobs remain from API response`);
+    
     // Get category description (preferred) or generate one
     const categoryDescription = categoryDescriptions[slug as keyof typeof categoryDescriptions] || createGenericCategory(slug);
     
     // Include the job count from the API
     const categoryWithCount = {
       ...categoryDescription,
-      count: jobs.length
+      count: validJobs.length
     };
     
     return {
       props: {
         category: categoryWithCount,
-        jobs: jobs,
+        jobs: validJobs,
         slug,
-        hasJobs: jobs.length > 0
+        hasJobs: validJobs.length > 0
       },
       revalidate: 60 * 10 // Revalidate every 10 minutes
     };
