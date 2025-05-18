@@ -25,6 +25,39 @@ interface HomePageProps {
   error?: string;
 }
 
+// Function to ensure no mock jobs are ever displayed
+function filterMockJobs(jobs: any[]): any[] {
+  if (!jobs || jobs.length === 0) return [];
+  
+  return jobs.filter((job: any) => {
+    // If job doesn't exist or is missing critical data, filter it out
+    if (!job || !job._id || !job.title || !job.company) return false;
+    
+    // Explicitly filter out TechCorp Solutions (known mock company)
+    if (job.company === 'TechCorp Solutions') return false;
+    
+    // Filter out mock job IDs
+    if (typeof job._id === 'string' && /^job\d+$/.test(job._id)) return false;
+    
+    // Filter jobs with example.com or mock URLs
+    if (job.url && typeof job.url === 'string' && 
+        /example\.com|placeholder|test|mock/.test(job.url)) return false;
+    
+    // Filter jobs with mock flags
+    if (job.isMock || job.is_mock_data) return false;
+    
+    // Filter jobs with mock prefixes in title/company
+    if ((job.title && job.title.startsWith('[MOCK]')) || 
+        (job.company && job.company.startsWith('[MOCK]'))) return false;
+    
+    // Make sure job has required fields for display
+    if (!job.postedDate) return false;
+    
+    // If it passes all checks, it's a real job
+    return true;
+  });
+}
+
 export const getServerSideProps = async () => {
   try {
     // Use the production API URL directly to avoid URL construction issues
@@ -62,7 +95,7 @@ export const getServerSideProps = async () => {
     }
     
     // Filter out any mock jobs
-    const validJobs = jobs.filter((job: any) => !isMockJob(job));
+    const validJobs = filterMockJobs(jobs.filter((job: any) => !isMockJob(job)));
     console.log(`Processed ${validJobs.length} valid jobs for display after filtering out mock data`);
     
     if (validJobs.length > 0) {

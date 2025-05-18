@@ -460,6 +460,39 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug, hasJo
   );
 };
 
+// Function to ensure no mock jobs are ever displayed
+function filterMockJobs(jobs: any[]): any[] {
+  if (!jobs || jobs.length === 0) return [];
+  
+  return jobs.filter((job: any) => {
+    // If job doesn't exist or is missing critical data, filter it out
+    if (!job || !job._id || !job.title || !job.company) return false;
+    
+    // Explicitly filter out TechCorp Solutions (known mock company)
+    if (job.company === 'TechCorp Solutions') return false;
+    
+    // Filter out mock job IDs
+    if (typeof job._id === 'string' && /^job\d+$/.test(job._id)) return false;
+    
+    // Filter jobs with example.com or mock URLs
+    if (job.url && typeof job.url === 'string' && 
+        /example\.com|placeholder|test|mock/.test(job.url)) return false;
+    
+    // Filter jobs with mock flags
+    if (job.isMock || job.is_mock_data) return false;
+    
+    // Filter jobs with mock prefixes in title/company
+    if ((job.title && job.title.startsWith('[MOCK]')) || 
+        (job.company && job.company.startsWith('[MOCK]'))) return false;
+    
+    // Make sure job has required fields for display
+    if (!job.postedDate) return false;
+    
+    // If it passes all checks, it's a real job
+    return true;
+  });
+}
+
 export const getStaticPaths: GetStaticPaths = async () => {
   // Get all valid category slugs instead of just the ones with defined data
   return {
@@ -503,7 +536,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
           console.log(`Found ${dbJobs.length} jobs directly from database for category: ${slug}`);
           
           // Filter out any invalid/mock jobs
-          const validJobs = dbJobs.filter((job: any) => isValidJob(job) && !isMockJob(job));
+          const validJobs = filterMockJobs(dbJobs.filter((job: any) => isValidJob(job) && !isMockJob(job)));
           console.log(`After filtering, ${validJobs.length} valid jobs remain`);
           
           // Get category description
@@ -572,7 +605,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     }
     
     // Filter out any mock/invalid jobs
-    const validJobs = jobs.filter((job: any) => isValidJob(job) && !isMockJob(job));
+    const validJobs = filterMockJobs(jobs.filter((job: any) => isValidJob(job) && !isMockJob(job)));
     console.log(`After filtering, ${validJobs.length} valid jobs remain from API response`);
     
     // Get category description (preferred) or generate one

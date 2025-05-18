@@ -41,6 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       payRange = '',
       location = '',
       datePosted = '',
+      softwareRequirements = '',
+      jobCategory = '',  // Support for both category and jobCategory
       sort = 'newest'
     } = req.query;
 
@@ -53,7 +55,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const filterConditions = [];
       
       // Always filter for remote jobs
-      filterConditions.push({ isRemote: true });
+      filterConditions.push({ remote: true });
+      
+      // IMPORTANT: Add filters to exclude mock jobs
+      filterConditions.push({
+        $and: [
+          // Exclude jobs with ID like "job1", "job2", etc.
+          { _id: { $not: { $regex: /^job\d+$/ } } },
+          // Exclude mock company
+          { company: { $ne: "TechCorp Solutions" } },
+          // Exclude jobs explicitly marked as mock
+          { $or: [
+              { isMock: { $ne: true } },
+              { isMock: { $exists: false } }
+            ]
+          },
+          // Exclude jobs with mock data flag
+          { $or: [
+              { is_mock_data: { $ne: true } },
+              { is_mock_data: { $exists: false } }
+            ]
+          },
+          // Exclude jobs with example.com URLs
+          { $or: [
+              { url: { $not: { $regex: /example\.com|test|mock/ } } },
+              { url: { $exists: false } }
+            ]
+          }
+        ]
+      });
       
       console.log('Query params received:', req.query);
       
@@ -71,16 +101,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
       
-      // Process category filter
-      if (category && typeof category === 'string') {
-        const categories = category.split(',');
+      // Also check jobCategory field if category wasn't provided
+      const categoryFilter = category || jobCategory;
+      
+      if (categoryFilter && typeof categoryFilter === 'string') {
+        console.log('Processing category filter:', categoryFilter);
+        const categories = categoryFilter.split(',');
+        
         if (categories.length === 1) {
-          // Single category - look for exact match or pattern match
-          filterConditions.push({ jobCategory: { $regex: category, $options: 'i' } });
+          console.log('Single category filter:', categories[0]);
+          // Single category - handle both jobCategory and title matching
+          // This makes filtering more robust since some jobs might not have jobCategory set
+          filterConditions.push({ 
+            $or: [
+              // Exact match on jobCategory field
+              { jobCategory: categoryFilter },
+              // Case-insensitive match on jobCategory
+              { jobCategory: { $regex: `^${categoryFilter}$`, $options: 'i' } },
+              // Match in title field for better coverage
+              { title: { $regex: categoryFilter.replace(/-/g, ' '), $options: 'i' } }
+            ] 
+          });
         } else if (categories.length > 1) {
-          // Multiple categories - use $or to match any of them
+          console.log('Multiple category filters:', categories);
+          // Multiple categories - broader matching for each category
           const categoryFilters = categories.map(cat => ({ 
-            jobCategory: { $regex: cat, $options: 'i' } 
+            $or: [
+              { jobCategory: cat },
+              { jobCategory: { $regex: `^${cat}$`, $options: 'i' } },
+              { title: { $regex: cat.replace(/-/g, ' '), $options: 'i' } }
+            ]
           }));
           
           filterConditions.push({ $or: categoryFilters });
@@ -91,9 +141,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (jobType && typeof jobType === 'string') {
         const jobTypes = jobType.split(',');
         if (jobTypes.length === 1) {
-          filterConditions.push({ jobType: jobType });
+          filterConditions.push({ jobType: { $regex: jobType, $options: 'i' } });
         } else if (jobTypes.length > 1) {
-          filterConditions.push({ jobType: { $in: jobTypes } });
+          const typeFilters = jobTypes.map(type => ({ 
+            jobType: { $regex: type, $options: 'i' } 
+          }));
+          filterConditions.push({ $or: typeFilters });
         }
       }
 
@@ -101,9 +154,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (experienceLevel && typeof experienceLevel === 'string') {
         const expLevels = experienceLevel.split(',');
         if (expLevels.length === 1) {
-          filterConditions.push({ experienceLevel: experienceLevel });
+          filterConditions.push({ experienceLevel: { $regex: experienceLevel, $options: 'i' } });
         } else if (expLevels.length > 1) {
-          filterConditions.push({ experienceLevel: { $in: expLevels } });
+          const levelFilters = expLevels.map(level => ({ 
+            experienceLevel: { $regex: level, $options: 'i' } 
+          }));
+          filterConditions.push({ $or: levelFilters });
         }
       }
       
@@ -163,6 +219,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               locationFilters.push({ 
                 location: { $regex: "(europe|eu|european)", $options: "i" } 
               });
+            } else if (loc === 'asia') {
+              locationFilters.push({ 
+                location: { $regex: "(asia|india|china|japan|singapore|philippines|thailand|malaysia|indonesia)", $options: "i" } 
+              });
             }
           });
           
@@ -192,19 +252,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
       
+      // Process software requirements filter
+      if (softwareRequirements && typeof softwareRequirements === 'string') {
+        const software = softwareRequirements.split(',');
+        if (software.length > 0) {
+          const softwareFilters: Array<any> = [];
+          
+          software.forEach(sw => {
+            // Transform into human-readable form for better matching
+            const readableValue = sw.replace(/-/g, ' ');
+            
+            softwareFilters.push({ 
+              $or: [
+                // Match in skills array
+                { skills: { $in: [sw, readableValue] } },
+                // Match in description text
+                { description: { $regex: readableValue, $options: 'i' } },
+                // Match in descriptionText field if present
+                { descriptionText: { $regex: readableValue, $options: 'i' } }
+              ] 
+            });
+          });
+          
+          if (softwareFilters.length > 0) {
+            filterConditions.push({ $or: softwareFilters });
+          }
+        }
+      }
+      
       // Build the final filter object using $and to combine all conditions
       let filter: any = {};
       if (filterConditions.length > 0) {
         filter.$and = filterConditions;
       } else {
-        filter = { isRemote: true };
+        filter = { remote: true };
       }
       
       // Print the filter for debugging
       console.log('API Query Filter:', JSON.stringify(filter, null, 2));
       
-      // Log all the active conditions
-      console.log('Active Filter Conditions:', filterConditions.length);
+      // Log all the active conditions for debugging
+      console.log('Active Filter Conditions Count:', filterConditions.length);
+      filterConditions.forEach((condition, index) => {
+        console.log(`Filter Condition ${index}:`, JSON.stringify(condition, null, 2));
+      });
       
       // Cap limit to reasonable number
       limitNum = Math.min(100, Math.max(1, limitNum));
