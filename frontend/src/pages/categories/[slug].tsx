@@ -330,7 +330,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug, hasJo
       </section>
 
       {/* Jobs Section - Only displayed if real jobs exist */}
-      {hasJobs ? (
+      {hasJobs && !jobs.some(job => job._id === 'job1' || job.company === 'TechCorp Solutions') ? (
         <section className="py-12 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-8">
@@ -545,10 +545,17 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
         
         // Query the database for jobs in this category
         const dbJobs = await jobsCollection.find({
-          $or: [
-            { jobCategory: slug },
-            { jobCategory: { $regex: `^${slug}$`, $options: 'i' } },
-            { title: { $regex: slug.replace(/-/g, ' '), $options: 'i' } }
+          $and: [
+            // First, match jobs in this category
+            { $or: [
+                { jobCategory: slug },
+                { jobCategory: { $regex: `^${slug}$`, $options: 'i' } },
+                { title: { $regex: slug.replace(/-/g, ' '), $options: 'i' } }
+              ]
+            },
+            // Then explicitly filter out mock jobs
+            { company: { $ne: "TechCorp Solutions" } },
+            { _id: { $not: { $regex: /^job\d+$/ } } }
           ]
         })
         .sort({ postedDate: -1 })
