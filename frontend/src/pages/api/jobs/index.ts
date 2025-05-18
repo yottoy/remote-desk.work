@@ -81,6 +81,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               { url: { $not: { $regex: /example\.com|test|mock/ } } },
               { url: { $exists: false } }
             ]
+          },
+          // Exclude jobs with titles that suggest engineering roles
+          { title: { $not: { $regex: /engineer|developer|software|coding|programming|devops|architect|frontend|backend|fullstack|tech lead|IT manager|sys admin|network admin|security/i } } },
+          // Exclude jobs with irrelevant job categories
+          { $or: [
+              { jobCategory: { $not: { $regex: /engineering|development|programming|IT|security|networking/i } } },
+              { jobCategory: { $exists: false } }
+            ]
           }
         ]
       });

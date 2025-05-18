@@ -53,6 +53,18 @@ function filterMockJobs(jobs: any[]): any[] {
     // Make sure job has required fields for display
     if (!job.postedDate) return false;
     
+    // Filter out engineering and other irrelevant job types that don't match our focus
+    if (job.title && typeof job.title === 'string') {
+      const irrelevantJobPattern = /engineer|developer|software|coding|programming|devops|architect|frontend|backend|fullstack|tech lead|IT manager|sys admin|network admin|security/i;
+      if (irrelevantJobPattern.test(job.title)) return false;
+    }
+    
+    // Filter out irrelevant job categories if present
+    if (job.jobCategory && typeof job.jobCategory === 'string') {
+      const irrelevantCategoryPattern = /engineering|development|programming|IT|security|networking/i;
+      if (irrelevantCategoryPattern.test(job.jobCategory)) return false;
+    }
+    
     // If it passes all checks, it's a real job
     return true;
   });
