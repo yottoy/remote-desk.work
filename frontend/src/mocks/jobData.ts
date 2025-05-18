@@ -1,11 +1,18 @@
 import { Job, EnhancedJobListing } from '../types/job';
 
+// WARNING: MOCK DATA ONLY - DO NOT USE IN PRODUCTION
+// This file contains mock data for development and testing purposes only.
+// In production, all job data should come from the database/API.
+
+// Add a prefix to clearly identify mock jobs
+const MOCK_PREFIX = 'MOCKDATA_';
+
 // Mock data for jobs (in a real app, these would come from an API)
 export const mockJobs: Job[] = [
   {
-    _id: 'job1',
-    title: 'Remote Data Entry Specialist',
-    company: 'TechCorp Solutions',
+    _id: `${MOCK_PREFIX}job1`,
+    title: '[MOCK] Remote Data Entry Specialist',
+    company: '[MOCK] TechCorp Solutions',
     location: 'Remote (US Only)',
     description: '<p>We are looking for a detail-oriented Data Entry Specialist to join our team. The ideal candidate will have strong typing skills and attention to detail.</p><h3>Responsibilities:</h3><ul><li>Enter data from various sources into company database</li><li>Maintain data accuracy and integrity</li><li>Process paperwork and maintain filing systems</li><li>Generate reports as needed</li></ul>',
     descriptionText: 'We are looking for a detail-oriented Data Entry Specialist to join our team. You will be responsible for entering data from various sources into company database, maintaining data accuracy and integrity.',
@@ -24,12 +31,13 @@ export const mockJobs: Job[] = [
     datePosted: 'today',
     tags: ['data-entry', 'remote', 'entry-level'],
     categories: ['data-entry', 'administrative'],
-    url: 'https://example.com/jobs/remote-data-entry-specialist'
+    url: 'https://example.com/jobs/remote-data-entry-specialist',
+    isMock: true // Explicitly mark as mock data
   },
   {
-    _id: 'job2',
-    title: 'Virtual Administrative Assistant',
-    company: 'Global Services LLC',
+    _id: `${MOCK_PREFIX}job2`,
+    title: '[MOCK] Virtual Administrative Assistant',
+    company: '[MOCK] Global Services LLC',
     location: 'Remote (Worldwide)',
     description: '<p>Support executives by managing schedules, preparing reports, and handling correspondence. Must have excellent communication skills and be proficient in Microsoft Office suite.</p>',
     descriptionText: 'Support executives by managing schedules, preparing reports, and handling correspondence. Must have excellent communication skills and be proficient in Microsoft Office suite.',
@@ -48,12 +56,13 @@ export const mockJobs: Job[] = [
     datePosted: 'this-week',
     tags: ['administrative', 'remote', 'entry-level'],
     categories: ['administrative', 'virtual-assistant'],
-    url: 'https://example.com/jobs/virtual-administrative-assistant'
+    url: 'https://example.com/jobs/virtual-administrative-assistant',
+    isMock: true
   },
   {
-    _id: 'job3',
-    title: 'Customer Service Representative',
-    company: 'Support Heroes',
+    _id: `${MOCK_PREFIX}job3`,
+    title: '[MOCK] Customer Service Representative',
+    company: '[MOCK] Support Heroes',
     location: 'Remote (US Only)',
     description: '<p>Answer customer inquiries via phone, email, and chat. Resolve issues and provide information about our products and services. Must have excellent communication skills and a customer-first attitude.</p>',
     descriptionText: 'Answer customer inquiries via phone, email, and chat. Resolve issues and provide information about our products and services. Must have excellent communication skills and a customer-first attitude.',
@@ -72,12 +81,13 @@ export const mockJobs: Job[] = [
     datePosted: 'this-week',
     tags: ['customer-service', 'remote', 'experienced'],
     categories: ['customer-service', 'administrative'],
-    url: 'https://example.com/jobs/customer-service-representative'
+    url: 'https://example.com/jobs/customer-service-representative',
+    isMock: true
   },
   {
-    _id: 'job4',
-    title: 'Data Entry Clerk',
-    company: 'DataFlow Inc',
+    _id: `${MOCK_PREFIX}job4`,
+    title: '[MOCK] Data Entry Clerk',
+    company: '[MOCK] DataFlow Inc',
     location: 'Remote (US Only)',
     description: '<p>Input data from various sources into our proprietary system. Ensure accuracy and completeness of data. Flag discrepancies and errors.</p>',
     descriptionText: 'Input data from various sources into our proprietary system. Ensure accuracy and completeness of data. Flag discrepancies and errors.',
@@ -96,12 +106,13 @@ export const mockJobs: Job[] = [
     datePosted: 'this-week',
     tags: ['data-entry', 'remote', 'no-experience'],
     categories: ['data-entry', 'data-processing'],
-    url: 'https://example.com/jobs/data-entry-clerk'
+    url: 'https://example.com/jobs/data-entry-clerk',
+    isMock: true
   },
   {
-    _id: 'job5',
-    title: 'Transcriptionist',
-    company: 'TranscribeNow',
+    _id: `${MOCK_PREFIX}job5`,
+    title: '[MOCK] Transcriptionist',
+    company: '[MOCK] TranscribeNow',
     location: 'Remote (Worldwide)',
     description: '<p>Convert audio recordings into written documents with high accuracy. Must have excellent listening skills and fast typing speed.</p>',
     descriptionText: 'Convert audio recordings into written documents with high accuracy. Must have excellent listening skills and fast typing speed.',
@@ -120,12 +131,13 @@ export const mockJobs: Job[] = [
     datePosted: 'this-week',
     tags: ['transcription', 'remote', 'entry-level'],
     categories: ['transcription', 'data-entry'],
-    url: 'https://example.com/jobs/transcriptionist'
+    url: 'https://example.com/jobs/transcriptionist',
+    isMock: true
   },
   {
-    _id: 'job6',
-    title: 'Virtual Executive Assistant',
-    company: 'Executive Support Co',
+    _id: `${MOCK_PREFIX}job6`,
+    title: '[MOCK] Virtual Executive Assistant',
+    company: '[MOCK] Executive Support Co',
     location: 'Remote (US Only)',
     description: '<p>Provide administrative support to C-level executives. Manage calendars, arrange travel, and handle correspondence. Must be highly organized and professional.</p>',
     descriptionText: 'Provide administrative support to C-level executives. Manage calendars, arrange travel, and handle correspondence. Must be highly organized and professional.',
@@ -144,12 +156,13 @@ export const mockJobs: Job[] = [
     datePosted: 'this-week',
     tags: ['administrative', 'executive', 'remote', 'experienced'],
     categories: ['administrative', 'virtual-assistant'],
-    url: 'https://example.com/jobs/virtual-executive-assistant'
+    url: 'https://example.com/jobs/virtual-executive-assistant',
+    isMock: true
   },
   {
-    _id: 'job7',
-    title: 'Bookkeeping Assistant',
-    company: 'FinanceHelp Inc',
+    _id: `${MOCK_PREFIX}job7`,
+    title: '[MOCK] Bookkeeping Assistant',
+    company: '[MOCK] FinanceHelp Inc',
     location: 'Remote (US & Canada)',
     description: '<p>Assist with accounts payable, accounts receivable, and general bookkeeping tasks. Reconcile accounts and prepare financial reports. Experience with QuickBooks required.</p>',
     descriptionText: 'Assist with accounts payable, accounts receivable, and general bookkeeping tasks. Reconcile accounts and prepare financial reports. Experience with QuickBooks required.',
@@ -168,12 +181,13 @@ export const mockJobs: Job[] = [
     datePosted: 'this-week',
     tags: ['bookkeeping', 'finance', 'remote', 'experienced'],
     categories: ['bookkeeping', 'administrative'],
-    url: 'https://example.com/jobs/bookkeeping-assistant'
+    url: 'https://example.com/jobs/bookkeeping-assistant',
+    isMock: true
   },
   {
-    _id: 'job8',
-    title: 'Entry-Level Data Processor',
-    company: 'DataWorks Solutions',
+    _id: `${MOCK_PREFIX}job8`,
+    title: '[MOCK] Entry-Level Data Processor',
+    company: '[MOCK] DataWorks Solutions',
     location: 'Remote (Worldwide)',
     description: '<p>Process and validate data from multiple sources. Format data according to company standards and check for accuracy and completeness.</p>',
     descriptionText: 'Process and validate data from multiple sources. Format data according to company standards and check for accuracy and completeness.',
@@ -192,13 +206,21 @@ export const mockJobs: Job[] = [
     datePosted: 'today',
     tags: ['data-entry', 'remote', 'no-experience'],
     categories: ['data-entry', 'data-processing'],
-    url: 'https://example.com/jobs/entry-level-data-processor'
+    url: 'https://example.com/jobs/entry-level-data-processor',
+    isMock: true
   },
 ];
 
-// Mock function to get a job by ID
+// Mock function to get a job by ID - ensure it only works with mocked IDs
 export const getJobById = (id: string): EnhancedJobListing => {
-  const job = mockJobs.find(job => job._id === id);
+  // Only return mock data if the ID has the mock prefix or if we're in development
+  if (!id.startsWith(MOCK_PREFIX) && process.env.NODE_ENV === 'production') {
+    throw new Error('Attempted to use mock data in production');
+  }
+  
+  // If ID doesn't have prefix but we're in dev, try to find it anyway
+  const mockId = id.startsWith(MOCK_PREFIX) ? id : `${MOCK_PREFIX}${id}`;
+  const job = mockJobs.find(job => job._id === mockId || job._id === id);
   
   if (!job) {
     throw new Error(`Job with ID ${id} not found`);
@@ -215,8 +237,8 @@ export const getJobById = (id: string): EnhancedJobListing => {
     scrapedDate: new Date(),
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     sourceId: 'abc123',
-    source: 'indeed',
-    uniqueIdentifier: `${job.company.toLowerCase().replace(/\s+/g, '-')}-${job.title.toLowerCase().replace(/\s+/g, '-')}`,
+    source: 'mock_data', // Explicitly mark source as mock
+    uniqueIdentifier: `mock_${job.company.toLowerCase().replace(/\s+/g, '-')}-${job.title.toLowerCase().replace(/\s+/g, '-')}`,
     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
     updatedAt: new Date(),
     engagementMetrics: {
@@ -225,84 +247,121 @@ export const getJobById = (id: string): EnhancedJobListing => {
       applicationCount: 25,
       lastClicked: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
       lastViewed: new Date()
-    }
+    },
+    isMock: true
   };
 };
 
-// Filter jobs by category
+// Filter jobs by category - ensure this never returns mock data in production
 export const getJobsByCategory = (category: string): Job[] => {
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('Attempted to use mock data in production');
+    return [];
+  }
+  
   return mockJobs.filter(job => 
     job.jobCategory === category || (job.tags && job.tags.includes(category))
   );
 };
 
-// Get latest jobs (most recent first)
+// Get latest jobs (most recent first) - ensure this never returns mock data in production
 export const getLatestJobs = (count: number = 10): Job[] => {
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('Attempted to use mock data in production');
+    return [];
+  }
+  
   return [...mockJobs]
     .sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime())
     .slice(0, count);
 };
 
-// Get featured jobs
+// Get featured jobs - ensure this never returns mock data in production
 export const getFeaturedJobs = (count: number = 3): Job[] => {
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('Attempted to use mock data in production');
+    return [];
+  }
+  
   return [...mockJobs]
     .filter(job => job.featured)
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0))
     .slice(0, count);
 };
 
-// Search jobs by query and filters
+// Search jobs - ensure this never returns mock data in production
 export const searchJobs = (query: string, filters: Record<string, any> = {}): Job[] => {
-  let results = [...mockJobs];
-  
-  // Apply text search
-  if (query) {
-    const searchTerm = query.toLowerCase();
-    results = results.filter(job => 
-      job.title.toLowerCase().includes(searchTerm) || 
-      job.company.toLowerCase().includes(searchTerm) || 
-      (job.descriptionText && job.descriptionText.toLowerCase().includes(searchTerm))
-    );
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('Attempted to use mock data in production');
+    return [];
   }
   
-  // Apply filters (if any)
-  for (const [key, value] of Object.entries(filters)) {
-    if (!value) continue;
+  // Convert query to lowercase for case-insensitive comparison
+  const lowerQuery = query.toLowerCase();
+  
+  // Filter jobs by search query and other filters
+  return mockJobs.filter(job => {
+    // Skip if mock data in production
+    if (process.env.NODE_ENV === 'production') return false;
     
-    if (key === 'jobType' && value) {
-      results = results.filter(job => job.jobType === value);
-    } else if (key === 'experienceLevel' && value) {
-      results = results.filter(job => job.experienceLevel === value);
-    } else if (key === 'payRange' && value) {
-      results = results.filter(job => job.payRange === value);
-    } else if (key === 'location' && value) {
-      results = results.filter(job => job.location_restriction === value);
-    } else if (key === 'datePosted' && value) {
-      results = results.filter(job => job.datePosted === value);
-    } else if (key === 'jobCategory' && value) {
-      results = results.filter(job => job.jobCategory === value);
+    // Search in title, company, and description
+    const matchesQuery = !query || 
+      job.title.toLowerCase().includes(lowerQuery) ||
+      job.company.toLowerCase().includes(lowerQuery) ||
+      (job.descriptionText && job.descriptionText.toLowerCase().includes(lowerQuery));
+    
+    // If query doesn't match, return false immediately
+    if (!matchesQuery) return false;
+    
+    // Apply additional filters if any
+    for (const [key, value] of Object.entries(filters)) {
+      if (!value || value.length === 0) continue;
+      
+      // Check if job has this filter property and it matches
+      if (Array.isArray(value)) {
+        // Handle array values (OR condition)
+        const jobValue = (job as any)[key];
+        if (!jobValue) return false;
+        
+        if (Array.isArray(jobValue)) {
+          // If both are arrays, check for overlap
+          if (!value.some(v => jobValue.includes(v))) return false;
+        } else {
+          // If job value is not array, check if it's in the filter values
+          if (!value.includes(jobValue)) return false;
+        }
+      } else {
+        // Handle string/primitive values (exact match)
+        if ((job as any)[key] !== value) return false;
+      }
     }
-  }
-  
-  return results;
+    
+    return true;
+  });
 };
 
-// Mock function to get similar jobs
+// Get similar jobs - ensure this never returns mock data in production
 export const getSimilarJobs = (jobId: string) => {
-  const job = mockJobs.find(job => job._id === jobId);
-  if (!job) return [];
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('Attempted to use mock data in production');
+    return [];
+  }
   
+  // For mock purposes, just return some other jobs
   return mockJobs
-    .filter(j => j._id !== jobId && 
-      ((j.categories?.some(cat => job.categories?.includes(cat)) || 
-       j.tags?.some(tag => job.tags?.includes(tag))) || false))
+    .filter(job => job._id !== jobId)
+    .sort(() => 0.5 - Math.random()) // Random sort
     .slice(0, 3);
 };
 
-// Mock function to get popular jobs
+// Get popular jobs - ensure this never returns mock data in production
 export const getPopularJobs = () => {
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('Attempted to use mock data in production');
+    return [];
+  }
+  
   return mockJobs
-    .filter(job => (job.qualityScore || 0) >= 8.0)
-    .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0))
+    .sort(() => 0.5 - Math.random()) // Random sort for mock purposes
     .slice(0, 4);
 }; 

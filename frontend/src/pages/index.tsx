@@ -8,6 +8,7 @@ import EnhancedJobCard from '../components/common/EnhancedJobCard';
 import CategoryCard from '../components/common/CategoryCard';
 import { useRouter } from 'next/router';
 import type { Job } from '../types/job';
+import { isMockJob } from '../types/job';
 
 // Job categories
 const jobCategories = [
@@ -60,19 +61,22 @@ export const getServerSideProps = async () => {
       jobs = [];
     }
     
-    console.log(`Processed ${jobs.length} jobs for display`);
-    if (jobs.length > 0) {
+    // Filter out any mock jobs
+    const validJobs = jobs.filter((job: any) => !isMockJob(job));
+    console.log(`Processed ${validJobs.length} valid jobs for display after filtering out mock data`);
+    
+    if (validJobs.length > 0) {
       console.log('First job sample:', {
-        id: jobs[0]._id,
-        title: jobs[0].title,
-        company: jobs[0].company,
-        fields: Object.keys(jobs[0])
+        id: validJobs[0]._id,
+        title: validJobs[0].title,
+        company: validJobs[0].company,
+        fields: Object.keys(validJobs[0])
       });
     }
     
     return {
       props: {
-        featuredJobs: jobs.slice(0, 6) // Ensure we only get at most 6 jobs
+        featuredJobs: validJobs.slice(0, 6) // Ensure we only get at most 6 jobs
       }
     };
   } catch (error) {

@@ -32,6 +32,8 @@ export interface Job {
   softwareRequirements?: string[];
   timezone?: string;
   datePosted?: string;
+  isMock?: boolean;
+  is_mock_data?: boolean;
 }
 
 export interface JobListing {
@@ -67,6 +69,8 @@ export interface JobListing {
   softwareRequirements?: string[];
   timezone?: string;
   datePosted?: string;
+  isMock?: boolean;
+  is_mock_data?: boolean;
 }
 
 // Define the properties used for user engagement features
@@ -100,6 +104,8 @@ export interface EnhancedJobListing extends Partial<JobListing> {
   timezone?: string;
   datePosted?: string;
   engagementMetrics?: JobEngagementMetrics;
+  isMock?: boolean;
+  is_mock_data?: boolean;
 }
 
 // Helper functions for user engagement badges
@@ -118,6 +124,27 @@ export const isVerified = (job: Job | JobListing | EnhancedJobListing): boolean 
 
 export const isPopular = (job: EnhancedJobListing): boolean => {
   return (job.engagementMetrics?.clickCount ?? 0) >= 50;
+};
+
+// Helper to check if a job is mock data that should be filtered out
+export const isMockJob = (job: Job | JobListing | EnhancedJobListing): boolean => {
+  if (!job) return true;
+  
+  // Check for explicit mock flags
+  if (job.isMock || job.is_mock_data) return true;
+  
+  // Check for mock ID pattern (job1, job2, etc)
+  if (typeof job._id === 'string' && /^job\d+$/.test(job._id)) return true;
+  
+  // Check for suspicious URLs
+  if (job.url && typeof job.url === 'string' && 
+      /example\.com|placeholder|test|mock/.test(job.url)) return true;
+  
+  // Check for mock prefix in title/company
+  if ((job.title && job.title.startsWith('[MOCK]')) || 
+      (job.company && job.company.startsWith('[MOCK]'))) return true;
+  
+  return false;
 };
 
 export interface JobsResponse {

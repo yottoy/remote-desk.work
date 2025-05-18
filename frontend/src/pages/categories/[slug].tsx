@@ -8,6 +8,7 @@ import JobCard from '../../components/common/JobCard';
 import CategoryCard from '../../components/common/CategoryCard';
 import { connectToDatabase, isValidJob } from '../../utils/mongodb';
 import type { Job } from '../../types/job';
+import { isMockJob } from '../../types/job';
 
 // List of valid category slugs (matching the ones in CategoryCard component)
 const validCategorySlugs = [
@@ -502,7 +503,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
           console.log(`Found ${dbJobs.length} jobs directly from database for category: ${slug}`);
           
           // Filter out any invalid/mock jobs
-          const validJobs = dbJobs.filter((job: any) => isValidJob(job));
+          const validJobs = dbJobs.filter((job: any) => isValidJob(job) && !isMockJob(job));
           console.log(`After filtering, ${validJobs.length} valid jobs remain`);
           
           // Get category description
@@ -571,7 +572,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     }
     
     // Filter out any mock/invalid jobs
-    const validJobs = jobs.filter((job: any) => isValidJob(job));
+    const validJobs = jobs.filter((job: any) => isValidJob(job) && !isMockJob(job));
     console.log(`After filtering, ${validJobs.length} valid jobs remain from API response`);
     
     // Get category description (preferred) or generate one
