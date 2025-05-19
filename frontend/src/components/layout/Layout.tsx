@@ -134,11 +134,6 @@ const Layout: React.FC<LayoutProps> = ({
                       Terms of Service
                     </Link>
                   </li>
-                  <li>
-                    <Link href="/how-we-verify-jobs" className="text-gray-600 hover:text-blue-600 text-sm">
-                      How We Verify Jobs
-                    </Link>
-                  </li>
                 </ul>
               </div>
             </div>

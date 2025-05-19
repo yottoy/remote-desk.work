@@ -92,11 +92,11 @@ const AboutPage = () => {
             </p>
             
             <p>
-              Email: <a href="mailto:support@clickclickjob.com" className="text-blue-600 hover:text-blue-800">support@clickclickjob.com</a>
+              Please use our <a href="/contact" className="text-blue-600 hover:text-blue-800">contact form</a> to get in touch with us.
             </p>
             
             <p>
-              For business inquiries or partnership opportunities, please contact: <a href="mailto:partners@clickclickjob.com" className="text-blue-600 hover:text-blue-800">partners@clickclickjob.com</a>
+              For business partnerships or employer inquiries, please use the contact form and select "Business Inquiry" as the subject.
             </p>
           </div>
           
