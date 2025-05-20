@@ -15,6 +15,7 @@
     "vercel-build": "next build"
   },
   "dependencies": {
+    "@tailwindcss/forms": "^0.5.10",
     "@types/nodemailer": "^6.4.17",
     "@vercel/analytics": "^1.2.2",
     "axios": "^1.6.5",
