@@ -20,7 +20,8 @@ interface FilterEvent {
 interface SearchEvent {
   query: string;
   resultCount: number;
-  filters?: Record<string, string[]>;
+  filters?: Record<string, any>;
+  properties?: Record<string, any>;
 }
 
 interface PageViewEvent {
@@ -34,6 +35,14 @@ interface ErrorEvent {
   message: string;
   componentStack?: string;
   url: string;
+}
+
+interface JobInteractionEvent {
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  action: 'view' | 'click' | 'apply' | 'save';
+  properties?: Record<string, any>;
 }
 
 class AnalyticsService {
@@ -89,6 +98,19 @@ class AnalyticsService {
       ...event.properties
     };
     
+    // Track in GA4
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_title: document.title,
+        page_location: window.location.href,
+        page_path: event.page,
+        page_referrer: event.referrer || document.referrer,
+        user_id: this.userId,
+        session_id: this.sessionId,
+        ...event.properties
+      });
+    }
+    
     // In production, send to analytics server
     if (process.env.NODE_ENV === 'production') {
       this.sendToAnalyticsServer('pageview', payload);
@@ -140,6 +162,18 @@ class AnalyticsService {
       url: window.location.href
     };
     
+    // Track in GA4
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'filter_apply', {
+        filter_type: event.filterType,
+        filter_values: event.values.join(','),
+        result_count: event.resultCount,
+        search_query: event.searchQuery,
+        user_id: this.userId,
+        session_id: this.sessionId
+      });
+    }
+    
     // In production, send to analytics server
     if (process.env.NODE_ENV === 'production') {
       this.sendToAnalyticsServer('filter', payload);
@@ -170,8 +204,21 @@ class AnalyticsService {
       query: event.query,
       resultCount: event.resultCount,
       filters: event.filters,
-      url: window.location.href
+      url: window.location.href,
+      ...event.properties
     };
+    
+    // Track in GA4
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'search', {
+        search_term: event.query,
+        result_count: event.resultCount,
+        filters: JSON.stringify(event.filters),
+        user_id: this.userId,
+        session_id: this.sessionId,
+        ...event.properties
+      });
+    }
     
     // In production, send to analytics server
     if (process.env.NODE_ENV === 'production') {
@@ -206,11 +253,55 @@ class AnalyticsService {
       userAgent: navigator.userAgent
     };
     
+    // Track in GA4
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'error', {
+        error_name: event.error,
+        error_message: event.message,
+        error_stack: event.componentStack,
+        user_id: this.userId,
+        session_id: this.sessionId
+      });
+    }
+    
     // In production, send to analytics server
     if (process.env.NODE_ENV === 'production') {
       this.sendToAnalyticsServer('error', payload);
     } else if (this.debugMode) {
       console.error('Error tracked:', payload);
+    }
+  }
+  
+  /**
+   * Track job interactions
+   */
+  trackJobInteraction(event: JobInteractionEvent): void {
+    if (!this.initialized) this.init();
+    
+    const payload = {
+      userId: this.userId,
+      sessionId: this.sessionId,
+      timestamp: new Date().toISOString(),
+      ...event,
+      url: window.location.href
+    };
+
+    // Track in GA4
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', `job_${event.action}`, {
+        job_id: event.jobId,
+        job_title: event.jobTitle,
+        company: event.company,
+        user_id: this.userId,
+        session_id: this.sessionId,
+        ...event.properties
+      });
+    }
+    
+    if (process.env.NODE_ENV === 'production') {
+      this.sendToAnalyticsServer('job_interaction', payload);
+    } else if (this.debugMode) {
+      console.log('Job interaction tracked:', payload);
     }
   }
   
@@ -253,11 +344,7 @@ class AnalyticsService {
    * Generate a unique anonymous user ID
    */
   private generateUserId(): string {
-    return 'user-xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
+    return 'user_' + Math.random().toString(36).substr(2, 9);
   }
 }
 
