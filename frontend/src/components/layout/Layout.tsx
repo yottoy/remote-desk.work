@@ -2,6 +2,7 @@ import React, { ReactNode, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import GoogleAnalytics from '../common/GoogleAnalytics';
 
 type LayoutProps = {
   children: ReactNode;
@@ -25,6 +26,8 @@ const Layout: React.FC<LayoutProps> = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      
+      <GoogleAnalytics />
       
       <div className="min-h-screen flex flex-col">
         <header className="bg-white shadow-sm">
