@@ -11,6 +11,11 @@ import '../styles/globals.css';
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   
+  // Testing scripts removed to fix issues
+  useEffect(() => {
+    console.log('App initialized');
+  }, []);
+  
   // Track page views
   useEffect(() => {
     // Function to track page view

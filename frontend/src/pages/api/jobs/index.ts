@@ -345,7 +345,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Enhanced caching for better performance
-      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60, stale-while-revalidate=120');
       
       // Return jobs with pagination metadata
       return res.status(200).json({

@@ -99,6 +99,8 @@ export interface EnhancedJobListing extends Partial<JobListing> {
   payRange?: string;
   location_restriction?: string;
   jobCategory?: string;
+  category?: string; // For SEO landing pages (admin, data-entry, virtual-assistant, executive-assistant)
+  verified?: boolean; // Explicitly marked as verified
   skills?: string[];
   softwareRequirements?: string[];
   timezone?: string;
