@@ -53,6 +53,11 @@ jobs:
           python direct_scraper.py 2>&1 | tee logs/direct_scraper.log
           echo "Scraper exit code: $?"
       
+      - name: Run AdminDataEntryScraper
+        run: |
+          node src/scrapers/AdminDataEntryScraper.js 2>&1 | tee logs/admin_data_entry_scraper.log
+          echo "AdminDataEntryScraper exit code: $?"
+      
       - name: Force create results if missing
         if: always()
         run: |
