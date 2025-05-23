@@ -344,7 +344,7 @@ class AdminDataEntryScraper extends BaseScraper {
    * @returns {Object} - Cleaned job data
    * @private
    */
-  _cleanJobData(job) {
+  async _cleanJobData(job) {
     const cleaned = { ...job };
     
     // Ensure title and company are strings
@@ -402,19 +402,72 @@ class AdminDataEntryScraper extends BaseScraper {
       // Store both HTML/markdown and plain text versions
       cleaned.descriptionText = this._extractTextFromHtml(cleaned.description);
     } else {
-      cleaned.description = '';
-      cleaned.descriptionText = '';
+      // If description is empty, try to scrape the full job details from the job URL
+      if (cleaned.url) {
+        const fullDetails = await this.scrapeJobDetails(cleaned.url);
+        cleaned.description = fullDetails.description || '';
+        cleaned.descriptionText = fullDetails.descriptionText || '';
+      } else {
+        cleaned.description = '';
+        cleaned.descriptionText = '';
+      }
     }
     
     // Standardize date format if exists
     if (cleaned.date) {
       try {
-        cleaned.postedDate = new Date(cleaned.date);
+        // Try to parse relative dates first
+        const lowerDate = cleaned.date.toLowerCase();
+        if (lowerDate.includes('hour') || lowerDate.includes('hr')) {
+          const hours = parseInt(lowerDate.replace(/[^0-9]/g, ''), 10) || 0;
+          const date = new Date();
+          date.setHours(date.getHours() - hours);
+          cleaned.postedDate = date;
+        } else if (lowerDate.includes('day') || lowerDate.includes('d')) {
+          const days = parseInt(lowerDate.replace(/[^0-9]/g, ''), 10) || 0;
+          const date = new Date();
+          date.setDate(date.getDate() - days);
+          cleaned.postedDate = date;
+        } else if (lowerDate.includes('week') || lowerDate.includes('w')) {
+          const weeks = parseInt(lowerDate.replace(/[^0-9]/g, ''), 10) || 0;
+          const date = new Date();
+          date.setDate(date.getDate() - (weeks * 7));
+          cleaned.postedDate = date;
+        } else if (lowerDate.includes('month') || lowerDate.includes('m')) {
+          const months = parseInt(lowerDate.replace(/[^0-9]/g, ''), 10) || 0;
+          const date = new Date();
+          date.setMonth(date.getMonth() - months);
+          cleaned.postedDate = date;
+        } else if (lowerDate.includes('today') || lowerDate.includes('just posted')) {
+          cleaned.postedDate = new Date();
+        } else if (lowerDate.includes('yesterday')) {
+          const date = new Date();
+          date.setDate(date.getDate() - 1);
+          cleaned.postedDate = date;
+        } else {
+          // Try parsing as a standard date
+          const parsedDate = new Date(cleaned.date);
+          if (!isNaN(parsedDate.getTime())) {
+            cleaned.postedDate = parsedDate;
+          } else {
+            // If we can't parse the date, use a default of 7 days ago
+            // This is better than using current date as it won't make old jobs appear new
+            const date = new Date();
+            date.setDate(date.getDate() - 7);
+            cleaned.postedDate = date;
+          }
+        }
       } catch (e) {
-        cleaned.postedDate = new Date();
+        // If parsing fails, use a default of 7 days ago
+        const date = new Date();
+        date.setDate(date.getDate() - 7);
+        cleaned.postedDate = date;
       }
     } else {
-      cleaned.postedDate = new Date();
+      // If no date provided, use a default of 7 days ago
+      const date = new Date();
+      date.setDate(date.getDate() - 7);
+      cleaned.postedDate = date;
     }
     
     // Add scrapedDate if not exists
