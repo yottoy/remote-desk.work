@@ -336,6 +336,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .limit(limitNum)
         .toArray();
 
+      // Update postedDate to current date for all jobs
+      const updatedJobs = jobs.map((job: { [key: string]: any }) => ({
+        ...job,
+        postedDate: new Date().toISOString()
+      }));
+
       // Get total count for pagination
       const totalJobs = await jobsCollection.countDocuments(filter);
 
@@ -349,7 +355,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // Return jobs with pagination metadata
       return res.status(200).json({
-        jobs,
+        jobs: updatedJobs,
         pagination: {
           totalJobs,
           totalPages: Math.ceil(totalJobs / limitNum),
