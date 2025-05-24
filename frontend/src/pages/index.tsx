@@ -7,6 +7,7 @@ import SearchBar from '../components/common/SearchBar';
 import EnhancedJobCard from '../components/common/EnhancedJobCard';
 import ImprovedJobCard from '../components/common/ImprovedJobCard';
 import CategoryCard from '../components/common/CategoryCard';
+import { EmailCaptureForm } from '../components/email-capture/EmailCaptureForm';
 import { useRouter } from 'next/router';
 import type { Job } from '../types/job';
 import { isMockJob } from '../types/job';
@@ -75,7 +76,7 @@ export const getServerSideProps = async () => {
   try {
     // Use environment variable for API URL, fallback to localhost for dev, production URL for prod
     const apiUrl = process.env.API_URL || (process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3000/api/jobs/'
+      ? 'http://localhost:3002/api/jobs/'
       : 'https://clickclickjob.vercel.app/api/jobs/');
     console.log('Fetching jobs from:', apiUrl);
     
@@ -247,6 +248,20 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, error }) => {
               ))}
             </div>
           )}
+
+          {/* Email Capture Section */}
+          <div className="mt-16 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8">
+            <div className="max-w-2xl mx-auto text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">
+                Want fresh jobs delivered to your inbox every Monday?
+              </h2>
+              <EmailCaptureForm
+                source="homepage"
+                variant="inline"
+                className="max-w-md mx-auto"
+              />
+            </div>
+          </div>
           
           <div className="mt-10 text-center">
             <Link 
