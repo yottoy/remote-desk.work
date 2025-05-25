@@ -5,8 +5,8 @@ import EmailCapture from '../components/common/EmailCapture';
 const NewsletterPage = () => {
   return (
     <Layout
-      title="Remote Work Newsletter | Daily Data Entry & Administrative Job Alerts | ClickClickJob.com"
-      description="Subscribe to our newsletter for daily remote job alerts. Get verified data entry, virtual assistant, and administrative work-from-home opportunities delivered straight to your inbox."
+      title="Remote Work Newsletter | Weekly Data Entry & Administrative Job Updates | ClickClickJob.com"
+      description="Subscribe to our weekly newsletter for remote job updates. Get verified data entry, virtual assistant, and administrative work-from-home opportunities delivered to your inbox every Monday."
     >
       <div className="bg-white">
         <div className="max-w-4xl mx-auto px-4 py-16 sm:px-6 lg:px-8 text-center">
@@ -16,15 +16,15 @@ const NewsletterPage = () => {
               Never Miss a Remote Job Opportunity Again
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
-              Get verified <strong>data entry</strong>, <strong>virtual assistant</strong>, and <strong>administrative jobs</strong> delivered to your inbox daily. Join 10,000+ remote workers who find their perfect work-from-home opportunity through our newsletter.
+              Get verified <strong>data entry</strong>, <strong>virtual assistant</strong>, and <strong>administrative jobs</strong> delivered to your inbox every Monday. Join job seekers who find genuine remote work opportunities through our curated newsletter.
             </p>
           </div>
 
           {/* Email Signup Form */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 md:p-12 shadow-lg mb-12">
             <EmailCapture 
-              title="🔥 Get Daily Remote Job Alerts"
-              description="Fresh opportunities every morning. Verified companies. No spam. No experience required for many positions."
+              title="📧 Get Weekly Remote Job Updates"
+              description="Curated opportunities every Monday morning. Verified companies. No spam. No experience required for many positions."
               source="newsletter_page"
               variant="compact"
             />
@@ -48,8 +48,8 @@ const NewsletterPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Fresh Daily Updates</h3>
-              <p className="text-gray-600">New opportunities added every day. Be among the first to apply for the best remote positions.</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Weekly Job Roundup</h3>
+              <p className="text-gray-600">Curated opportunities delivered every Monday. Quality over quantity - only the best remote positions.</p>
             </div>
             
             <div className="text-center">
@@ -109,21 +109,21 @@ const NewsletterPage = () => {
             </div>
           </div>
 
-          {/* Social Proof */}
+          {/* Value Proposition */}
           <div className="bg-blue-600 text-white rounded-xl p-8">
-            <h2 className="text-2xl font-bold mb-4">Join Thousands of Successful Remote Workers</h2>
+            <h2 className="text-2xl font-bold mb-4">Join Our Growing Community of Remote Workers</h2>
             <div className="grid md:grid-cols-3 gap-6 text-center">
               <div>
-                <div className="text-3xl font-bold text-blue-200">10,000+</div>
-                <div className="text-blue-100">Newsletter Subscribers</div>
+                <div className="text-3xl font-bold text-blue-200">✅</div>
+                <div className="text-blue-100">Hand-Verified Jobs Only</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-blue-200">500+</div>
-                <div className="text-blue-100">Jobs Added Weekly</div>
+                <div className="text-3xl font-bold text-blue-200">🚫</div>
+                <div className="text-blue-100">No Scams or MLMs</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-blue-200">95%</div>
-                <div className="text-blue-100">Verified Job Success Rate</div>
+                <div className="text-3xl font-bold text-blue-200">🆓</div>
+                <div className="text-blue-100">Completely Free Service</div>
               </div>
             </div>
           </div>
