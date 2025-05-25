@@ -14,6 +14,7 @@ import { isMockJob } from '../../types/job';
 const validCategorySlugs = [
   'data-entry',
   'administrative',
+  'administrative-assistant',
   'customer-service',
   'transcription',
   'virtual-assistant',
@@ -31,6 +32,7 @@ const createGenericCategory = (slug: string) => {
   const nameMap: Record<string, string> = {
     'data-entry': 'Remote Data Entry Jobs',
     'administrative': 'Remote Administrative Jobs',
+    'administrative-assistant': 'Remote Administrative Assistant Jobs',
     'customer-service': 'Remote Customer Service Jobs',
     'transcription': 'Remote Transcription Jobs',
     'virtual-assistant': 'Remote Virtual Assistant Jobs',
@@ -172,6 +174,45 @@ Companies across all industries hire remote administrative professionals, includ
       { name: 'Virtual Assistant Jobs', slug: 'virtual-assistant' },
       { name: 'Data Entry Jobs', slug: 'data-entry' },
       { name: 'Customer Service Jobs', slug: 'customer-service' }
+    ]
+  },
+  'administrative-assistant': {
+    name: 'Remote Administrative Assistant Jobs',
+    description: `Administrative assistant jobs involve providing comprehensive support to executives, teams, and organizations through task management, scheduling, correspondence, document preparation, and general office administration. Remote administrative assistants work from home while maintaining professional standards and clear communication.
+
+These positions are ideal for highly organized, detail-oriented professionals with excellent communication skills and the ability to manage multiple priorities simultaneously. Administrative assistant roles typically require proficiency with office productivity tools, email management systems, calendar applications, and video conferencing platforms.
+
+Remote administrative assistant positions typically pay between $16-28 per hour, with executive assistants and specialized roles earning $25-35+ per hour. Most positions require intermediate to advanced computer skills, professional communication abilities, and experience with standard office software applications.
+
+Companies across all industries hire remote administrative assistants, from small startups to Fortune 500 corporations. Many positions offer flexible scheduling, professional development opportunities, and the chance to work with executive-level professionals while maintaining work-life balance.`,
+    requirements: [
+      { title: 'Organization Skills', description: 'Expert-level task and priority management' },
+      { title: 'Software Proficiency', description: 'Microsoft Office Suite, Google Workspace, project management tools' },
+      { title: 'Communication', description: 'Professional written and verbal communication skills' },
+      { title: 'Calendar Management', description: 'Advanced scheduling and coordination experience' }
+    ],
+    faqs: [
+      {
+        question: 'What does a remote administrative assistant do?',
+        answer: 'Remote administrative assistants handle executive support tasks including email and calendar management, scheduling meetings and appointments, preparing documents and presentations, managing filing systems, coordinating travel arrangements, and providing general administrative support. They work closely with executives and teams to ensure smooth daily operations.'
+      },
+      {
+        question: 'What qualifications do I need for remote administrative assistant jobs?',
+        answer: 'Most positions require a high school diploma or equivalent, with many preferring some college education or relevant certification. Key requirements include 1-3 years of administrative experience, proficiency with Microsoft Office or Google Workspace, excellent communication skills, and the ability to work independently in a remote environment.'
+      },
+      {
+        question: 'How much do remote administrative assistants earn?',
+        answer: 'Remote administrative assistant salaries typically range from $16-28 per hour, depending on experience, specialization, and employer. Entry-level positions start around $16-20 per hour, while experienced administrative assistants supporting executives can earn $25-35+ per hour. Some positions offer additional benefits and bonuses.'
+      },
+      {
+        question: 'What is the difference between an administrative assistant and a virtual assistant?',
+        answer: 'Administrative assistants typically work as employees of a single company and focus on supporting specific executives or departments. Virtual assistants often work as freelancers or contractors supporting multiple clients with more diverse tasks. Administrative assistants usually have more structured schedules and deeper integration with company operations.'
+      }
+    ],
+    relatedCategories: [
+      { name: 'Administrative Jobs', slug: 'administrative' },
+      { name: 'Virtual Assistant Jobs', slug: 'virtual-assistant' },
+      { name: 'Data Entry Jobs', slug: 'data-entry' }
     ]
   },
   'customer-service': {

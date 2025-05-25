@@ -8,6 +8,7 @@ import { GetServerSideProps } from 'next';
 const jobCategoryDefinitions = [
   { name: 'Data Entry Jobs', slug: 'data-entry' },
   { name: 'Administrative Jobs', slug: 'administrative' },
+  { name: 'Administrative Assistant Jobs', slug: 'administrative-assistant' },
   { name: 'Customer Service Jobs', slug: 'customer-service' },
   { name: 'Transcription Jobs', slug: 'transcription' },
   { name: 'Virtual Assistant Jobs', slug: 'virtual-assistant' },

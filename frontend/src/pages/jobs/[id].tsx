@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -23,23 +23,33 @@ import OrganizationSchema from '../../components/seo/OrganizationSchema';
 import BreadcrumbSchema from '../../components/seo/BreadcrumbSchema';
 import FAQSchema from '../../components/seo/FAQSchema';
 import Layout from '../../components/layout/Layout';
+// import ShareButton from '../../components/common/ShareButton';
+import ErrorBoundary from '../../components/common/ErrorBoundary';
+import JobCard from '../../components/common/JobCard';
+import { connectToDatabase } from '../../utils/mongodb';
+import { formatJobDate } from '../../utils/jobUtils';
 
 interface JobDetailsPageProps {
   job: EnhancedJobListing;
   similarJobs: EnhancedJobListing[];
   peopleAlsoViewed: EnhancedJobListing[];
   relatedCategories: Array<{ name: string; slug: string; jobCount: number; }>;
+  relatedJobs: EnhancedJobListing[];
+  moreFromCompany: EnhancedJobListing[];
 }
 
 const JobDetailsPage: React.FC<JobDetailsPageProps> = ({ 
   job, 
   similarJobs, 
   peopleAlsoViewed, 
-  relatedCategories 
+  relatedCategories,
+  relatedJobs,
+  moreFromCompany
 }) => {
   const router = useRouter();
   const descriptionRef = useRef<HTMLDivElement>(null);
   const { addJobToRecentlyViewed } = useRecentlyViewedJobs();
+  const [isBookmarked, setIsBookmarked] = useState(false);
   
   useEffect(() => {
     if (job?._id) {
@@ -63,6 +73,29 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
       }).catch(err => console.error('Analytics error:', err));
     }
   }, [job, addJobToRecentlyViewed]);
+
+  useEffect(() => {
+    if (job) {
+      const bookmarks = JSON.parse(localStorage.getItem('bookmarkedJobs') || '[]');
+      setIsBookmarked(bookmarks.includes(job._id));
+    }
+  }, [job]);
+
+  const toggleBookmark = () => {
+    if (!job) return;
+    
+    const bookmarks = JSON.parse(localStorage.getItem('bookmarkedJobs') || '[]');
+    let newBookmarks;
+    
+    if (isBookmarked) {
+      newBookmarks = bookmarks.filter((id: string) => id !== job._id);
+    } else {
+      newBookmarks = [...bookmarks, job._id];
+    }
+    
+    localStorage.setItem('bookmarkedJobs', JSON.stringify(newBookmarks));
+    setIsBookmarked(!isBookmarked);
+  };
 
   const isVerified = job?.qualityScore >= 8;
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -356,6 +389,62 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                   currentJob={job}
                   viewedJobs={peopleAlsoViewed}
                 />
+
+                {/* Related Jobs Section */}
+                {relatedJobs && relatedJobs.length > 0 && (
+                  <div className="bg-white rounded-lg shadow border border-gray-200 p-6 mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Related Jobs</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {relatedJobs.slice(0, 6).map((relatedJob) => (
+                        <div key={relatedJob._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                          <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
+                            <Link href={`/jobs/${relatedJob._id}`} className="hover:text-blue-600">
+                              {relatedJob.title}
+                            </Link>
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-2">{relatedJob.company}</p>
+                          <p className="text-xs text-gray-500">{relatedJob.location}</p>
+                          {relatedJob.salary && (
+                            <p className="text-xs text-green-600 font-medium mt-1">{relatedJob.salary}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 text-center">
+                      <Link
+                        href="/jobs"
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      >
+                        Browse All Jobs
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* More Jobs from Company */}
+                {moreFromCompany && moreFromCompany.length > 0 && (
+                  <div className="bg-white rounded-lg shadow border border-gray-200 p-6 mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      More Jobs from {job.company}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {moreFromCompany.slice(0, 4).map((companyJob) => (
+                        <div key={companyJob._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                          <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
+                            <Link href={`/jobs/${companyJob._id}`} className="hover:text-blue-600">
+                              {companyJob.title}
+                            </Link>
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-2">{companyJob.company}</p>
+                          <p className="text-xs text-gray-500">{companyJob.location}</p>
+                          {companyJob.salary && (
+                            <p className="text-xs text-green-600 font-medium mt-1">{companyJob.salary}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -382,147 +471,72 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    // Direct API URL - don't try to be clever with URLs
-    const apiUrl = `https://clickclickjob.vercel.app/api/jobs/${id}`;
-    console.log(`Fetching job details from: ${apiUrl}`);
+    const { db } = await connectToDatabase();
     
-    // Test direct API access first
-    try {
-      const testResponse = await fetch(apiUrl, {
-        method: 'HEAD',
-        headers: {
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache'
-        }
-      });
-      
-      if (!testResponse.ok) {
-        console.error(`API endpoint returned ${testResponse.status}`);
-      } else {
-        console.log('API endpoint is accessible');
-      }
-    } catch (e) {
-      console.error('Error pre-testing API endpoint:', e);
-    }
-    
-    // Fetch job details with more verbose error handling
-    const jobResponse = await fetch(apiUrl, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'ClickClickJob/1.0',
-        'Cache-Control': 'no-cache'
-      }
+    // Find the job by ID or uniqueIdentifier
+    const job = await db.collection('jobs').findOne({
+      $or: [
+        { _id: id },
+        { uniqueIdentifier: id }
+      ]
     });
-    
-    if (!jobResponse.ok) {
-      const errorText = await jobResponse.text();
-      console.error(`Failed to fetch job: ${jobResponse.status}`, errorText);
-      return { notFound: true };
-    }
-    
-    let job;
-    try {
-      job = await jobResponse.json();
-    } catch (e) {
-      console.error('Error parsing job JSON:', e);
-      return { notFound: true };
-    }
-    
-    // Validate job data
-    if (!job || !job._id) {
-      console.error('Invalid job data received:', job);
-      return { notFound: true };
+
+    if (!job) {
+      return {
+        notFound: true,
+      };
     }
 
-    // Ensure all required fields are present
-    if (!job.title || !job.company) {
-      console.error('Job missing required fields:', job._id);
-      return { notFound: true };
-    }
-
-    // Normalize dates
-    const normalizeDate = (date: string | Date | null) => {
-      if (!date) return null;
-      try {
-        return new Date(date).toISOString();
-      } catch (e) {
-        return null;
-      }
+    // Get related jobs (same category or similar title words)
+    const titleWords = job.title.toLowerCase().split(' ')
+      .filter((word: string) => word.length > 3 && !['the', 'and', 'for', 'with', 'this', 'that'].includes(word))
+      .slice(0, 3);
+    
+    const relatedJobsQuery: any = {
+      _id: { $ne: job._id },
+      $or: [
+        { jobCategory: job.jobCategory },
+        { title: { $regex: new RegExp(titleWords.join('|'), 'i') } }
+      ]
     };
 
-    job.postedDate = normalizeDate(job.postedDate);
-    job.scrapedDate = normalizeDate(job.scrapedDate);
-    job.expiresAt = normalizeDate(job.expiresAt);
-    job.createdAt = normalizeDate(job.createdAt);
-    job.updatedAt = normalizeDate(job.updatedAt);
+    const relatedJobs = await db.collection('jobs')
+      .find(relatedJobsQuery)
+      .limit(6)
+      .sort({ qualityScore: -1, postedDate: -1 })
+      .toArray();
 
-    // Ensure description exists
-    if (!job.description) {
-      job.description = `<p>Apply for this ${job.title} position at ${job.company}.</p>
-      <p>This is a remote role with competitive compensation.</p>`;
-    }
+    // Get more jobs from the same company
+    const moreFromCompany = await db.collection('jobs')
+      .find({
+        _id: { $ne: job._id },
+        company: job.company
+      })
+      .limit(4)
+      .sort({ postedDate: -1 })
+      .toArray();
 
-    // Ensure apply URL is valid
-    if (!job.url || job.url.includes('example.com') || !job.url.startsWith('http')) {
-      job.url = job.sourceUrl || (job.company?.careerUrl ? job.company.careerUrl : '');
-    }
-    
-    // Ensure job skills are populated
-    if (!job.skills || !Array.isArray(job.skills) || job.skills.length === 0) {
-      // Generate some reasonable default skills based on job title
-      const defaultSkills = [];
-      
-      if (job.title.toLowerCase().includes('data entry')) {
-        defaultSkills.push('Data Entry', 'Typing', 'Attention to Detail', 'Microsoft Office');
-      } else if (job.title.toLowerCase().includes('assistant')) {
-        defaultSkills.push('Communication', 'Organization', 'Time Management', 'Microsoft Office');
-      } else if (job.title.toLowerCase().includes('bookkeeping')) {
-        defaultSkills.push('QuickBooks', 'Accounting', 'Financial Reporting', 'Data Entry');
-      } else if (job.title.toLowerCase().includes('customer')) {
-        defaultSkills.push('Customer Service', 'Communication', 'Problem Solving', 'CRM Software');
-      } else {
-        defaultSkills.push('Remote Work', 'Communication', 'Time Management', 'Organization');
-      }
-      
-      job.skills = defaultSkills;
-    }
-    
-    // Ensure job type is populated
-    if (!job.jobType) {
-      // Try to infer job type from the title or description
-      if (job.title.toLowerCase().includes('part-time') || 
-          (job.description && job.description.toLowerCase().includes('part-time'))) {
-        job.jobType = 'Part-time';
-      } else if (job.title.toLowerCase().includes('contract') || 
-                (job.description && job.description.toLowerCase().includes('contract'))) {
-        job.jobType = 'Contract';
-      } else {
-        job.jobType = 'Full-time';
-      }
-    }
-    
-    console.log(`Successfully fetched job: ${job.title}`);
-    
-    // Manually added similar jobs for fallback
-    const similarJobs: EnhancedJobListing[] = [];
-    
     return {
       props: {
-        job,
-        similarJobs,
-        peopleAlsoViewed: [], 
-        relatedCategories: [
-          { name: 'Data Entry Jobs', slug: 'data-entry', jobCount: 56 },
-          { name: 'Administrative Assistant', slug: 'administrative-assistant', jobCount: 42 },
-          { name: 'Customer Service', slug: 'customer-service', jobCount: 78 }
-        ],
-      }
+        job: JSON.parse(JSON.stringify(job)),
+        similarJobs: [],
+        peopleAlsoViewed: [],
+        relatedCategories: [],
+        relatedJobs: JSON.parse(JSON.stringify(relatedJobs)),
+        moreFromCompany: JSON.parse(JSON.stringify(moreFromCompany)),
+      },
     };
   } catch (error) {
-    console.error('Error in getServerSideProps:', error);
+    console.error('Error fetching job:', error);
     return {
-      notFound: true
+      props: {
+        job: null,
+        similarJobs: [],
+        peopleAlsoViewed: [],
+        relatedCategories: [],
+        relatedJobs: [],
+        moreFromCompany: [],
+      },
     };
   }
 };
