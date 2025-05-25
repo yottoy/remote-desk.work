@@ -49,7 +49,7 @@ const Layout: React.FC<LayoutProps> = ({
                 <Link href="/categories" className={`text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium ${router.pathname.startsWith('/categories') ? 'text-blue-600' : ''}`}>
                   Categories
                 </Link>
-                <Link href="/newsletter" className={`text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium ${router.pathname === '/newsletter' ? 'text-blue-600' : ''}`}>
+                <Link href="/newsletter" className={`text-blue-600 hover:text-blue-800 px-3 py-2 text-sm font-bold ${router.pathname === '/newsletter' ? 'text-blue-800' : ''}`}>
                   Newsletter
                 </Link>
                 <Link href="/about" className={`text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium ${router.pathname === '/about' ? 'text-blue-600' : ''}`}>
