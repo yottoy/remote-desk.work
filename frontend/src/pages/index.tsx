@@ -205,8 +205,13 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
             />
           </div>
           
-          <div className="mt-6 text-sm text-blue-700 font-medium">
-            → {recentJobsCount} new opportunities just added! ←
+          <div className="mt-6 text-sm">
+            <Link 
+              href="/jobs"
+              className="text-blue-700 font-medium hover:text-blue-800 hover:underline cursor-pointer transition-colors duration-200"
+            >
+              → {recentJobsCount} new opportunities just added! ←
+            </Link>
           </div>
         </div>
       </section>
