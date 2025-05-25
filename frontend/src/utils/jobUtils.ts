@@ -124,3 +124,26 @@ export function detectJobCategory(job: Job | EnhancedJobListing): string {
     return 'administrative'; // Default category
   }
 }
+
+/**
+ * Counts jobs added in the past 7 days
+ */
+export function countRecentJobs(jobs: (Job | EnhancedJobListing)[], days: number = 7): number {
+  if (!jobs || jobs.length === 0) return 0;
+  
+  const now = new Date();
+  const daysAgo = new Date();
+  daysAgo.setDate(now.getDate() - days);
+  
+  return jobs.filter(job => {
+    if (!job.postedDate) return false;
+    
+    try {
+      const postedDate = job.postedDate instanceof Date ? job.postedDate : new Date(job.postedDate);
+      return !isNaN(postedDate.getTime()) && postedDate >= daysAgo;
+    } catch (error) {
+      console.error('Error parsing job posted date:', error);
+      return false;
+    }
+  }).length;
+}

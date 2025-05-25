@@ -11,6 +11,7 @@ import { EmailCaptureForm } from '../components/email-capture/EmailCaptureForm';
 import { useRouter } from 'next/router';
 import type { Job } from '../types/job';
 import { isMockJob } from '../types/job';
+import { countRecentJobs } from '../utils/jobUtils';
 
 // Job categories
 const jobCategories = [
@@ -24,6 +25,7 @@ const jobCategories = [
 
 interface HomePageProps {
   featuredJobs: Job[];
+  recentJobsCount: number;
   error?: string;
 }
 
@@ -116,6 +118,10 @@ export const getServerSideProps = async () => {
     const validJobs = filterMockJobs(jobs.filter((job: any) => !isMockJob(job)));
     console.log(`Processed ${validJobs.length} valid jobs for display after filtering out mock data`);
     
+    // Count jobs added in the past 7 days
+    const recentJobsCount = countRecentJobs(validJobs, 7);
+    console.log(`Found ${recentJobsCount} jobs added in the past 7 days`);
+    
     if (validJobs.length > 0) {
       console.log('First job sample:', {
         id: validJobs[0]._id,
@@ -127,7 +133,8 @@ export const getServerSideProps = async () => {
     
     return {
       props: {
-        featuredJobs: validJobs.slice(0, 6) // Ensure we only get at most 6 jobs
+        featuredJobs: validJobs.slice(0, 6), // Ensure we only get at most 6 jobs
+        recentJobsCount
       }
     };
   } catch (error) {
@@ -135,13 +142,14 @@ export const getServerSideProps = async () => {
     return {
       props: {
         featuredJobs: [],
+        recentJobsCount: 0,
         error: error instanceof Error ? error.message : 'Failed to load jobs'
       }
     };
   }
 };
 
-const HomePage: React.FC<HomePageProps> = ({ featuredJobs, error }) => {
+const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, error }) => {
   const router = useRouter();
   
   // Display error if present
@@ -198,7 +206,7 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, error }) => {
           </div>
           
           <div className="mt-6 text-sm text-blue-700 font-medium">
-            → Browse high-quality remote opportunities updated regularly ←
+            → Just added {recentJobsCount} new high-quality remote opportunities ←
           </div>
         </div>
       </section>
