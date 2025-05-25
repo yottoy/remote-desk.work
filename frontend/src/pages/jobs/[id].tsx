@@ -473,13 +473,34 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const { db } = await connectToDatabase();
     
+    if (!db) {
+      console.error('Failed to connect to database');
+      return { notFound: true };
+    }
+    
     // Find the job by ID or uniqueIdentifier
-    const job = await db.collection('jobs').findOne({
-      $or: [
-        { _id: id },
-        { uniqueIdentifier: id }
-      ]
-    });
+    // Try to convert to ObjectId first, then fallback to string search
+    const { ObjectId } = require('mongodb');
+    let job = null;
+    
+    // Try ObjectId format first
+    try {
+      if (ObjectId.isValid(id)) {
+        job = await db.collection('jobs').findOne({ _id: new ObjectId(id) });
+      }
+    } catch (e) {
+      console.log('Not a valid ObjectId, trying string search');
+    }
+    
+    // If not found by ObjectId, try string search
+    if (!job) {
+      job = await db.collection('jobs').findOne({
+        $or: [
+          { _id: id },
+          { uniqueIdentifier: id }
+        ]
+      });
+    }
 
     if (!job) {
       return {
