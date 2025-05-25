@@ -14,6 +14,23 @@ interface Job {
   createdAt?: Date;
 }
 
+// Hardcoded category slugs that match the ones used in the category pages
+const STATIC_CATEGORY_SLUGS = [
+  'data-entry',
+  'administrative',
+  'customer-service',
+  'transcription',
+  'virtual-assistant',
+  'data-processing',
+  'customer-support',
+  'bookkeeping',
+  'content-writing',
+  'social-media',
+  'project-management',
+  'quality-assurance',
+  'administrative-assistant'
+];
+
 const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickclickjob.com';
@@ -56,7 +73,12 @@ const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
     const staticUrls = [
       { url: '', changefreq: 'daily', priority: '1.0' },
       { url: 'jobs', changefreq: 'daily', priority: '0.9' },
-      { url: 'about', changefreq: 'monthly', priority: '0.5' }
+      { url: 'about', changefreq: 'monthly', priority: '0.5' },
+      { url: 'categories', changefreq: 'weekly', priority: '0.8' },
+      { url: 'contact', changefreq: 'monthly', priority: '0.5' },
+      { url: 'privacy-policy', changefreq: 'monthly', priority: '0.3' },
+      { url: 'terms-of-service', changefreq: 'monthly', priority: '0.3' },
+      { url: 'resources/remote-work-guide', changefreq: 'monthly', priority: '0.6' }
     ];
     
     // Start building the sitemap XML
@@ -75,7 +97,7 @@ const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
       res.write(`  </url>\n`);
     });
     
-    // Add category URLs if available
+    // Add database category URLs if available
     categories.forEach((category: Category) => {
       if (category.slug) {
         res.write(`  <url>\n`);
@@ -84,6 +106,19 @@ const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
         if (lastmod) {
           res.write(`    <lastmod>${new Date(lastmod).toISOString()}</lastmod>\n`);
         }
+        res.write(`    <changefreq>weekly</changefreq>\n`);
+        res.write(`    <priority>0.7</priority>\n`);
+        res.write(`  </url>\n`);
+      }
+    });
+    
+    // Add hardcoded category URLs to ensure they're always included
+    STATIC_CATEGORY_SLUGS.forEach((categorySlug: string) => {
+      // Only add if it's not already included from the database
+      const alreadyIncluded = categories.some(cat => cat.slug === categorySlug);
+      if (!alreadyIncluded) {
+        res.write(`  <url>\n`);
+        res.write(`    <loc>${baseUrl}/categories/${categorySlug}</loc>\n`);
         res.write(`    <changefreq>weekly</changefreq>\n`);
         res.write(`    <priority>0.7</priority>\n`);
         res.write(`  </url>\n`);
@@ -131,6 +166,38 @@ const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
         <changefreq>monthly</changefreq>
         <priority>0.5</priority>
       </url>
+      <url>
+        <loc>${baseUrl}/categories</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+      </url>
+      <url>
+        <loc>${baseUrl}/contact</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+      </url>
+      <url>
+        <loc>${baseUrl}/privacy-policy</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.3</priority>
+      </url>
+      <url>
+        <loc>${baseUrl}/terms-of-service</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.3</priority>
+      </url>
+      <url>
+        <loc>${baseUrl}/resources/remote-work-guide</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+      </url>` +
+    STATIC_CATEGORY_SLUGS.map(slug => 
+      `      <url>
+        <loc>${baseUrl}/categories/${slug}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+      </url>`
+    ).join('\n') + `
     </urlset>`;
     
     res.setHeader('Content-Type', 'text/xml');

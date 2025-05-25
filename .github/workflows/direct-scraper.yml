@@ -94,6 +94,44 @@ jobs:
             fi
           done
       
+      - name: Set up Node.js for MongoDB import
+        if: success()  # Only if scraping succeeded
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node.js dependencies for import
+        if: success()  # Only if scraping succeeded
+        run: npm ci
+
+      - name: Import results to MongoDB
+        if: success()  # Only run if scrapers succeeded
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+        run: |
+          echo "Starting MongoDB import..." | tee logs/mongodb-import.log
+          # Check if we have any result files to import
+          result_files=$(find results -name "*results*.json" -size +100c | head -5)
+          if [ -z "$result_files" ]; then
+            echo "No significant result files found to import" | tee -a logs/mongodb-import.log
+          else
+            echo "Found result files to import:" | tee -a logs/mongodb-import.log
+            echo "$result_files" | tee -a logs/mongodb-import.log
+            
+            # Run the import with overwrite mode to replace old data with fresh data
+            node import-scraper-to-mongodb.js --overwrite 2>&1 | tee -a logs/mongodb-import.log
+            import_exit_code=$?
+            echo "MongoDB import exit code: $import_exit_code" | tee -a logs/mongodb-import.log
+            
+            if [ $import_exit_code -eq 0 ]; then
+              echo "✅ Successfully imported fresh jobs to MongoDB!" | tee -a logs/mongodb-import.log
+            else
+              echo "❌ MongoDB import failed" | tee -a logs/mongodb-import.log
+            fi
+          fi
+
       - name: Upload job results
         if: always()  # Always attempt to upload
         uses: actions/upload-artifact@v4

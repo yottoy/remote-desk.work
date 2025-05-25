@@ -9,12 +9,15 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, status, BackgroundTasks
+from fastapi import FastAPI, HTTPException, status, BackgroundTasks, Depends, Request
 from pydantic import BaseModel, Field, validator
 from dotenv import load_dotenv
 from jobspy import scrape_jobs, Site
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import requests
+from requests.packages.urllib3.util.connection import allowed_gai_family
+import tls_client
 
 # Load environment variables
 load_dotenv()
@@ -31,31 +34,33 @@ logging.basicConfig(
 logger = logging.getLogger("jobspy_bridge")
 
 # Get environment variables
-HOST = os.getenv("JOBSPY_BRIDGE_HOST", "127.0.0.1")
-PORT = int(os.getenv("JOBSPY_BRIDGE_PORT", "8000"))
+HOST = os.getenv("JOBSPY_BRIDGE_HOST", "0.0.0.0")  # Changed to 0.0.0.0 for Vercel
+PORT = int(os.getenv("JOBSPY_BRIDGE_PORT", "3000"))  # Changed to 3000 for Vercel
 MAX_RETRY_ATTEMPTS = int(os.getenv("MAX_RETRY_ATTEMPTS", "3"))
 RETRY_DELAY = float(os.getenv("RETRY_DELAY", "5"))
 MIN_REQUEST_INTERVAL = float(os.getenv("MIN_REQUEST_INTERVAL", "2.0"))
 USE_RANDOM_USER_AGENTS = os.getenv("USE_RANDOM_USER_AGENTS", "false").lower() == "true"
 
-# Force IPv4
+# Configure socket to use IPv4 only
+socket.setdefaulttimeout(30)  # 30 second timeout
+
+# Force IPv4 only
 if ":" in HOST:
     logger.warning(f"IPv6 address detected: {HOST}. Forcing IPv4 only.")
     HOST = "127.0.0.1"
 
-# Configure socket to use IPv4 only
-socket.setdefaulttimeout(30)  # 30 second timeout
-original_getaddrinfo = socket.getaddrinfo
+# Configure requests to use IPv4
+def _allowed_gai_family():
+    return socket.AF_INET
 
-def getaddrinfo_ipv4_only(*args, **kwargs):
-    """Force IPv4 only for all socket connections"""
-    family = kwargs.get('family', socket.AF_UNSPEC)
-    if family == socket.AF_UNSPEC:
-        kwargs['family'] = socket.AF_INET  # Force IPv4
-    return original_getaddrinfo(*args, **kwargs)
+socket._getaddrinfo = socket.getaddrinfo
+socket._allowed_gai_family = _allowed_gai_family
 
-# Override the getaddrinfo function
-socket.getaddrinfo = getaddrinfo_ipv4_only
+# Configure tls_client to use IPv4
+def create_ipv4_socket(*args, **kwargs):
+    return socket.socket(family=socket.AF_INET)
+
+tls_client.Session._create_socket = create_ipv4_socket
 
 # Common user agents for rotating
 USER_AGENTS = [
@@ -75,12 +80,20 @@ USER_AGENTS = [
 last_request_time = {}
 
 # Create FastAPI app
-app = FastAPI(title="JobSpy Bridge API", version="1.0")
+app = FastAPI(title="JobSpy Bridge API")
 
-# Add CORS middleware
+# Update CORS settings to allow specific origins
+origins = [
+    "http://localhost:3000",
+    "http://localhost:3002",
+    "https://clickclickjob-*.vercel.app",
+    "https://clickclickjob.vercel.app",
+    "https://*.vercel.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -126,31 +139,12 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    # Check system information
-    import platform
-    import sys
-    
-    system_info = {
+    return {
         "status": "ok",
-        "api_version": "1.0",
-        "python_version": sys.version,
-        "platform": platform.platform(),
-        "host": HOST,
-        "port": PORT,
-        "socket_family": "IPv4 only",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0",
+        "environment": os.getenv("ENVIRONMENT", "development")
     }
-    
-    # Test socket binding
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((HOST, 0))  # Bind to an available port
-        system_info["socket_test"] = "passed"
-        s.close()
-    except Exception as e:
-        system_info["socket_test"] = f"failed: {str(e)}"
-    
-    return system_info
 
 @app.get("/supported-sites")
 async def supported_sites():
@@ -161,24 +155,14 @@ def get_random_user_agent():
     return random.choice(USER_AGENTS) if USE_RANDOM_USER_AGENTS else None
 
 def apply_rate_limiting(site_name: str):
-    """Apply rate limiting for specific sites with more randomization"""
-    now = time.time()
+    """Apply rate limiting between requests"""
+    current_time = time.time()
     if site_name in last_request_time:
-        elapsed = now - last_request_time[site_name]
-        # Add more randomness to bypass rate limiting detection
-        min_delay = MIN_REQUEST_INTERVAL + random.uniform(1.0, 8.0)  # Higher random component
-        if elapsed < min_delay:
-            # Longer sleep with much more variation
-            sleep_time = min_delay - elapsed + random.uniform(1.5, 10.0)
-            logger.info(f"Rate limiting for {site_name}, sleeping for {sleep_time:.2f} seconds")
+        time_since_last = current_time - last_request_time[site_name]
+        if time_since_last < MIN_REQUEST_INTERVAL:
+            sleep_time = MIN_REQUEST_INTERVAL - time_since_last
             time.sleep(sleep_time)
-    
-    # Add additional random delay before updating the timestamp
-    # This helps avoid patterns in request timing
-    time.sleep(random.uniform(0.2, 2.0))
-    
-    # Update the last request time
-    last_request_time[site_name] = time.time()
+    last_request_time[site_name] = current_time
 
 async def scrape_with_retry(
     site_name: Site,
@@ -227,72 +211,42 @@ async def scrape_with_retry(
                 user_agent=user_agent
             )
             
-            # Filter out jobs with excluded keywords
-            if exclude_keywords and not jobs_df.empty:
-                original_count = len(jobs_df)
-                
-                # Create a filter based on excluded keywords in title and description
-                def contains_excluded_keyword(row):
-                    title = str(row.get('title', '')).lower()
-                    description = str(row.get('description', '')).lower()
-                    
-                    for keyword in exclude_keywords:
-                        if keyword.lower() in title or keyword.lower() in description:
-                            return True
-                    return False
-                
-                # Apply the filter
-                jobs_df = jobs_df[~jobs_df.apply(contains_excluded_keyword, axis=1)]
-                
-                filtered_count = original_count - len(jobs_df)
-                if filtered_count > 0:
-                    logger.info(f"Filtered out {filtered_count} jobs containing excluded keywords")
-            
             return jobs_df
             
         except Exception as e:
-            attempt += 1
             last_error = e
-            logger.warning(f"Error on attempt {attempt}/{MAX_RETRY_ATTEMPTS} for {site_name.name} - {search_term}: {str(e)}")
-            
+            attempt += 1
             if attempt < MAX_RETRY_ATTEMPTS:
-                # Exponential backoff with jitter
-                sleep_time = RETRY_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 1)
-                logger.info(f"Retrying in {sleep_time:.2f} seconds...")
-                time.sleep(sleep_time)
-    
-    # If we get here, all attempts failed
-    logger.error(f"All {MAX_RETRY_ATTEMPTS} attempts failed for {site_name.name} - {search_term}")
-    if last_error:
-        logger.error(f"Last error: {last_error}")
-    
-    # Return empty DataFrame instead of raising exception
-    return pd.DataFrame()
+                wait_time = RETRY_DELAY * (2 ** (attempt - 1))  # Exponential backoff
+                logger.warning(f"Attempt {attempt} failed for {site_name.name}: {str(e)}. Retrying in {wait_time} seconds...")
+                time.sleep(wait_time)
+            else:
+                logger.error(f"All {MAX_RETRY_ATTEMPTS} attempts failed for {site_name.name}: {str(last_error)}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to scrape {site_name.name} after {MAX_RETRY_ATTEMPTS} attempts: {str(last_error)}"
+                )
 
 @app.post("/scrape-jobs", response_model=JobResponse)
 async def scrape_all_jobs(request: JobRequest, background_tasks: BackgroundTasks):
     try:
-        logger.info(f"Scraping jobs from {request.site_names} with search terms: {request.search_terms}")
-        
         # Convert site names to Site enums
         sites = []
         for site_name in request.site_names:
-            site_upper = site_name.upper()
             try:
-                sites.append(Site[site_upper])
+                site = Site[site_name.upper()]
+                sites.append(site)
             except KeyError:
-                logger.warning(f"Unknown site name: {site_name}")
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, 
-                    detail=f"Unknown site name: {site_name}. Supported sites are: {[s.name.lower() for s in Site]}"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Unsupported site: {site_name}"
                 )
         
-        all_jobs = []
-        start_time = datetime.now()
-        
-        # Log exclusion keywords if present
-        if request.exclude_keywords:
-            logger.info(f"Will exclude jobs containing keywords: {request.exclude_keywords}")
+        if not sites:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No valid sites specified"
+            )
         
         # Scrape each search term
         for search_term in request.search_terms:
@@ -317,101 +271,43 @@ async def scrape_all_jobs(request: JobRequest, background_tasks: BackgroundTasks
                         exclude_keywords=request.exclude_keywords
                     )
                     
-                    if not jobs_df.empty:
-                        logger.info(f"Found {len(jobs_df)} jobs for search term: {search_term} from {site.name}")
-                        
-                        # Convert DataFrame to records
-                        term_jobs = jobs_df.to_dict(orient="records")
-                        
-                        # Add search query and site to each job
-                        for job in term_jobs:
-                            job["search_query"] = search_term
-                            job["site_source"] = site.name.lower()
-                            
-                            # Convert all date fields to ISO format strings
-                            for field in job.keys():
-                                if isinstance(job[field], pd.Timestamp):
-                                    job[field] = job[field].isoformat()
-                                elif field.lower().endswith('date') and job[field] is not None:
-                                    if isinstance(job[field], (datetime, pd.Timestamp)):
-                                        job[field] = job[field].isoformat()
-                        
-                        all_jobs.extend(term_jobs)
-                    else:
-                        logger.warning(f"No jobs found for search term: {search_term} from {site.name}")
-                
+                    # Convert DataFrame to list of dicts
+                    jobs = jobs_df.to_dict('records')
+                    
+                    # Return response
+                    return JobResponse(
+                        jobs=jobs,
+                        count=len(jobs),
+                        metadata={
+                            "site": site.name.lower(),
+                            "search_term": search_term,
+                            "location": request.location,
+                            "timestamp": datetime.now().isoformat()
+                        }
+                    )
+                    
                 except Exception as e:
-                    logger.error(f"Error scraping term '{search_term}' from {site.name}: {str(e)}")
-                    # Continue with next site/term instead of failing completely
-        
-        # Process the final results
-        end_time = datetime.now()
-        duration = (end_time - start_time).total_seconds()
-        
-        # Create metadata
-        metadata = {
-            "search_terms": request.search_terms,
-            "sites": request.site_names,
-            "location": request.location,
-            "duration_seconds": duration,
-            "timestamp": datetime.now().isoformat(),
-            "source": "jobspy",
-            "jobs_per_term": {term: len([j for j in all_jobs if j.get("search_query") == term]) for term in request.search_terms},
-            "jobs_per_site": {site: len([j for j in all_jobs if j.get("site_source") == site.lower()]) for site in request.site_names}
-        }
-        
-        logger.info(f"Scraping complete. Found {len(all_jobs)} total jobs.")
-        
-        return {
-            "jobs": all_jobs,
-            "count": len(all_jobs),
-            "metadata": metadata
-        }
-    
-    except HTTPException:
-        # Re-raise HTTP exceptions directly
-        raise
+                    logger.error(f"Error scraping {site.name}: {str(e)}")
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Error scraping {site.name}: {str(e)}"
+                    )
+                    
     except Exception as e:
-        logger.exception(f"Error during job scraping: {str(e)}")
+        logger.error(f"Error in scrape_all_jobs: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error during job scraping: {str(e)}"
+            detail=str(e)
         )
-
-# Maintain backward compatibility with the old indeed-only endpoint
-@app.post("/scrape-indeed", response_model=JobResponse)
-async def scrape_indeed(request: JobRequest, background_tasks: BackgroundTasks):
-    request.site_names = ["indeed"]
-    return await scrape_all_jobs(request, background_tasks)
 
 # Run the API server if executed directly
 if __name__ == "__main__":
-    logger.info(f"Starting JobSpy bridge on http://{HOST}:{PORT} (IPv4 only)")
+    logger.info(f"Starting JobSpy bridge on http://{HOST}:{PORT}")
     try:
-        # Get socket info for localhost to verify it's resolving to IPv4
-        try:
-            addr_info = socket.getaddrinfo("localhost", PORT, socket.AF_INET, socket.SOCK_STREAM)
-            logger.info(f"localhost resolves to: {addr_info[0][4][0]}")
-        except Exception as e:
-            logger.warning(f"Could not resolve localhost: {e}")
-        
-        try:
-            addr_info = socket.getaddrinfo("127.0.0.1", PORT, socket.AF_INET, socket.SOCK_STREAM)
-            logger.info(f"127.0.0.1 resolves to: {addr_info[0][4][0]}")
-        except Exception as e:
-            logger.warning(f"Could not resolve 127.0.0.1: {e}")
-            
-        # Create server with IPv4 binding
-        import socket
+        # Create server with Vercel-compatible configuration
         config = uvicorn.Config(app="jobspy_bridge:app", host=HOST, port=PORT, log_level="info")
         server = uvicorn.Server(config)
         server.run()
     except Exception as e:
         logger.error(f"Failed to start JobSpy bridge: {str(e)}")
-        # Try alternative approaches if the server won't start
-        try:
-            logger.info("Trying alternative server configuration...")
-            uvicorn.run(app, host=HOST, port=PORT, log_level="info")
-        except Exception as e2:
-            logger.error(f"Alternative server configuration also failed: {str(e2)}")
-            logger.error("Unable to start the JobSpy bridge server.") 
+        raise 

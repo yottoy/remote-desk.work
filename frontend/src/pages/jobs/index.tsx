@@ -192,8 +192,8 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
           if (aQuality !== bQuality) return bQuality - aQuality;
           
           // Finally sort by date
-          const aDate = new Date(a.postedAt).getTime();
-          const bDate = new Date(b.postedAt).getTime();
+          const aDate = new Date(a.postedDate).getTime();
+          const bDate = new Date(b.postedDate).getTime();
           
           return bDate - aDate;
         });
@@ -487,7 +487,7 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
                   jobs={filteredJobs.map(job => ({
                     ...job,
                     _id: job._id || '',
-                    postedDate: job.postedAt || new Date()
+                    postedDate: job.postedDate || new Date()
                   }))}
                   title={jobListTitle}
                   isLoading={isLoading}

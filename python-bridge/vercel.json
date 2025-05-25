@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "jobspy_bridge.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "jobspy_bridge.py"
+    }
+  ],
+  "env": {
+    "JOBSPY_BRIDGE_HOST": "0.0.0.0",
+    "JOBSPY_BRIDGE_PORT": "3000"
+  }
+} 

@@ -366,16 +366,39 @@ class WeWorkRemotelyScraper extends BaseScraper {
                          
           // Get description with fallbacks
           let description = '';
+          let descriptionText = '';
           const descriptionEl = document.querySelector('.listing-container') || 
                                document.querySelector('.job') ||
                                document.querySelector('main');
                                
           if (descriptionEl) {
+            // Get the full HTML description
             description = descriptionEl.innerHTML;
+            
+            // Clean up the HTML for better text extraction
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = description;
+            
+            // Remove unwanted elements
+            const elementsToRemove = tempDiv.querySelectorAll('script, style, iframe, noscript');
+            elementsToRemove.forEach(el => el.remove());
+            
+            // Convert HTML to clean text
+            descriptionText = tempDiv.textContent
+              .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+              .replace(/\n+/g, '\n') // Replace multiple newlines with single newline
+              .trim();
+            
+            // Remove any remaining HTML entities
+            descriptionText = descriptionText
+              .replace(/&nbsp;/g, ' ')
+              .replace(/&amp;/g, '&')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"')
+              .replace(/&apos;/g, "'")
+              .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
           }
-          
-          // Get plain text description
-          let descriptionText = description ? descriptionEl.textContent.trim() : '';
           
           // Get date with fallbacks
           let dateString = '';

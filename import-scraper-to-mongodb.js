@@ -118,7 +118,10 @@ async function importToMongoDB(jobs) {
             descriptionText: job.descriptionText || '',
             location: job.location || 'Remote',
             salary: job.salary || '',
-            postedDate: job.postedDate ? new Date(job.postedDate) : new Date(),
+            // Preserve original posting date if available, otherwise use reasonable fallback
+            postedDate: job.postedDate ? new Date(job.postedDate) : 
+                       job.date_posted ? new Date(job.date_posted) : 
+                       new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Default to 7 days ago instead of today
             remote: true, // Admin and data entry jobs are remote
             url: job.url || '',
             source: job.source || job.site_source || 'direct_scraper',
@@ -297,7 +300,10 @@ async function overwriteAllJobs(jobs) {
         descriptionText: job.descriptionText || '',
         location: job.location || 'Remote',
         salary: job.salary || '',
-        postedDate: job.date_posted ? new Date(job.date_posted) : new Date(),
+        // Preserve original posting date if available, otherwise use reasonable fallback
+        postedDate: job.postedDate ? new Date(job.postedDate) : 
+                   job.date_posted ? new Date(job.date_posted) : 
+                   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Default to 7 days ago instead of today
         remote: true, // Admin and data entry jobs are remote
         url: url,
         source: job.source || job.site_source || 'direct_scraper',

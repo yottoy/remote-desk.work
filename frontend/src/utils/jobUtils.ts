@@ -115,12 +115,12 @@ export function detectJobCategory(job: Job | EnhancedJobListing): string {
   } else if (title.includes('virtual assistant') || title.includes('va ') || description.includes('virtual assistant')) {
     return 'virtual-assistant';
   } else if (title.includes('executive assistant') || description.includes('executive assistant')) {
-    return 'executive-assistant';
+    return 'administrative-assistant';
   } else if (title.includes('admin') || title.includes('administrative') || description.includes('administrative')) {
-    return 'admin';
+    return 'administrative';
   } else if (title.includes('customer service') || description.includes('customer service')) {
     return 'customer-service';
   } else {
-    return 'admin'; // Default category
+    return 'administrative'; // Default category
   }
 }

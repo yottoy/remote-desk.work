@@ -319,13 +319,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // If sorting by relevance and there's a search query
         // Using any type here to allow MongoDB's text score sorting
         sortQuery = { score: { $meta: "textScore" }, postedDate: -1 };
+      } else if (sort === 'oldest') {
+        // Sort by oldest first
+        sortQuery = { postedDate: 1 };
       } else {
-        // Priority sorting: Verified/high quality first, then by date
-        sortQuery = { 
-          verified: -1,
-          qualityScore: -1, 
-          postedDate: -1 
-        };
+        // Default sorting: Just by posting date (newest first)
+        // Removed verified/qualityScore since they don't exist in our data
+        sortQuery = { postedDate: -1 };
       }
 
       // Execute query with pagination
@@ -336,11 +336,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .limit(limitNum)
         .toArray();
 
-      // Update postedDate to current date for all jobs
-      const updatedJobs = jobs.map((job: { [key: string]: any }) => ({
-        ...job,
-        postedDate: new Date().toISOString()
-      }));
+      // Preserve original posted dates - DO NOT override with current date
+      const processedJobs = jobs.map((job: { [key: string]: any }) => {
+        // Debug: Log the original postedDate from database
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`Job "${job.title?.substring(0, 30)}" DB postedDate:`, job.postedDate);
+        }
+        
+        return {
+          ...job,
+          // Ensure postedDate is properly formatted but preserve the original date
+          postedDate: job.postedDate ? 
+            (job.postedDate instanceof Date ? job.postedDate.toISOString() : job.postedDate) : 
+            new Date().toISOString() // Only use current date if no posting date exists
+        };
+      });
 
       // Get total count for pagination
       const totalJobs = await jobsCollection.countDocuments(filter);
@@ -355,7 +365,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // Return jobs with pagination metadata
       return res.status(200).json({
-        jobs: updatedJobs,
+        jobs: processedJobs,
         pagination: {
           totalJobs,
           totalPages: Math.ceil(totalJobs / limitNum),

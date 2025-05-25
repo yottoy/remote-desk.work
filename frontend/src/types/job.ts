@@ -1,11 +1,11 @@
 export interface Job {
-  _id?: string;
+  _id: string;
   title: string;
   company: string;
   location: string;
   description: string;
   url: string;
-  postedAt: Date;
+  postedDate: Date;
   site: string;
   keywords: string[];
   isMock?: boolean;

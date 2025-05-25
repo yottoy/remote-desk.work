@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('Fetching jobs since:', sevenDaysAgo);
     
     const recentJobs = await jobsCollection.find({
-      postedAt: { $gte: sevenDaysAgo },
+      postedDate: { $gte: sevenDaysAgo },
       // Exclude mock jobs and low quality listings
       isMock: { $ne: true },
       is_mock_data: { $ne: true },
@@ -76,7 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       company: { $exists: true },
       url: { $exists: true },
       description: { $exists: true }
-    }).sort({ postedAt: -1 }).toArray();
+          }).sort({ postedDate: -1 }).toArray();
 
     console.log(`Found ${recentJobs.length} recent jobs`);
     
@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: recentJobs[0]._id,
         title: recentJobs[0].title,
         company: recentJobs[0].company,
-        postedAt: recentJobs[0].postedAt,
+        postedDate: recentJobs[0].postedDate,
         isMock: recentJobs[0].isMock,
         is_mock_data: recentJobs[0].is_mock_data,
         hasTitle: !!recentJobs[0].title,

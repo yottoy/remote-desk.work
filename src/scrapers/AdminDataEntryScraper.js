@@ -1025,13 +1025,46 @@ class AdminDataEntryScraper extends BaseScraper {
   _extractTextFromHtml(html) {
     if (!html) return '';
     
-    // Simple HTML tag removal (for more complex cases, use a proper parser)
-    return html
+    // First handle HTML entities
+    let text = html
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&mdash;/g, '—')
+      .replace(/&ndash;/g, '–')
+      .replace(/&hellip;/g, '...')
+      .replace(/&copy;/g, '©')
+      .replace(/&reg;/g, '®')
+      .replace(/&trade;/g, '™')
+      .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+      .replace(/&x([0-9a-f]+);/gi, (match, hex) => String.fromCharCode(parseInt(hex, 16)));
+    
+    // Remove HTML tags
+    text = text
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<[^>]*>/g, ' ')
+      .replace(/<[^>]+>/g, ' ');
+    
+    // Handle markdown formatting
+    text = text
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Bold
+      .replace(/\*(.*?)\*/g, '$1')     // Italic
+      .replace(/`(.*?)`/g, '$1')       // Code
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Links
+      .replace(/#{1,6}\s+(.*?)$/gm, '$1') // Headers
+      .replace(/>\s+(.*?)$/gm, '$1')   // Blockquotes
+      .replace(/\n\s*[-*+]\s+(.*?)$/gm, '$1') // List items
+      .replace(/\n\s*\d+\.\s+(.*?)$/gm, '$1'); // Numbered list items
+    
+    // Clean up whitespace
+    text = text
       .replace(/\s+/g, ' ')
       .trim();
+    
+    return text;
   }
   
   /**

@@ -742,14 +742,7 @@ function ClientOnlyJobsSection({ category, jobs, slug }: ClientOnlyJobsSectionPr
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredJobs.map(job => (
-            <JobCard 
-              key={job._id} 
-              job={{
-                ...job,
-                _id: job._id || '', // Ensure _id is always a string
-                postedDate: job.postedAt || new Date() // Map postedAt to postedDate
-              }} 
-            />
+            <JobCard key={job._id} job={job} />
           ))}
         </div>
         

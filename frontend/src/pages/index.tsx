@@ -251,7 +251,7 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, error }) => {
                   job={{
                     ...job,
                     _id: job._id || '', // Ensure _id is always a string
-                    postedDate: job.postedAt || new Date() // Map postedAt to postedDate
+                    postedDate: job.postedDate || new Date() // Ensure postedDate exists
                   }} 
                   variant="compact" 
                 />
