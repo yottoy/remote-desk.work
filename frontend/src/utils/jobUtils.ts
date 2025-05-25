@@ -135,15 +135,30 @@ export function countRecentJobs(jobs: (Job | EnhancedJobListing)[], days: number
   const daysAgo = new Date();
   daysAgo.setDate(now.getDate() - days);
   
-  return jobs.filter(job => {
-    if (!job.postedDate) return false;
+  console.log(`Counting jobs from ${daysAgo.toISOString()} to ${now.toISOString()}`);
+  console.log(`Total jobs to check: ${jobs.length}`);
+  
+  const recentJobs = jobs.filter(job => {
+    if (!job.postedDate) {
+      console.log('Job missing postedDate:', job._id || 'unknown');
+      return false;
+    }
     
     try {
       const postedDate = job.postedDate instanceof Date ? job.postedDate : new Date(job.postedDate);
-      return !isNaN(postedDate.getTime()) && postedDate >= daysAgo;
+      const isRecent = !isNaN(postedDate.getTime()) && postedDate >= daysAgo;
+      
+      if (!isNaN(postedDate.getTime())) {
+        console.log(`Job ${job._id}: ${postedDate.toISOString()} - Recent: ${isRecent}`);
+      }
+      
+      return isRecent;
     } catch (error) {
       console.error('Error parsing job posted date:', error);
       return false;
     }
-  }).length;
+  });
+  
+  console.log(`Found ${recentJobs.length} recent jobs out of ${jobs.length} total`);
+  return recentJobs.length;
 }

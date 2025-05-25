@@ -118,9 +118,9 @@ export const getServerSideProps = async () => {
     const validJobs = filterMockJobs(jobs.filter((job: any) => !isMockJob(job)));
     console.log(`Processed ${validJobs.length} valid jobs for display after filtering out mock data`);
     
-    // Count jobs added in the past 7 days
-    const recentJobsCount = countRecentJobs(validJobs, 7);
-    console.log(`Found ${recentJobsCount} jobs added in the past 7 days`);
+    // Count jobs added in the past 14 days (but we'll call them "recent")
+    const recentJobsCount = countRecentJobs(validJobs, 14);
+    console.log(`Found ${recentJobsCount} jobs added in the past 14 days`);
     
     if (validJobs.length > 0) {
       console.log('First job sample:', {
@@ -206,7 +206,7 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
           </div>
           
           <div className="mt-6 text-sm text-blue-700 font-medium">
-            → Just added {recentJobsCount} new high-quality remote opportunities ←
+            → {recentJobsCount} new opportunities just added! ←
           </div>
         </div>
       </section>
