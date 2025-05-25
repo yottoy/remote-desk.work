@@ -22,6 +22,7 @@ import JobSchema from '../../components/seo/JobSchema';
 import OrganizationSchema from '../../components/seo/OrganizationSchema';
 import BreadcrumbSchema from '../../components/seo/BreadcrumbSchema';
 import FAQSchema from '../../components/seo/FAQSchema';
+import Layout from '../../components/layout/Layout';
 
 interface JobDetailsPageProps {
   job: EnhancedJobListing;
@@ -78,7 +79,10 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
   }
 
   return (
-    <>
+    <Layout
+      title={`${job.title} at ${job.company} | ClickClickJob.com`}
+      description={job.descriptionText || (job.description ? job.description.substring(0, 250) : '')}
+    >
       <Metadata 
         jobTitle={job.title}
         companyName={job.company}
@@ -366,7 +370,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
           </div>
         </div>
       </main>
-    </>
+    </Layout>
   );
 };
 

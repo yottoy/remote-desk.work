@@ -75,9 +75,11 @@ function filterMockJobs(jobs: any[]): any[] {
 export const getServerSideProps = async () => {
   try {
     // Use environment variable for API URL, fallback to localhost for dev, production URL for prod
-    const apiUrl = process.env.API_URL || (process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3002/api/jobs/'
-      : 'https://clickclickjob.vercel.app/api/jobs/');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/jobs`
+      : (process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3004/api/jobs'
+        : 'https://clickclickjob.vercel.app/api/jobs');
     console.log('Fetching jobs from:', apiUrl);
     
     const response = await fetch(apiUrl, {
@@ -244,7 +246,15 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, error }) => {
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {featuredJobs.map(job => (
-                <ImprovedJobCard key={job._id} job={job} variant="compact" />
+                <ImprovedJobCard 
+                  key={job._id} 
+                  job={{
+                    ...job,
+                    _id: job._id || '', // Ensure _id is always a string
+                    postedDate: job.postedAt || new Date() // Map postedAt to postedDate
+                  }} 
+                  variant="compact" 
+                />
               ))}
             </div>
           )}
@@ -278,13 +288,13 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, error }) => {
       <section className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
-            Explore Job Categories
+            Browse Jobs by Category
           </h2>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {jobCategories.map(category => (
+            {jobCategories.map((category, index) => (
               <CategoryCard 
-                key={category.slug}
+                key={index} 
                 name={category.name}
                 slug={category.slug}
               />
@@ -302,45 +312,6 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, error }) => {
         </div>
       </section>
 
-      {/* SEO Landing Pages Section */}
-      <section className="py-12 bg-blue-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">
-            Explore SEO Landing Pages
-          </h2>
-          
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <ul className="divide-y divide-gray-200">
-              <li className="px-6 py-4 hover:bg-gray-50">
-                <a href="/remote-data-entry-jobs-no-experience" className="text-blue-600 hover:text-blue-800 hover:underline">
-                  Remote Data Entry Jobs No Experience
-                </a>
-              </li>
-              <li className="px-6 py-4 hover:bg-gray-50">
-                <a href="/legitimate-work-from-home-admin-jobs" className="text-blue-600 hover:text-blue-800 hover:underline">
-                  Legitimate Work From Home Admin Jobs
-                </a>
-              </li>
-              <li className="px-6 py-4 hover:bg-gray-50">
-                <a href="/virtual-assistant-jobs-part-time-remote" className="text-blue-600 hover:text-blue-800 hover:underline">
-                  Virtual Assistant Jobs Part Time Remote
-                </a>
-              </li>
-              <li className="px-6 py-4 hover:bg-gray-50">
-                <a href="/entry-level-remote-administrative-assistant" className="text-blue-600 hover:text-blue-800 hover:underline">
-                  Entry Level Remote Administrative Assistant
-                </a>
-              </li>
-              <li className="px-6 py-4 hover:bg-gray-50">
-                <a href="/work-from-anywhere-data-entry-positions" className="text-blue-600 hover:text-blue-800 hover:underline">
-                  Work From Anywhere Data Entry Positions
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-      
       {/* Trust Section */}
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

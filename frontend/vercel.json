@@ -4,7 +4,10 @@
   "env": {
     "NEXT_PUBLIC_API_URL": "https://www.clickclickjob.com",
     "NEXT_PUBLIC_SITE_URL": "https://www.clickclickjob.com",
-    "MONGODB_DB": "clickclickjob"
+    "MONGODB_DB": "clickclickjob",
+    "EMAIL_USER": "daily.app.2024@gmail.com",
+    "EMAIL_PASS": "***REMOVED***",
+    "CRON_SECRET": "***REMOVED***"
   },
   "routes": [
     {
@@ -31,5 +34,11 @@
   "github": {
     "silent": true,
     "autoJobCancelation": true
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/digest/weekly",
+      "schedule": "0 14 * * 1"
+    }
+  ]
 }

@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import GoogleAnalytics from '../common/GoogleAnalytics';
+import EmailCapture from '../common/EmailCapture';
 
 type LayoutProps = {
   children: ReactNode;
@@ -68,6 +69,11 @@ const Layout: React.FC<LayoutProps> = ({
         <main className="flex-grow">
           {children}
         </main>
+        
+        {/* Email Capture Section */}
+        <EmailCapture 
+          source={`page_${router.pathname.replace('/', '').replace('[', '').replace(']', '') || 'home'}`}
+        />
         
         <footer className="bg-white border-t border-gray-200">
           <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">

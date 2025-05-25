@@ -156,83 +156,42 @@ export const getServerSideProps: GetServerSideProps = async () => {
   }
   
   try {
-    // Create realistic job data for display
-    const jobs: JobListing[] = [
-      {
-        _id: 'job1',
-        title: 'Data Entry Specialist',
-        company: 'Global Data Solutions',
-        location: 'Remote - Worldwide',
-        salary: '$15-20/hr',
-        jobType: 'Full-time',
-        experienceLevel: 'no-experience',
-        description: 'Looking for detail-oriented individuals to join our remote data entry team. No prior experience required. Tasks include inputting customer information, processing orders, and maintaining accurate records. Attention to detail and basic computer skills required.',
-        postedDate: '2025-05-15',
-        featured: false,
-        skills: ['Microsoft Excel', 'Data Entry', 'Typing'],
-        applyUrl: 'https://example.com/apply/job1'
+    // Fetch real jobs from the API
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/jobs?limit=10`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      {
-        _id: 'job2',
-        title: 'Virtual Data Entry Clerk',
-        company: 'RemoteWorks Inc.',
-        location: 'Remote - US Based',
-        salary: '$16/hr',
-        jobType: 'Part-time',
-        experienceLevel: 'no-experience',
-        description: 'Part-time data entry position perfect for beginners. Training provided. Flexible hours, work from home. Responsibilities include data entry, data verification, and basic administrative tasks.',
-        postedDate: '2025-05-18',
-        featured: true,
-        skills: ['Microsoft Office', 'Data Entry', 'Communication'],
-        applyUrl: 'https://example.com/apply/job2'
-      },
-      {
-        _id: 'job3',
-        title: 'Entry-Level Data Entry Specialist',
-        company: 'DataFlex Solutions',
-        location: 'Remote - Global',
-        salary: '$14-18/hr',
-        jobType: 'Full-time',
-        experienceLevel: 'no-experience',
-        description: 'Join our global team as an entry-level data entry specialist. No experience needed - we provide comprehensive training. Benefits include flexible schedule and advancement opportunities.',
-        postedDate: '2025-05-20',
-        featured: false,
-        skills: ['Data Entry', 'Organization', 'Attention to Detail'],
-        applyUrl: 'https://example.com/apply/job3'
-      },
-      {
-        _id: 'job4',
-        title: 'Remote Data Processing Clerk',
-        company: 'Digital Input Services',
-        location: 'Remote - Worldwide',
-        salary: '$15/hr',
-        jobType: 'Full-time',
-        experienceLevel: 'no-experience',
-        description: 'Data processing position for entry-level candidates. Process various forms of information into our digital systems. Full training provided for motivated individuals.',
-        postedDate: '2025-05-19',
-        featured: false,
-        skills: ['Data Processing', 'Computer Skills', 'Detail-Oriented'],
-        applyUrl: 'https://example.com/apply/job4'
-      },
-      {
-        _id: 'job5',
-        title: 'Work-From-Home Data Entry Operator',
-        company: 'RemoteForce',
-        location: 'Remote - North America',
-        salary: '$17/hr',
-        jobType: 'Part-time',
-        experienceLevel: 'no-experience',
-        description: 'Seeking detail-oriented individuals for data entry roles. Enter and verify data in our proprietary systems. No experience required, paid training provided.',
-        postedDate: '2025-05-21',
-        featured: true,
-        skills: ['Data Entry', 'Time Management', 'Fast Typing'],
-        applyUrl: 'https://example.com/apply/job5'
-      }
-    ];
+    });
+
+    let jobs: JobListing[] = [];
     
-    // Note: In a production environment, you would fetch jobs from the API:
-    // const response = await fetch(`${process.env.API_URL}/api/jobs?keyword=${keywordSlug}`);
-    // const jobs = await response.json();
+    if (response.ok) {
+      const data = await response.json();
+      jobs = data.jobs || [];
+    } else {
+      console.warn('Failed to fetch jobs, using fallback data');
+    }
+
+    // If no jobs found, create some fallback content
+    if (jobs.length === 0) {
+      jobs = [
+        {
+          _id: 'fallback1',
+          title: 'Remote Data Entry Opportunities',
+          company: 'Various Companies',
+          location: 'Remote - Worldwide',
+          salary: '$15-25/hr',
+          jobType: 'Full-time',
+          experienceLevel: 'no-experience',
+          description: 'We regularly feature new remote data entry positions. Check back daily for the latest opportunities.',
+          postedDate: new Date().toISOString(),
+          featured: false,
+          skills: ['Data Entry', 'Computer Skills', 'Attention to Detail'],
+          applyUrl: '/jobs'
+        }
+      ];
+    }
     
     return {
       props: {
@@ -240,19 +199,37 @@ export const getServerSideProps: GetServerSideProps = async () => {
         h1: pageData.h1,
         description: pageData.description,
         faqItems: pageData.faqItems || [],
-        jobs: jobs
+        jobs: jobs.slice(0, 10)
       }
     };
   } catch (error) {
     console.error('Error fetching jobs:', error);
     
+    // Return fallback data
+    const fallbackJobs: JobListing[] = [
+      {
+        _id: 'fallback1',
+        title: 'Remote Data Entry Opportunities',
+        company: 'Various Companies',
+        location: 'Remote - Worldwide',
+        salary: '$15-25/hr',
+        jobType: 'Full-time',
+        experienceLevel: 'no-experience',
+        description: 'We regularly feature new remote data entry positions. Check back daily for the latest opportunities.',
+        postedDate: new Date().toISOString(),
+        featured: false,
+        skills: ['Data Entry', 'Computer Skills', 'Attention to Detail'],
+        applyUrl: '/jobs'
+      }
+    ];
+    
     return {
       props: {
         title: pageData.title,
         h1: pageData.h1,
         description: pageData.description,
         faqItems: pageData.faqItems || [],
-        jobs: []
+        jobs: fallbackJobs
       }
     };
   }

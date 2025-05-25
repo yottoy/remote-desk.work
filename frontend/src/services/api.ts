@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = process.env.API_URL || '/api';
+const API_URL = process.env.API_URL || (process.env.NODE_ENV === 'development'
+  ? 'http://localhost:3004/api'
+  : '/api');
 
 /**
  * Utility to parse ISO date strings in API responses

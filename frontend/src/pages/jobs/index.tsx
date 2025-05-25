@@ -192,8 +192,8 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
           if (aQuality !== bQuality) return bQuality - aQuality;
           
           // Finally sort by date
-          const aDate = new Date(a.postedDate).getTime();
-          const bDate = new Date(b.postedDate).getTime();
+          const aDate = new Date(a.postedAt).getTime();
+          const bDate = new Date(b.postedAt).getTime();
           
           return bDate - aDate;
         });
@@ -484,7 +484,11 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
               {/* Job listings with proper error handling */}
               <ErrorBoundary>
                 <JobList 
-                  jobs={filteredJobs}
+                  jobs={filteredJobs.map(job => ({
+                    ...job,
+                    _id: job._id || '',
+                    postedDate: job.postedAt || new Date()
+                  }))}
                   title={jobListTitle}
                   isLoading={isLoading}
                   error={apiError}

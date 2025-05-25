@@ -108,7 +108,7 @@ export function formatSalary(salary: string | number | undefined): string {
  */
 export function detectJobCategory(job: Job | EnhancedJobListing): string {
   const title = job.title?.toLowerCase() || '';
-  const description = (job.description || job.descriptionText || '').toLowerCase();
+  const description = (job.description || ('descriptionText' in job ? job.descriptionText : '') || '').toLowerCase();
   
   if (title.includes('data entry') || description.includes('data entry')) {
     return 'data-entry';
