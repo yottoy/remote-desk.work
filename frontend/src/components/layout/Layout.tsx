@@ -49,6 +49,9 @@ const Layout: React.FC<LayoutProps> = ({
                 <Link href="/categories" className={`text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium ${router.pathname.startsWith('/categories') ? 'text-blue-600' : ''}`}>
                   Categories
                 </Link>
+                <Link href="/newsletter" className={`text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium ${router.pathname === '/newsletter' ? 'text-blue-600' : ''}`}>
+                  Newsletter
+                </Link>
                 <Link href="/about" className={`text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium ${router.pathname === '/about' ? 'text-blue-600' : ''}`}>
                   About
                 </Link>
@@ -123,6 +126,11 @@ const Layout: React.FC<LayoutProps> = ({
                   Resources
                 </h2>
                 <ul className="mt-4 space-y-2">
+                  <li>
+                    <Link href="/newsletter" className="text-gray-600 hover:text-blue-600 text-sm">
+                      Newsletter
+                    </Link>
+                  </li>
                   <li>
                     <Link href="/about" className="text-gray-600 hover:text-blue-600 text-sm">
                       About Us
