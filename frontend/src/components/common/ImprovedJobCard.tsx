@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { formatJobDescription } from '../../utils/jobUtils';
 
 interface JobCardProps {
   job: {
@@ -64,11 +65,22 @@ const ImprovedJobCard: React.FC<JobCardProps> = ({ job, variant = 'default', key
     </span>
   ) : null;
   
-  // Extract a short description snippet
-  const descriptionText = job.descriptionText || job.description || '';
-  const descriptionSnippet = descriptionText
-    ? descriptionText.substring(0, 140) + (descriptionText.length > 140 ? '...' : '')
-    : '';
+  // Extract a short description snippet with cleaned formatting
+  const getDescriptionSnippet = () => {
+    let text = job.descriptionText || job.description || '';
+    if (!text) return '';
+    
+    // Strip HTML tags and markdown for snippet
+    text = text.replace(/<[^>]*>/g, '');
+    text = text.replace(/\*\*(.*?)\*\*/g, '$1');
+    text = text.replace(/\*(.*?)\*/g, '$1');
+    text = text.replace(/\n+/g, ' ');
+    text = text.trim();
+    
+    return text.length > 140 ? text.substring(0, 140) + '...' : text;
+  };
+  
+  const descriptionSnippet = getDescriptionSnippet();
   
   // Get job link - handle both keyword pages and regular job pages
   const getJobLink = () => {

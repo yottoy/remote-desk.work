@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/react';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import analytics from '../utils/analytics';
 import '../styles/globals.css';
+import '../styles/jobDescription.css';
 
 // Application wrapper
 function MyApp({ Component, pageProps }: AppProps) {

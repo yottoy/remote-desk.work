@@ -162,3 +162,127 @@ export function countRecentJobs(jobs: (Job | EnhancedJobListing)[], days: number
   console.log(`Found ${recentJobs.length} recent jobs out of ${jobs.length} total`);
   return recentJobs.length;
 }
+
+/**
+ * Formats job description by converting markdown to HTML and fixing bullet point inconsistencies
+ */
+export function formatJobDescription(description: string): string {
+  if (!description) return '';
+  
+  let formatted = description;
+  
+  // First, handle existing HTML content - if it already has HTML tags, just clean it up
+  const hasHTMLTags = /<[^>]+>/g.test(formatted);
+  
+  if (hasHTMLTags) {
+    // Clean up existing HTML but preserve structure
+    formatted = formatted.replace(/<p>\s*<\/p>/g, '');
+    formatted = formatted.replace(/\n\s*\n/g, '\n');
+    return formatted;
+  }
+  
+  // Convert markdown bold to HTML (but preserve existing strong tags)
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Convert markdown italic to HTML (but be careful not to affect bullet points)
+  formatted = formatted.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
+  
+  // Handle headings with underlines (e.g., "TITLE\n----")
+  formatted = formatted.replace(/^(.+)\n[-=]{3,}$/gm, '<h3>$1</h3>');
+  
+  // Handle common heading patterns
+  formatted = formatted.replace(/^\*\*([^*]+)\*\*$/gm, '<h3>$1</h3>');
+  
+  // Split into lines for processing
+  const lines = formatted.split('\n');
+  const processedLines = [];
+  let inList = false;
+  let listType = 'ul'; // 'ul' for unordered, 'ol' for ordered
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Skip empty lines but preserve them for paragraph breaks
+    if (line.length === 0) {
+      if (inList) {
+        processedLines.push(`</${listType}>`);
+        inList = false;
+      }
+      processedLines.push(''); // Preserve empty line for paragraph separation
+      continue;
+    }
+    
+    // Check if this line is a bullet point
+    const bulletMatch = line.match(/^[\*\•\-\+]\s+(.+)$/);
+    const numberedMatch = line.match(/^\d+\.\s+(.+)$/);
+    
+         if (bulletMatch || numberedMatch) {
+       const content = bulletMatch ? bulletMatch[1] : (numberedMatch ? numberedMatch[1] : '');
+       const currentListType = numberedMatch ? 'ol' : 'ul';
+      
+      // If we're starting a new list or changing list type
+      if (!inList) {
+        listType = currentListType;
+        processedLines.push(`<${listType}>`);
+        inList = true;
+      } else if (listType !== currentListType) {
+        // Close current list and start new one
+        processedLines.push(`</${listType}>`);
+        listType = currentListType;
+        processedLines.push(`<${listType}>`);
+      }
+      
+      processedLines.push(`<li>${content}</li>`);
+    } else {
+      // Close any open list
+      if (inList) {
+        processedLines.push(`</${listType}>`);
+        inList = false;
+      }
+      
+      // Check if this looks like a heading (all caps, ends with colon, etc.)
+      if (line.match(/^[A-Z\s]+:$/) && line.length < 50) {
+        processedLines.push(`<h4>${line}</h4>`);
+      } else if (line.match(/^[A-Z\s]{3,}$/) && line.length < 50) {
+        processedLines.push(`<h3>${line}</h3>`);
+      } else {
+        processedLines.push(line);
+      }
+    }
+  }
+  
+  // Close any open list
+  if (inList) {
+    processedLines.push(`</${listType}>`);
+  }
+  
+  // Join lines and create paragraphs
+  formatted = processedLines.join('\n');
+  
+  // Convert double newlines to paragraph breaks, but preserve list structure
+  const chunks = formatted.split(/\n\s*\n/);
+  const paragraphs = chunks.map(chunk => {
+    chunk = chunk.trim();
+    if (!chunk) return '';
+    
+    // Don't wrap lists, headings, or already wrapped content in paragraphs
+    if (chunk.match(/^<(ul|ol|h[1-6]|li|strong)/i) || chunk.includes('</')) {
+      return chunk;
+    }
+    
+    return `<p>${chunk}</p>`;
+  }).filter(p => p.length > 0);
+  
+  formatted = paragraphs.join('\n\n');
+  
+  // Clean up any double spacing and empty tags
+  formatted = formatted.replace(/\n{3,}/g, '\n\n');
+  formatted = formatted.replace(/<p>\s*<\/p>/g, '');
+  formatted = formatted.replace(/<li>\s*<\/li>/g, '');
+  
+  // Final cleanup - ensure proper spacing around lists
+  formatted = formatted.replace(/(<\/[uo]l>)\n*(<p>)/g, '$1\n\n$2');
+  formatted = formatted.replace(/(<\/p>)\n*(<[uo]l>)/g, '$1\n\n$2');
+  
+  return formatted;
+}

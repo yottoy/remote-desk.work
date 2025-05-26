@@ -27,7 +27,7 @@ import Layout from '../../components/layout/Layout';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import JobCard from '../../components/common/JobCard';
 import { connectToDatabase } from '../../utils/mongodb';
-import { formatJobDate } from '../../utils/jobUtils';
+import { formatJobDate, formatJobDescription } from '../../utils/jobUtils';
 
 interface JobDetailsPageProps {
   job: EnhancedJobListing;
@@ -282,14 +282,14 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
             <div className="lg:col-span-2">
               <article 
                 ref={descriptionRef} 
-                className="prose max-w-none bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+                className="prose max-w-none bg-white p-6 rounded-lg shadow-sm border border-gray-200 job-description"
                 itemProp="description"
               >
-                {/* Preserve formatting by using pre-wrap for plain text descriptions */}
+                {/* Format description with proper markdown to HTML conversion */}
                 {job.description ? (
-                  <div dangerouslySetInnerHTML={{ __html: job.description }} />
+                  <div dangerouslySetInnerHTML={{ __html: formatJobDescription(job.description) }} />
                 ) : job.descriptionText ? (
-                  <pre className="whitespace-pre-wrap font-sans text-base text-gray-700">{job.descriptionText}</pre>
+                  <div dangerouslySetInnerHTML={{ __html: formatJobDescription(job.descriptionText) }} />
                 ) : (
                   <p className="text-gray-500 italic">No job description available.</p>
                 )}

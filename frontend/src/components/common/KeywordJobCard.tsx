@@ -7,6 +7,7 @@ import TimezoneCompatibility from './TimezoneCompatibility';
 import CurrencyDisplay from './CurrencyDisplay';
 import RegionalJobTitle from './RegionalJobTitle';
 import { keywordTracking } from './KeywordAnalytics';
+import { formatJobDescription } from '../../utils/jobUtils';
 
 interface KeywordJobCardProps {
   job: EnhancedJobListing;
@@ -49,10 +50,22 @@ const KeywordJobCard: React.FC<KeywordJobCardProps> = ({ job, keyword }) => {
     </span>
   ) : null;
   
-  // Extract a short description snippet if available
-  const descriptionSnippet = job.descriptionText
-    ? job.descriptionText.substring(0, 120) + (job.descriptionText.length > 120 ? '...' : '')
-    : '';
+  // Extract a short description snippet with cleaned formatting
+  const getDescriptionSnippet = () => {
+    let text = job.descriptionText || job.description || '';
+    if (!text) return '';
+    
+    // Strip HTML tags and markdown for snippet
+    text = text.replace(/<[^>]*>/g, '');
+    text = text.replace(/\*\*(.*?)\*\*/g, '$1');
+    text = text.replace(/\*(.*?)\*/g, '$1');
+    text = text.replace(/\n+/g, ' ');
+    text = text.trim();
+    
+    return text.length > 120 ? text.substring(0, 120) + '...' : text;
+  };
+  
+  const descriptionSnippet = getDescriptionSnippet();
     
   const handleApplyClick = (e: React.MouseEvent) => {
     e.preventDefault();

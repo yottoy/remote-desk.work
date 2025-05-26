@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { formatJobDescription } from '../../utils/jobUtils';
 
 interface Job {
   _id: string;
@@ -73,10 +74,22 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
   if (job.experienceLevel === 'no-experience') jobTypeBadges.push('No Experience');
   if (job.experienceLevel === 'entry-level') jobTypeBadges.push('Entry Level');
 
-  // Extract a short description snippet
-  const descriptionSnippet = job.descriptionText
-    ? job.descriptionText.substring(0, 150) + (job.descriptionText.length > 150 ? '...' : '')
-    : '';
+  // Extract a short description snippet with cleaned formatting
+  const getDescriptionSnippet = () => {
+    let text = job.descriptionText || job.description || '';
+    if (!text) return '';
+    
+    // Strip HTML tags and markdown for snippet
+    text = text.replace(/<[^>]*>/g, '');
+    text = text.replace(/\*\*(.*?)\*\*/g, '$1');
+    text = text.replace(/\*(.*?)\*/g, '$1');
+    text = text.replace(/\n+/g, ' ');
+    text = text.trim();
+    
+    return text.length > 150 ? text.substring(0, 150) + '...' : text;
+  };
+  
+  const descriptionSnippet = getDescriptionSnippet();
 
   // Check if application link is valid or use job details page instead
   const getApplicationLink = () => {
