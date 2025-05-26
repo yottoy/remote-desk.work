@@ -12,7 +12,11 @@
     "lint": "next lint",
     "verify-mongodb": "node scripts/verify-mongodb.js",
     "verify-env": "node scripts/verify-build-env.js",
-    "vercel-build": "next build"
+    "vercel-build": "next build",
+    "fix-deployment": "node scripts/fix-deployment.js",
+    "clean-build": "rm -rf .next dist build",
+    "rebuild": "npm run clean-build && npm run fix-deployment && npm run build",
+    "test-fixes": "node scripts/test-fixes.js"
   },
   "dependencies": {
     "@tailwindcss/forms": "^0.5.10",

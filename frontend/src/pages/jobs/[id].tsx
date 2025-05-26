@@ -22,6 +22,7 @@ import JobSchema from '../../components/seo/JobSchema';
 import OrganizationSchema from '../../components/seo/OrganizationSchema';
 import BreadcrumbSchema from '../../components/seo/BreadcrumbSchema';
 import FAQSchema from '../../components/seo/FAQSchema';
+import InternalLinking from '../../components/seo/InternalLinking';
 import Layout from '../../components/layout/Layout';
 // import ShareButton from '../../components/common/ShareButton';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
@@ -30,7 +31,7 @@ import { connectToDatabase } from '../../utils/mongodb';
 import { formatJobDate, formatJobDescription } from '../../utils/jobUtils';
 
 interface JobDetailsPageProps {
-  job: EnhancedJobListing;
+  job: EnhancedJobListing | null;
   similarJobs: EnhancedJobListing[];
   peopleAlsoViewed: EnhancedJobListing[];
   relatedCategories: Array<{ name: string; slug: string; jobCount: number; }>;
@@ -50,7 +51,14 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
   const descriptionRef = useRef<HTMLDivElement>(null);
   const { addJobToRecentlyViewed } = useRecentlyViewedJobs();
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
   
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
+
   useEffect(() => {
     if (job?._id) {
       // Add to recently viewed jobs in local storage
@@ -97,17 +105,38 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
     setIsBookmarked(!isBookmarked);
   };
 
-  const isVerified = job?.qualityScore >= 8;
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const isVerified = job?.qualityScore ? job.qualityScore >= 8 : false;
 
   if (!job) {
     return (
-      <div>
-        <Head>
-          <title>Job Not Found | ClickClickJob.com</title>
-        </Head>
-        <p>Loading job details or job not found...</p>
-      </div>
+      <Layout
+        title="Job Not Found | ClickClickJob.com"
+        description="The job you're looking for could not be found. Browse our latest remote opportunities."
+      >
+        <div className="min-h-[70vh] flex flex-col items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="text-6xl font-extrabold text-blue-600 mb-4">404</div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Job Not Found</h1>
+            <p className="text-xl text-gray-600 mb-8">This job posting may have expired or been removed.</p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/jobs"
+                className="px-6 py-3 bg-blue-600 text-white rounded-md font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Browse All Jobs
+              </Link>
+              
+              <Link
+                href="/"
+                className="px-6 py-3 bg-white text-blue-600 border border-blue-300 rounded-md font-medium shadow-sm hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Go Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </Layout>
     );
   }
 
@@ -445,6 +474,16 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* Internal Linking Component for SEO */}
+                <InternalLinking
+                  currentJob={job}
+                  relatedJobs={relatedJobs}
+                  category={job.jobCategory}
+                  showJobSuggestions={true}
+                  showCategoryLinks={true}
+                  className="mb-6"
+                />
               </div>
             </div>
 
@@ -467,7 +506,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params || {};
   
   if (!id || typeof id !== 'string') {
-    return { notFound: true };
+    return { 
+      redirect: {
+        destination: '/jobs',
+        permanent: false,
+      }
+    };
   }
 
   try {
@@ -475,7 +519,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     if (!db) {
       console.error('Failed to connect to database');
-      return { notFound: true };
+      return { 
+        redirect: {
+          destination: '/jobs',
+          permanent: false,
+        }
+      };
     }
     
     // Find the job by ID or uniqueIdentifier
@@ -502,9 +551,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       });
     }
 
+    // If job still not found, redirect to jobs page instead of showing "Job Not Found"
     if (!job) {
+      console.log(`Job not found for ID: ${id}, redirecting to /jobs`);
       return {
-        notFound: true,
+        redirect: {
+          destination: '/jobs',
+          permanent: false,
+        }
       };
     }
 
@@ -549,15 +603,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   } catch (error) {
     console.error('Error fetching job:', error);
+    // On error, redirect to jobs page instead of showing error content
     return {
-      props: {
-        job: null,
-        similarJobs: [],
-        peopleAlsoViewed: [],
-        relatedCategories: [],
-        relatedJobs: [],
-        moreFromCompany: [],
-      },
+      redirect: {
+        destination: '/jobs',
+        permanent: false,
+      }
     };
   }
 };

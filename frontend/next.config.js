@@ -32,6 +32,17 @@ const nextConfig = {
   },
   output: 'standalone',
   
+  // Enable asset prefix for proper static file serving
+  assetPrefix: process.env.NODE_ENV === 'production' ? '' : undefined,
+  
+  // Ensure build reproducibility
+  generateBuildId: async () => {
+    if (process.env.VERCEL_GIT_COMMIT_SHA) {
+      return process.env.VERCEL_GIT_COMMIT_SHA;
+    }
+    return null; // Use default behavior
+  },
+  
   // Changed to false to ensure clean URLs
   trailingSlash: false,
   
