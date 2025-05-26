@@ -171,13 +171,45 @@ export function formatJobDescription(description: string): string {
   
   let formatted = description;
   
-  // First, handle existing HTML content - if it already has HTML tags, just clean it up
+  // First, check if we have HTML content and clean up markdown within it
   const hasHTMLTags = /<[^>]+>/g.test(formatted);
   
   if (hasHTMLTags) {
-    // Clean up existing HTML but preserve structure
+    // Even with HTML tags, we still need to process markdown within the content
+    // Convert markdown bold to HTML within existing HTML structure
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Convert markdown italic (be careful not to affect bullet points)
+    formatted = formatted.replace(/(?<!\*)\*([^*\n<>]+)\*(?!\*)/g, '<em>$1</em>');
+    
+         // Fix bullet points that are just asterisks to proper HTML lists
+     // Look for patterns like "* Item" within <p> tags
+     formatted = formatted.replace(/<p>(\s*\*\s+[^<]+)<\/p>/g, (match, content) => {
+       const items = content.split(/\n\s*\*\s+/).filter((item: string) => item.trim());
+       if (items.length > 1) {
+         const listItems = items.map((item: string) => `<li>${item.trim()}</li>`).join('');
+         return `<ul>${listItems}</ul>`;
+       }
+       return match;
+     });
+     
+     // Convert bullet points that appear as "* Item" in text
+     formatted = formatted.replace(/(\*\s+)([^\n\*<>]+)/g, '<li>$2</li>');
+     
+     // Group consecutive <li> elements into lists
+     formatted = formatted.replace(/(<li>.*?<\/li>)(\s*<li>.*?<\/li>)+/g, (match) => {
+       return `<ul>${match}</ul>`;
+     });
+     
+     // Clean up any remaining standalone <li> elements by wrapping them in <ul>
+     // Simple approach: find <li> not preceded by <ul> and wrap in <ul>
+     formatted = formatted.replace(/(<li>(?:(?!<\/?ul>).)*<\/li>)/g, '<ul>$1</ul>');
+    
+    // Clean up spacing and empty paragraphs
     formatted = formatted.replace(/<p>\s*<\/p>/g, '');
-    formatted = formatted.replace(/\n\s*\n/g, '\n');
+    formatted = formatted.replace(/&nbsp;/g, ' ');
+    formatted = formatted.replace(/\s{2,}/g, ' ');
+    
     return formatted;
   }
   
