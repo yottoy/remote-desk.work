@@ -90,7 +90,9 @@ export const getServerSideProps = async () => {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'User-Agent': 'ClickClickJob/1.0',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     });
     
@@ -118,9 +120,9 @@ export const getServerSideProps = async () => {
     const validJobs = filterMockJobs(jobs.filter((job: any) => !isMockJob(job)));
     console.log(`Processed ${validJobs.length} valid jobs for display after filtering out mock data`);
     
-    // Count jobs added in the past 14 days (but we'll call them "recent")
-    const recentJobsCount = countRecentJobs(validJobs, 14);
-    console.log(`Found ${recentJobsCount} jobs added in the past 14 days`);
+    // Count jobs added in the past 7 days (changed from 14 to 7 days)
+    const recentJobsCount = countRecentJobs(validJobs, 7);
+    console.log(`Found ${recentJobsCount} jobs added in the past 7 days`);
     
     if (validJobs.length > 0) {
       console.log('First job sample:', {

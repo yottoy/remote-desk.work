@@ -360,8 +360,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log(`Found ${jobs.length} jobs matching filter, total: ${totalJobs}`);
       }
 
-      // Enhanced caching for better performance
-      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60, stale-while-revalidate=120');
+      // Enhanced caching for better performance but more responsive
+      res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=30, stale-while-revalidate=60');
       
       // Return jobs with pagination metadata
       return res.status(200).json({

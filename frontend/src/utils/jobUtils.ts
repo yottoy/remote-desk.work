@@ -1,8 +1,105 @@
 import { Job, EnhancedJobListing } from '../types/job';
 
 /**
- * Filters out mock jobs from an array of jobs
- * This ensures no test or mock data is ever displayed to users
+ * Enhanced remote job validation for frontend filtering
+ */
+function isLikelyRemoteJob(job: any): boolean {
+  const title = (job.title || '').toLowerCase();
+  const description = (job.description || '').toLowerCase();
+  const location = (job.location || '').toLowerCase();
+  const combinedText = `${title} ${description} ${location}`;
+
+  // Strong remote indicators
+  const strongRemoteIndicators = [
+    'fully remote', '100% remote', 'remote-first', 'remote only',
+    'work from anywhere', 'location independent', 'distributed team',
+    'no office required', 'home office', 'telecommute', 'work-from-home', 'work from home'
+  ];
+
+  // Strong on-site indicators that should exclude the job
+  const strongOnsiteIndicators = [
+    'on-site', 'onsite', 'in-person', 'office location', 'come into the office',
+    'at our office', 'in our office', 'office environment', 'headquarters',
+    'commute to', 'commuting distance', 'within commuting distance',
+    'relocation required', 'must relocate', 'local candidates only',
+    'must be located in', 'based in', 'prefer local', 'face-to-face',
+    'parking provided', 'office culture', 'on-site training', 'report to office'
+  ];
+
+  // Job titles that are typically on-site
+  const typicallyOnsiteJobTitles = [
+    'receptionist', 'front desk', 'security', 'maintenance', 'custodial',
+    'warehouse', 'shipping', 'receiving', 'driver', 'delivery', 'cashier',
+    'retail', 'sales associate', 'store', 'clinic', 'medical assistant',
+    'dental assistant', 'nurse', 'therapist', 'technician', 'lab'
+  ];
+
+  // Check for strong remote indicators
+  let remoteScore = 0;
+  for (const indicator of strongRemoteIndicators) {
+    if (combinedText.includes(indicator)) {
+      remoteScore += 3;
+    }
+  }
+
+  // Check for weak remote indicators
+  if (combinedText.includes('remote') || combinedText.includes('virtual') || combinedText.includes('wfh')) {
+    remoteScore += 1;
+  }
+
+  // Check for strong on-site indicators (these are disqualifying)
+  for (const indicator of strongOnsiteIndicators) {
+    if (combinedText.includes(indicator)) {
+      return false; // Immediately disqualify
+    }
+  }
+
+  // Check for typically on-site job titles
+  for (const onsiteTitle of typicallyOnsiteJobTitles) {
+    if (title.includes(onsiteTitle)) {
+      return false; // Immediately disqualify
+    }
+  }
+
+  // Check for specific location patterns that suggest on-site work
+  const locationPatterns = [
+    /\w+,\s*[A-Z]{2}(?:\s*,?\s*US)?$/i, // City, State format
+    /\d+\s+\w+\s+(street|st|avenue|ave|road|rd|blvd|boulevard|drive|dr|lane|ln)/i,
+    /suite\s+\d+/i,
+    /must be able to commute/i,
+    /reliable transportation/i,
+    /valid driver.?s license/i
+  ];
+
+  for (const pattern of locationPatterns) {
+    if (pattern.test(combinedText)) {
+      return false; // Disqualify if specific location requirements found
+    }
+  }
+
+  // Special check for "work location: in person" type phrases
+  if (/work location.*in person/i.test(combinedText) || 
+      /physical presence required/i.test(combinedText) ||
+      /office based/i.test(combinedText)) {
+    return false;
+  }
+
+  // If location is not "remote" or similar, and we don't have strong remote indicators, be cautious
+  if (location && location !== 'remote' && location !== 'work from home' && 
+      !location.includes('remote') && remoteScore < 2) {
+    // Check if location looks like a specific place
+    if (/\w+,\s*[A-Z]{2}/i.test(location)) {
+      return false; // Specific city/state location without strong remote indicators
+    }
+  }
+
+  // If we have any remote indicators and no disqualifying factors, accept
+  return remoteScore > 0 || location.includes('remote') || location.includes('work from home');
+}
+
+/**
+ * Filters out mock jobs and on-site jobs from an array of jobs
+ * This ensures no test, mock data, or on-site jobs are displayed to users
  */
 export function filterMockJobs(jobs: any[]): EnhancedJobListing[] {
   if (!jobs || jobs.length === 0) return [];
@@ -42,8 +139,23 @@ export function filterMockJobs(jobs: any[]): EnhancedJobListing[] {
       const irrelevantCategoryPattern = /engineering|development|programming|IT|security|networking/i;
       if (irrelevantCategoryPattern.test(job.jobCategory)) return false;
     }
+
+    // NEW: Enhanced remote job validation
+    // If the job has been validated by the backend, use that
+    if (job.remoteValidation) {
+      // Use backend validation if available
+      if (job.remoteValidation.recommendation === 'REJECT_HIGH_CONFIDENCE_ONSITE' ||
+          job.remoteValidation.recommendation === 'REJECT_MEDIUM_CONFIDENCE_ONSITE') {
+        return false;
+      }
+    } else {
+      // Fallback to frontend validation for jobs not yet validated
+      if (!isLikelyRemoteJob(job)) {
+        return false;
+      }
+    }
     
-    // If it passes all checks, it's a real job
+    // If it passes all checks, it's a valid remote job
     return true;
   });
 }
