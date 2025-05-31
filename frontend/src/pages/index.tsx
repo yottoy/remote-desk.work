@@ -135,7 +135,7 @@ export const getServerSideProps = async () => {
     
     return {
       props: {
-        featuredJobs: validJobs.slice(0, 6), // Ensure we only get at most 6 jobs
+        featuredJobs: validJobs.slice(0, 15), // Increase to 15 jobs to support both featured and recent sections
         recentJobsCount
       }
     };
@@ -185,7 +185,7 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
 
   return (
     <Layout
-      title="Remote Data Entry Jobs | Work From Home Opportunities | ClickClickJob.com"
+      title="Remote Data Entry Jobs | Work From Home | ClickClickJob"
       description="Find verified remote data entry & administrative jobs. 100+ work-from-home opportunities updated daily. No experience options available."
     >
       {/* Hero Section */}
@@ -206,22 +206,13 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
               onFilterChange={handleFilterChange}
             />
           </div>
-          
-          <div className="mt-6 text-sm">
-            <Link 
-              href="/jobs"
-              className="text-blue-700 font-medium hover:text-blue-800 hover:underline cursor-pointer transition-colors duration-200"
-            >
-              → {recentJobsCount} new opportunities just added! ←
-            </Link>
-          </div>
         </div>
       </section>
 
       {/* Featured Jobs Section */}
-      <section className="py-12 bg-white">
+      <section className="py-8 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
             <span className="mr-3">Featured Jobs</span>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
               High-Quality Opportunities
@@ -259,48 +250,81 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {featuredJobs.map(job => (
-                <ImprovedJobCard 
-                  key={job._id} 
-                  job={{
-                    ...job,
-                    _id: job._id || '', // Ensure _id is always a string
-                    postedDate: job.postedDate || new Date() // Ensure postedDate exists
-                  }} 
-                  variant="compact" 
-                />
-              ))}
-            </div>
+            <>
+              {/* First row of featured jobs (show first 6) */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {featuredJobs.slice(0, 6).map(job => (
+                  <ImprovedJobCard 
+                    key={job._id} 
+                    job={{
+                      ...job,
+                      _id: job._id || '', // Ensure _id is always a string
+                      postedDate: job.postedDate || new Date() // Ensure postedDate exists
+                    }} 
+                    variant="compact" 
+                  />
+                ))}
+              </div>
+
+              {/* Email Capture Section - moved here */}
+              <div className="mt-10 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6">
+                <div className="max-w-2xl mx-auto text-center">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6">
+                    Want fresh jobs delivered to your inbox every Monday?
+                  </h2>
+                  <EmailCaptureForm
+                    source="homepage"
+                    variant="inline"
+                    className="max-w-md mx-auto"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
-          {/* Email Capture Section */}
-          <div className="mt-16 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8">
-            <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-8">
-                Want fresh jobs delivered to your inbox every Monday?
-              </h2>
-              <EmailCaptureForm
-                source="homepage"
-                variant="inline"
-                className="max-w-md mx-auto"
-              />
+          {/* Recent Jobs Quick Links */}
+          {featuredJobs && featuredJobs.length > 6 && (
+            <div className="mt-10 bg-gray-50 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">More Recent Opportunities</h3>
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {featuredJobs.slice(6, 15).map((job) => (
+                  <div key={job._id} className="bg-white rounded-md p-3 border border-gray-200 hover:border-blue-300 transition-colors">
+                    <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
+                      <Link href={`/jobs/${job._id}`} className="hover:text-blue-600">
+                        {job.title}
+                      </Link>
+                    </h4>
+                    <p className="text-xs text-gray-600 mt-1">{job.company}</p>
+                    {(job as any).salary && (
+                      <p className="text-xs text-green-600 font-medium mt-1">{(job as any).salary}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 text-center">
+                <Link
+                  href="/jobs"
+                  className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                >
+                  View all recent jobs →
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
           
-          <div className="mt-10 text-center">
+          <div className="mt-8 text-center">
             <Link 
               href="/jobs"
               className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              View All Jobs
+              Browse All Jobs
             </Link>
           </div>
         </div>
       </section>
 
       {/* Categories Section */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-10 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
             Browse Jobs by Category
