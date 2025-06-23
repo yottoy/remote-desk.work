@@ -1,126 +1,150 @@
-// Analytics System (Task 5C) - Overview endpoint
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
+  // Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
-    if (req.method === 'GET') {
-      // Mock analytics data - in production this would come from your analytics database
-      const analyticsData = {
-        overview: {
-          totalPageViews: 15847,
-          uniqueVisitors: 8934,
-          avgSessionDuration: 185, // seconds
-          bounceRate: 0.42,
-          conversionRate: 0.08,
-          lastUpdated: new Date().toISOString()
+    const { period = '30d', content_type, metric } = req.query;
+
+    // Mock comprehensive analytics data
+    const analyticsData = {
+      overview: {
+        total_page_views: 15847,
+        unique_visitors: 8934,
+        avg_session_duration: 245,
+        bounce_rate: 0.34,
+        conversion_rate: 0.045,
+        period: period
+      },
+      content_performance: [
+        {
+          title: 'Remote Administrative Jobs: Complete Guide',
+          views: 3421,
+          unique_views: 2876,
+          avg_time_on_page: 245,
+          scroll_depth: 82,
+          social_shares: 45,
+          content_type: 'guide',
+          quality_score: 8.7
         },
-        content: {
-          totalArticles: 127,
-          publishedArticles: 89,
-          draftArticles: 32,
-          scheduledArticles: 6,
-          avgQualityScore: 0.78,
-          avgReadabilityScore: 72
+        {
+          title: 'Weekly Job Market Insights',
+          views: 2847,
+          unique_views: 2456,
+          avg_time_on_page: 198,
+          scroll_depth: 75,
+          social_shares: 23,
+          content_type: 'weekly_insights',
+          quality_score: 7.9
         },
-        jobAlerts: {
-          totalSubscriptions: 3456,
-          activeSubscriptions: 2987,
-          pendingVerifications: 234,
-          emailsSentToday: 456,
-          emailsSentThisWeek: 2341,
-          avgOpenRate: 0.34,
-          avgClickRate: 0.12
-        },
-        seo: {
-          organicTraffic: 12456,
-          topKeywords: [
-            { keyword: 'remote admin jobs', position: 3, volume: 2400 },
-            { keyword: 'work from home data entry', position: 7, volume: 1800 },
-            { keyword: 'virtual assistant positions', position: 5, volume: 1200 }
-          ],
-          avgPageLoadTime: 1.8, // seconds
-          mobileTraffic: 0.67,
-          coreWebVitals: {
-            lcp: 2.1, // Largest Contentful Paint
-            fid: 45, // First Input Delay (ms)
-            cls: 0.08 // Cumulative Layout Shift
-          }
-        },
-        traffic: {
-          sources: {
-            organic: 0.52,
-            direct: 0.28,
-            social: 0.12,
-            referral: 0.08
-          },
-          topPages: [
-            { path: '/jobs', views: 4567, avgTimeOnPage: 145 },
-            { path: '/categories/administrative-assistant', views: 2341, avgTimeOnPage: 198 },
-            { path: '/categories/data-entry', views: 1987, avgTimeOnPage: 167 }
-          ]
-        },
-        performance: {
-          apiResponseTimes: {
-            '/api/jobs': 89, // ms
-            '/api/categories': 45, // ms
-            '/api/content/articles': 67 // ms
-          },
-          errorRate: 0.002,
-          uptime: 0.9998
-        },
-        timeRange: {
-          start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
-          end: new Date().toISOString(),
-          period: '30d'
+        {
+          title: 'Entry-Level Remote Positions',
+          views: 1523,
+          unique_views: 1398,
+          avg_time_on_page: 156,
+          scroll_depth: 65,
+          social_shares: 12,
+          content_type: 'editors_pick',
+          quality_score: 8.2
         }
-      };
-
-      const { period = '30d', metrics } = req.query;
-      
-      // Filter metrics if specified
-      let responseData = analyticsData;
-      if (metrics) {
-        const requestedMetrics = metrics.split(',');
-        responseData = {};
-        requestedMetrics.forEach(metric => {
-          if (analyticsData[metric]) {
-            responseData[metric] = analyticsData[metric];
-          }
-        });
+      ],
+      traffic_sources: {
+        organic_search: 0.62,
+        direct: 0.23,
+        social_media: 0.08,
+        referral: 0.05,
+        email: 0.02
+      },
+      top_keywords: [
+        { keyword: 'remote data entry jobs', impressions: 12450, clicks: 890, position: 3.2 },
+        { keyword: 'work from home admin', impressions: 8765, clicks: 654, position: 4.1 },
+        { keyword: 'virtual assistant jobs', impressions: 6543, clicks: 432, position: 5.8 }
+      ],
+      user_engagement: {
+        pages_per_session: 2.8,
+        new_vs_returning: {
+          new_users: 0.68,
+          returning_users: 0.32
+        },
+        device_breakdown: {
+          desktop: 0.45,
+          mobile: 0.42,
+          tablet: 0.13
+        }
+      },
+      job_alert_metrics: {
+        total_subscriptions: 1247,
+        weekly_signups: 89,
+        email_open_rate: 0.34,
+        click_through_rate: 0.12,
+        unsubscribe_rate: 0.02
+      },
+      seo_metrics: {
+        average_position: 4.2,
+        total_impressions: 45672,
+        total_clicks: 3421,
+        ctr: 0.075,
+        indexed_pages: 28
       }
+    };
 
-      res.status(200).json({
-        success: true,
-        data: responseData,
-        message: 'Analytics overview retrieved successfully',
-        timestamp: new Date().toISOString(),
-        period,
-        generatedAt: new Date().toISOString()
-      });
-    } else {
-      res.setHeader('Allow', ['GET', 'OPTIONS']);
-      res.status(405).json({
-        success: false,
-        error: `Method ${req.method} not allowed`,
-        allowedMethods: ['GET', 'OPTIONS']
-      });
+    // Apply filters if provided
+    let responseData = { ...analyticsData };
+
+    if (content_type) {
+      responseData.content_performance = responseData.content_performance.filter(
+        item => item.content_type === content_type
+      );
     }
+
+    if (metric) {
+      // Return specific metric if requested
+      const metricValue = getMetricValue(analyticsData, metric);
+      if (metricValue !== null) {
+        responseData = { metric, value: metricValue, period };
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: responseData,
+      generated_at: new Date().toISOString(),
+      period: period
+    });
+
   } catch (error) {
     console.error('Analytics API Error:', error);
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
       error: 'Internal server error',
-      message: 'Failed to retrieve analytics data',
-      timestamp: new Date().toISOString()
+      message: 'Failed to fetch analytics data'
     });
+  }
+}
+
+function getMetricValue(data, metric) {
+  switch (metric) {
+    case 'page_views':
+      return data.overview.total_page_views;
+    case 'unique_visitors':
+      return data.overview.unique_visitors;
+    case 'bounce_rate':
+      return data.overview.bounce_rate;
+    case 'conversion_rate':
+      return data.overview.conversion_rate;
+    case 'subscriptions':
+      return data.job_alert_metrics.total_subscriptions;
+    default:
+      return null;
   }
 } 

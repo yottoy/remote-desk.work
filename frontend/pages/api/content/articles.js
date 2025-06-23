@@ -1,109 +1,126 @@
-// Content Management API (Task 5A) - Articles endpoint
+import { MongoClient } from 'mongodb';
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+const DB_NAME = process.env.MONGODB_DB || 'clickclickjob';
+
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
+  // Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
-    // Mock response for now - in production this would connect to your content management system
+    const client = new MongoClient(MONGODB_URI);
+    await client.connect();
+    const db = client.db(DB_NAME);
+
+    // Mock articles data with realistic content management structure
     const articles = [
       {
-        id: '1',
-        title: 'Ultimate Remote Admin Guide',
-        slug: 'ultimate-remote-admin-guide',
-        type: 'guide',
+        id: 'art_001',
+        title: 'Remote Administrative Jobs: A Complete Guide for 2025',
+        content: 'The landscape of remote administrative work has evolved significantly...',
         status: 'published',
-        content: 'Comprehensive guide to remote administrative work...',
-        author: 'ClickClickJob Editorial Team',
-        publishedAt: new Date().toISOString(),
-        tags: ['remote-work', 'administrative', 'guide'],
-        seo: {
-          metaTitle: 'Ultimate Guide to Remote Administrative Jobs',
-          metaDescription: 'Complete guide to finding and succeeding in remote administrative positions.',
-          keywords: ['remote admin jobs', 'virtual assistant', 'work from home']
+        author: 'Editorial Team',
+        created_at: new Date('2025-01-15').toISOString(),
+        updated_at: new Date('2025-01-20').toISOString(),
+        content_type: 'guide',
+        workflow_status: 'approved',
+        seo_metadata: {
+          meta_title: 'Remote Admin Jobs 2025 | Complete Guide | ClickClickJob',
+          meta_description: 'Discover the best remote administrative job opportunities in 2025. Complete guide with salary data, requirements, and top employers.',
+          keywords: ['remote admin jobs', 'administrative assistant', 'work from home']
+        },
+        engagement_metrics: {
+          views: 2847,
+          time_on_page: 245,
+          scroll_depth: 78
         }
       },
       {
-        id: '2',
-        title: 'Weekly Market Insights - Week 1',
-        slug: 'weekly-market-insights-week-1',
-        type: 'weekly_insights',
+        id: 'art_002',
+        title: 'Weekly Job Market Insights: January 2025',
+        content: 'This week we analyzed 1,250 new remote job postings...',
         status: 'published',
-        content: 'This week\'s remote job market trends...',
-        author: 'Market Research Team',
-        publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        tags: ['market-insights', 'trends', 'weekly'],
-        analytics: {
-          views: 1247,
-          engagement: 0.68,
-          avgTimeOnPage: 180
+        author: 'Data Analytics Team',
+        created_at: new Date('2025-01-22').toISOString(),
+        updated_at: new Date('2025-01-22').toISOString(),
+        content_type: 'weekly_insights',
+        workflow_status: 'approved',
+        seo_metadata: {
+          meta_title: 'Weekly Remote Job Market Report | ClickClickJob',
+          meta_description: 'Latest remote job market trends and insights for administrative professionals.',
+          keywords: ['job market trends', 'remote jobs report', 'employment data']
+        },
+        engagement_metrics: {
+          views: 1523,
+          time_on_page: 156,
+          scroll_depth: 65
+        }
+      },
+      {
+        id: 'art_003',
+        title: 'Editor\'s Pick: Top 5 Entry-Level Remote Positions',
+        content: 'Our editorial team has curated the best entry-level opportunities...',
+        status: 'published',
+        author: 'Senior Editor',
+        created_at: new Date('2025-01-18').toISOString(),
+        updated_at: new Date('2025-01-19').toISOString(),
+        content_type: 'editors_pick',
+        workflow_status: 'approved',
+        featured: true,
+        seo_metadata: {
+          meta_title: 'Best Entry-Level Remote Jobs | Editor\'s Choice | ClickClickJob',
+          meta_description: 'Hand-picked entry-level remote job opportunities by our editorial experts.',
+          keywords: ['entry level remote jobs', 'beginner remote work', 'no experience remote']
+        },
+        engagement_metrics: {
+          views: 3421,
+          time_on_page: 198,
+          scroll_depth: 82
         }
       }
     ];
 
-    switch (req.method) {
-      case 'GET':
-        // Handle query parameters for filtering
-        const { type, status, limit = 10 } = req.query;
-        let filteredArticles = articles;
+    // Apply filters if provided
+    const { status, content_type, author, limit = 10 } = req.query;
+    let filteredArticles = [...articles];
 
-        if (type) {
-          filteredArticles = filteredArticles.filter(article => article.type === type);
-        }
-        if (status) {
-          filteredArticles = filteredArticles.filter(article => article.status === status);
-        }
+    if (status) filteredArticles = filteredArticles.filter(a => a.status === status);
+    if (content_type) filteredArticles = filteredArticles.filter(a => a.content_type === content_type);
+    if (author) filteredArticles = filteredArticles.filter(a => a.author.toLowerCase().includes(author.toLowerCase()));
 
-        const limitedArticles = filteredArticles.slice(0, parseInt(limit));
-        
-        res.status(200).json({
-          success: true,
-          data: limitedArticles,
-          total: filteredArticles.length,
-          message: 'Articles retrieved successfully',
-          timestamp: new Date().toISOString()
-        });
-        break;
+    const limitedArticles = filteredArticles.slice(0, parseInt(limit));
 
-      case 'POST':
-        // Handle article creation (would require authentication in production)
-        const newArticle = {
-          id: Date.now().toString(),
-          ...req.body,
-          status: 'draft',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
+    await client.close();
 
-        res.status(201).json({
-          success: true,
-          data: newArticle,
-          message: 'Article created successfully'
-        });
-        break;
+    res.status(200).json({
+      success: true,
+      articles: limitedArticles,
+      total: filteredArticles.length,
+      metadata: {
+        total_published: articles.filter(a => a.status === 'published').length,
+        content_types: [...new Set(articles.map(a => a.content_type))],
+        authors: [...new Set(articles.map(a => a.author))],
+        last_updated: new Date().toISOString()
+      }
+    });
 
-      default:
-        res.setHeader('Allow', ['GET', 'POST', 'OPTIONS']);
-        res.status(405).json({
-          success: false,
-          error: `Method ${req.method} not allowed`,
-          allowedMethods: ['GET', 'POST', 'OPTIONS']
-        });
-    }
   } catch (error) {
     console.error('Content API Error:', error);
-    res.status(500).json({
-      success: false,
+    res.status(500).json({ 
       error: 'Internal server error',
-      message: 'Failed to process request',
-      timestamp: new Date().toISOString()
+      message: 'Failed to fetch articles',
+      success: false 
     });
   }
 } 
