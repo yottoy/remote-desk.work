@@ -9,15 +9,23 @@ type LayoutProps = {
   children: ReactNode;
   title?: string;
   description?: string;
+  ogImage?: string;
+  ogUrl?: string;
 };
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
   title = 'ClickClickJob.com | Remote Jobs',
-  description = 'Find verified remote data entry & administrative jobs. 100+ work-from-home opportunities updated daily. No experience options available.'
+  description = 'Find verified remote data entry & administrative jobs. 100+ work-from-home opportunities updated daily. No experience options available.',
+  ogImage = 'https://via.placeholder.com/1200x630/3B82F6/FFFFFF?text=ClickClickJob.com%20-%20Remote%20Jobs',
+  ogUrl
 }) => {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  
+  // Generate full URL for Open Graph
+  const currentUrl = ogUrl || `https://www.clickclickjob.com${router.asPath}`;
+  const fullOgImage = ogImage.startsWith('http') ? ogImage : `https://www.clickclickjob.com${ogImage}`;
   
   return (
     <>
@@ -26,6 +34,20 @@ const Layout: React.FC<LayoutProps> = ({
         <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="ClickClickJob.com" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={fullOgImage} />
+        <meta property="og:url" content={currentUrl} />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={fullOgImage} />
       </Head>
       
       <GoogleAnalytics />

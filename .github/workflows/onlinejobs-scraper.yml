@@ -1,0 +1,184 @@
+name: OnlineJobs.ph Scraper
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC instead of every 6 hours
+
+jobs:
+  scrape-onlinejobs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Create log directories
+        run: |
+          mkdir -p logs
+          mkdir -p experimental-scrapers/production-data
+          touch logs/onlinejobs-scraper.log
+          chmod 777 logs
+          echo "Created directories for OnlineJobs.ph scraper"
+          ls -la logs/
+      
+      - name: Environment diagnostics
+        run: |
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+          echo "Current directory: $(pwd)"
+          echo "Directory contents: $(ls -la)"
+          echo "OnlineJobs.ph scraper environment ready" > logs/onlinejobs-environment.log
+          
+      - name: Install main project dependencies
+        run: npm ci
+      
+      - name: Install OnlineJobs.ph scraper dependencies
+        run: |
+          cd experimental-scrapers
+          npm install
+          echo "Installed scraper dependencies" | tee ../logs/scraper-deps.log
+          ls -la node_modules/ | head -10 | tee -a ../logs/scraper-deps.log
+      
+      - name: Test MongoDB connection
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          cd experimental-scrapers
+          echo "Testing MongoDB connection..." | tee ../logs/mongodb-test.log
+          node test-mongodb.js 2>&1 | tee -a ../logs/mongodb-test.log
+          mongodb_test_exit=$?
+          echo "MongoDB test exit code: $mongodb_test_exit" | tee -a ../logs/mongodb-test.log
+          
+          if [ $mongodb_test_exit -ne 0 ]; then
+            echo "❌ MongoDB connection failed, cannot proceed" | tee -a ../logs/mongodb-test.log
+            exit 1
+          else
+            echo "✅ MongoDB connection successful" | tee -a ../logs/mongodb-test.log
+          fi
+      
+      - name: Run OnlineJobs.ph scraper
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          cd experimental-scrapers
+          echo "Starting OnlineJobs.ph scraper..." | tee ../logs/onlinejobs-scraper.log
+          
+          # Run the scraper with detailed logging
+          node deploy-production.js run-once 2>&1 | tee -a ../logs/onlinejobs-scraper.log
+          scraper_exit_code=$?
+          echo "OnlineJobs.ph scraper exit code: $scraper_exit_code" | tee -a ../logs/onlinejobs-scraper.log
+          
+          # Check if we got results
+          if [ -f "production-data/latest-onlinejobs.json" ]; then
+            job_count=$(cat production-data/latest-onlinejobs.json | grep -o '"totalJobs":[0-9]*' | cut -d':' -f2)
+            echo "✅ Scraper completed successfully with $job_count jobs" | tee -a ../logs/onlinejobs-scraper.log
+          else
+            echo "⚠️ No results file found" | tee -a ../logs/onlinejobs-scraper.log
+          fi
+          
+          # List all result files
+          echo "Result files created:" | tee -a ../logs/onlinejobs-scraper.log
+          ls -la production-data/ | tee -a ../logs/onlinejobs-scraper.log
+      
+      - name: Verify database save
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          cd experimental-scrapers
+          echo "Verifying jobs were saved to database..." | tee ../logs/db-verification.log
+          
+          # Run a quick test to check if jobs were saved
+          node -e "
+            const MongoDBIntegration = require('./src/database/MongoDBIntegration');
+            const logger = require('./src/utils/logger');
+            
+            async function checkJobs() {
+              const mongodb = new MongoDBIntegration({
+                connectionString: process.env.MONGODB_URI || 'mongodb+srv://yotamt:***REMOVED***@cluster0.mjemntb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+                databaseName: 'remote-desk-work',
+                collectionName: 'jobs'
+              });
+              
+              try {
+                const stats = await mongodb.getStats();
+                console.log('Database Stats:');
+                console.log('  Total jobs:', stats.totalJobs);
+                console.log('  Experimental jobs:', stats.experimentalJobs);
+                console.log('  Recent jobs (24h):', stats.recentJobs);
+                console.log('  Source breakdown:', stats.sourceBreakdown);
+                
+                if (stats.experimentalJobs > 0) {
+                  console.log('✅ Jobs successfully saved to database!');
+                } else {
+                  console.log('⚠️ No experimental scraper jobs found in database');
+                }
+                
+                await mongodb.disconnect();
+              } catch (error) {
+                console.error('❌ Error checking database:', error.message);
+                process.exit(1);
+              }
+            }
+            
+            checkJobs();
+          " 2>&1 | tee -a ../logs/db-verification.log
+
+      - name: Create deployment summary
+        run: |
+          cd experimental-scrapers
+          echo "=== OnlineJobs.ph Scraper Deployment Summary ===" | tee ../logs/deployment-summary.log
+          
+          if [ -f "production-data/latest-onlinejobs.json" ]; then
+            echo "📊 Latest scraping results:" | tee -a ../logs/deployment-summary.log
+            node -e "
+              const fs = require('fs');
+              try {
+                const data = JSON.parse(fs.readFileSync('production-data/latest-onlinejobs.json', 'utf8'));
+                console.log('  Total jobs found:', data.metadata.totalJobs);
+                console.log('  Scraping time:', data.metadata.scrapedAt);
+                console.log('  Remote jobs:', data.metadata.stats.onlineJobs.remote);
+                console.log('  Jobs with salary:', data.metadata.stats.onlineJobs.withSalary);
+                console.log('  Jobs saved to DB:', data.metadata.stats.onlineJobs.saved || 'Unknown');
+                console.log('  Duplicates found:', data.metadata.stats.onlineJobs.duplicates || 'Unknown');
+              } catch (error) {
+                console.log('  Could not parse results file');
+              }
+            " | tee -a ../logs/deployment-summary.log
+          else
+            echo "❌ No results file found" | tee -a ../logs/deployment-summary.log
+          fi
+          
+          echo "🚀 OnlineJobs.ph scraper deployment completed!" | tee -a ../logs/deployment-summary.log
+          echo "💾 Jobs should now be visible in your frontend at remote-desk.work" | tee -a ../logs/deployment-summary.log
+
+      # Upload scraper results - TEMPORARILY DISABLED to fix storage quota
+      # - name: Upload scraper results
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: onlinejobs-results
+      #     path: |
+      #       experimental-scrapers/production-data/*.json
+      #       experimental-scrapers/production-data/*.csv
+      #     retention-days: 1
+      #     if-no-files-found: ignore
+      
+      # Upload logs - TEMPORARILY DISABLED to fix storage quota
+      # - name: Upload logs
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: onlinejobs-logs
+      #     path: |
+      #       logs/
+      #       *.log
+      #       **/*.log
+      #     retention-days: 1
+      #     if-no-files-found: warn 

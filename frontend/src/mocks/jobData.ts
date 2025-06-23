@@ -3,7 +3,7 @@ import { Job, EnhancedJobListing } from '../types/job';
 /**
  * MOCK DATA REMOVED
  * 
- * We've removed all mock job data from the application as it's no longer needed.
+ * We&apos;ve removed all mock job data from the application as it&apos;s no longer needed.
  * All job data should now come from the live API endpoints.
  * 
  * This file remains as a stub to prevent import errors but no longer contains

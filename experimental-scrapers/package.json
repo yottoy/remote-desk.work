@@ -1,0 +1,30 @@
+{
+  "name": "experimental-scrapers",
+  "version": "1.0.0",
+  "description": "Experimental scrapers for OnlineJobs.ph and RemoteJobs.com",
+  "main": "deploy-production.js",
+  "scripts": {
+    "start": "node deploy-production.js",
+    "test": "node test-scrapers.js",
+    "monitor": "node deploy-production.js monitor",
+    "newsletter": "node setup-newsletter.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "mongodb": "^6.16.0",
+    "playwright": "^1.40.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "keywords": [
+    "scraping",
+    "jobs",
+    "remote",
+    "onlinejobs",
+    "remotejobs"
+  ],
+  "author": "Remote Desk Work",
+  "license": "MIT"
+}

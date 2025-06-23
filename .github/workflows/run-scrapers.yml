@@ -2,8 +2,9 @@ name: Run Job Scrapers
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 */12 * * *'  # Run every 12 hours
+  # Schedule completely disabled to save storage - run manually when needed
+  # schedule:
+  #   - cron: '0 */12 * * *'  # Run every 12 hours - DISABLED to reduce artifact storage
 
 jobs:
   scrape-jobs:
@@ -172,23 +173,26 @@ jobs:
             fi
           fi
 
-      - name: Upload job results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: job-results
-          path: |
-            *.json
-            results/*.json
-          if-no-files-found: ignore
+      # Artifacts disabled to save GitHub Actions storage
+      # - name: Upload job results
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: job-results
+      #     path: |
+      #       *.json
+      #       results/*.json
+      #     retention-days: 1
+      #     if-no-files-found: ignore
       
-      - name: Upload logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-logs
-          path: |
-            logs/
-            *.log
-            **/*.log
-          if-no-files-found: warn 
+      # - name: Upload logs
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: debug-logs
+      #     path: |
+      #       logs/
+      #       *.log
+      #       **/*.log
+      #     retention-days: 1
+      #     if-no-files-found: warn 

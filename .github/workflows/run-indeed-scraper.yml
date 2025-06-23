@@ -58,4 +58,6 @@ jobs:
           name: debug-logs
           path: |
             indeed-scraper-debug.log
-            *.log 
+            *.log
+          retention-days: 1
+          if-no-files-found: warn 

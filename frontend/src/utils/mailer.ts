@@ -30,7 +30,7 @@ export async function sendDigest(jobs: Job[]) {
       url: job.url
     }));
 
-  // Send email using MailerLite API v3 format
+  // Create campaign using MailerLite API
   const response = await fetch('https://connect.mailerlite.com/api/campaigns', {
     method: 'POST',
     headers: {
@@ -47,38 +47,66 @@ export async function sendDigest(jobs: Job[]) {
         from: 'hi@clickclickjob.com',
         content: generateEmailHtml(formattedJobs)
       }],
-      groups: [MAILERLITE_GROUP_ID]
+      groups: [MAILERLITE_GROUP_ID],
+      // Schedule to send immediately
+      delivery_schedule: {
+        type: 'instant'
+      }
     })
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to send email: ${response.status} - ${errorText}`);
+    throw new Error(`Failed to create campaign: ${response.status} - ${errorText}`);
   }
 
   const result = await response.json();
   console.log('Digest email campaign created successfully:', result);
   
-  // Auto-send the campaign immediately
+  // Send the campaign immediately using the correct endpoint
   if (result.data && result.data.id) {
     console.log('Attempting to send campaign immediately...');
     try {
-      const sendResponse = await fetch(`https://connect.mailerlite.com/api/campaigns/${result.data.id}/send`, {
+      // Use the correct MailerLite API endpoint for sending campaigns
+      const sendResponse = await fetch(`https://connect.mailerlite.com/api/campaigns/${result.data.id}/schedule`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${MAILERLITE_API_KEY}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          delivery: {
+            type: 'instant'
+          }
+        })
       });
 
       if (sendResponse.ok) {
         const sendResult = await sendResponse.json();
-        console.log('Campaign sent successfully:', sendResult);
+        console.log('Campaign scheduled successfully:', sendResult);
       } else {
         const sendError = await sendResponse.text();
-        console.error('Failed to send campaign:', sendResponse.status, sendError);
-        // Don't throw error - campaign was created successfully even if sending failed
+        console.error('Failed to schedule campaign:', sendResponse.status, sendError);
+        
+        // Try alternative endpoint if schedule doesn't work
+        console.log('Trying alternative send endpoint...');
+        const altSendResponse = await fetch(`https://connect.mailerlite.com/api/campaigns/${result.data.id}/actions/send`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${MAILERLITE_API_KEY}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (altSendResponse.ok) {
+          const altSendResult = await altSendResponse.json();
+          console.log('Campaign sent via alternative endpoint:', altSendResult);
+        } else {
+          const altSendError = await altSendResponse.text();
+          console.error('Alternative send endpoint also failed:', altSendResponse.status, altSendError);
+        }
       }
     } catch (sendError) {
       console.error('Error sending campaign:', sendError);

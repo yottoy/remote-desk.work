@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { keywordTracking } from './KeywordAnalytics';
 
 interface JobAlertSignupProps {
@@ -59,7 +60,7 @@ const JobAlertSignup: React.FC<JobAlertSignupProps> = ({ keyword, className = ''
       data-testid="email-signup"
     >
       <h3 className="text-lg font-medium text-gray-900 mb-3">
-        Get Job Alerts for "{keyword.replace(/-/g, ' ')}"
+        Get Job Alerts for &quot;{keyword.replace(/-/g, ' ')}&quot;
       </h3>
       
       {success ? (
@@ -72,7 +73,7 @@ const JobAlertSignup: React.FC<JobAlertSignupProps> = ({ keyword, className = ''
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-green-800">
-                Success! You're now signed up for job alerts.
+                Success! You&apos;re now signed up for job alerts.
               </p>
             </div>
           </div>
@@ -141,7 +142,7 @@ const JobAlertSignup: React.FC<JobAlertSignupProps> = ({ keyword, className = ''
           </div>
           
           <p className="mt-2 text-xs text-gray-500">
-            You can unsubscribe at any time. By signing up, you agree to our <a href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</a>.
+            You can unsubscribe at any time. By signing up, you agree to our <Link href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</Link>.
           </p>
         </form>
       )}

@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "scrapedAt": "2025-05-28T23:24:24.744Z",
+    "totalJobs": 0,
+    "stats": {
+      "total": 0,
+      "remote": 0,
+      "withSalary": 0,
+      "withUrl": 0,
+      "recentJobs": 0,
+      "categories": {}
+    },
+    "scraper": "ProductionOnlineJobsScraper",
+    "version": "1.0"
+  },
+  "jobs": []
+}

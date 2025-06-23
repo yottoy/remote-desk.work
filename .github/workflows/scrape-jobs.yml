@@ -1,9 +1,9 @@
 name: Scrape Remote Admin/Data Entry Jobs
 
 on:
-  schedule:
-    - cron: '0 */12 * * *'  # Run every 12 hours
-  workflow_dispatch:  # Allow manual runs
+  # schedule:
+  #   - cron: '0 */12 * * *'  # Run every 12 hours - DISABLED to reduce artifact storage
+  workflow_dispatch:  # Allow manual runs only
 
 jobs:
   scrape:
@@ -64,10 +64,12 @@ jobs:
           fi
           
       - name: Upload results as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: job-scraping-results
           path: |
             combined-results.json
             results/
-            logs/ 
+            logs/
+          retention-days: 1
+          if-no-files-found: warn 

@@ -1,0 +1,68 @@
+name: Database Cleanup
+
+on:
+  schedule:
+    # Run weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      max_age_days:
+        description: 'Maximum age of jobs to keep (days)'
+        required: false
+        default: '60'
+      dry_run:
+        description: 'Run in dry-run mode (no changes)'
+        required: false
+        default: 'false'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run database cleanup
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          echo "🧹 Starting automated database cleanup..."
+          
+          # Set parameters from workflow inputs or defaults
+          MAX_AGE_DAYS="${{ github.event.inputs.max_age_days || '60' }}"
+          DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
+          
+          echo "Parameters:"
+          echo "  Max age: $MAX_AGE_DAYS days"
+          echo "  Dry run: $DRY_RUN"
+          echo ""
+          
+          # Run cleanup
+          if [ "$DRY_RUN" = "true" ]; then
+            node scripts/periodic-database-cleanup.js --dry-run --max-age=$MAX_AGE_DAYS
+          else
+            node scripts/periodic-database-cleanup.js --max-age=$MAX_AGE_DAYS
+          fi
+          
+          echo "✅ Database cleanup completed"
+      
+      - name: Check database status after cleanup
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          echo "📊 Checking database status after cleanup..."
+          node get-current-job-count.js
+      
+      - name: Test API after cleanup
+        run: |
+          echo "🔌 Testing API endpoint after cleanup..."
+          node test-api-endpoint.js || echo "⚠️ API test failed" 

@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# ClickClickJob Frontend Deployment Script
+echo "Starting ClickClickJob frontend deployment process..."
+
+# Change to the frontend directory
+echo "Navigating to frontend directory..."
+cd frontend || { echo "Frontend directory not found"; exit 1; }
+
+# Check if Vercel CLI is installed
+if ! command -v vercel &> /dev/null; then
+  echo "Vercel CLI not found. Installing..."
+  npm install -g vercel
+fi
+
+# Ensure environment variables are prepared
+echo "Checking environment variables..."
+
+# List of required environment variables
+required_vars=("MONGODB_URI" "MONGODB_DB")
+missing_vars=()
+
+for var in "${required_vars[@]}"; do
+  if [ -z "${!var}" ]; then
+    missing_vars+=("$var")
+  fi
+done
+
+if [ ${#missing_vars[@]} -gt 0 ]; then
+  echo "⚠️ Warning: The following environment variables are not set:"
+  for var in "${missing_vars[@]}"; do
+    echo "  - $var"
+  done
+  echo ""
+  echo "These will need to be configured in the Vercel dashboard."
+  echo ""
+fi
+
+# Deploy directly from frontend directory
+echo "Deploying to Vercel..."
+echo "Using the vercel.json in the frontend directory"
+vercel --prod
+
+if [ $? -ne 0 ]; then
+  echo "❌ Deployment failed."
+  exit 1
+fi
+
+echo "✅ Deployment successful! Your app is now live."
+echo "Visit the Vercel dashboard to configure environment variables and view analytics data."
+echo "https://vercel.com/dashboard" 

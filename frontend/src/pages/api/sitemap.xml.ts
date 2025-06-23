@@ -12,6 +12,8 @@ interface Job {
   uniqueIdentifier?: string;
   updatedAt?: Date;
   createdAt?: Date;
+  title?: string;
+  company?: string;
 }
 
 // Hardcoded category slugs that match the ones used in the category pages
@@ -42,15 +44,96 @@ const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const { db } = await connectToDatabase();
       
-      // Get jobs with minimal fields needed for sitemap
-      jobs = await db.collection('jobs').find({}, {
+      // Get jobs with EXACT SAME filtering as the jobs API to prevent orphan pages
+      // This ensures sitemap only includes jobs that are actually accessible
+      const filterConditions = [];
+      
+      // ENHANCED: More comprehensive remote job filtering (SAME AS JOBS API)
+      // Focus on excluding jobs that require physical presence, travel, or specific locations
+      filterConditions.push({
+        $and: [
+          // Basic job validity checks
+          { description: { $exists: true, $nin: [null, ""] } },
+          { title: { $exists: true, $nin: [null, ""] } },
+          
+          // Exclude jobs requiring transportation, travel, or mileage
+          { description: { $not: { $regex: /(reliable transportation|valid driver|mileage reimbursement|travel.*to.*client|visit.*client|client.*home|client.*site|travel.*required|commute|driving.*to)/i } } },
+          
+          // Exclude jobs with clear on-site requirements
+          { description: { $not: { $regex: /(on-site required|onsite required|in-person required|must work on-site|must work onsite|must work in-person|office attendance required|must commute to|relocation required|must relocate|physical presence required|work location.*in person|report.*to.*office|based.*in.*office)/i } } },
+          
+          // Exclude facility-based work locations
+          { description: { $not: { $regex: /(work.*at.*our.*location|work.*at.*facility|work.*at.*center|work.*at.*clinic|work.*at.*hospital|work.*at.*store|work.*at.*warehouse)/i } } },
+          
+          // Exclude jobs with on-site indicators in title
+          { title: { $not: { $regex: /(on-site only|onsite only|in-person only|office based only)/i } } },
+          
+          // NEW: Exclude reception and client-facing jobs that require physical presence
+          { description: { $not: { $regex: /(reception area|reception desk|front desk|greet.*client|welcome.*client|check.*in.*client|check.*out.*client|reception duties|receptionist role|reception work|office reception|clinic reception|hospital reception|front office|customer service desk|client reception|visitor reception)/i } } },
+          
+          // NEW: Exclude jobs with physical workplace indicators
+          { description: { $not: { $regex: /(our office|the office|office hours|office environment|come to work|report to work|work schedule.*monday.*friday|office location|physical office|corporate office|main office|branch office|headquarters)/i } } },
+          
+          // NEW: Exclude medical/clinical jobs requiring physical presence  
+          { description: { $not: { $regex: /(animal clinic|veterinary clinic|medical clinic|dental office|doctor office|practice location|clinic location|hospital floor|patient care|clinical setting|medical facility|healthcare facility|examination room)/i } } },
+          
+          // NEW: Exclude retail and service jobs
+          { description: { $not: { $regex: /(retail location|store location|service center|customer location|work site|job site|construction site|manufacturing plant|warehouse location|distribution center|call center location)/i } } },
+          
+          // NEW: Exclude jobs with specific workplace hazards (indicating physical work)
+          { description: { $not: { $regex: /(exposed to.*bite|exposed to.*scratch|animal waste|unpleasant odor|physical demand|lifting.*pound|standing.*hour|walking.*mile|safety equipment|protective equipment)/i } } },
+          
+          // Exclude jobs with specific address patterns (street addresses)
+          { location: { $not: { $regex: /\d+\s+\w+\s+(street|st|avenue|ave|road|rd|blvd|boulevard|drive|dr|lane|ln|way|court|ct|circle|cir|place|pl)/i } } },
+          
+          // Exclude jobs with specific city/state targeting that suggests in-person work
+          { description: { $not: { $regex: /(cities targeting|targeting.*cities|serve.*cities|cover.*cities|work.*in.*[A-Z][a-z]+,\s*[A-Z]{2}|clients in.*[A-Z][a-z]+)/i } } }
+        ]
+      });
+        
+      // IMPORTANT: Add filters to exclude mock jobs (SAME AS JOBS API)
+      filterConditions.push({
+        $and: [
+          // Exclude jobs with ID like "job1", "job2", etc.
+          { _id: { $not: { $regex: /^job\d+$/ } } },
+          // Explicitly block any TechCorp jobs
+          { company: { $ne: "TechCorp Solutions" } },
+          // Extra safety: block anything with TechCorp in the name
+          { company: { $not: { $regex: /TechCorp/ } } },
+          // Exclude jobs explicitly marked as mock
+          { $or: [
+              { isMock: { $ne: true } },
+              { isMock: { $exists: false } }
+            ]
+          },
+          // Exclude jobs with mock data flag
+          { $or: [
+              { is_mock_data: { $ne: true } },
+              { is_mock_data: { $exists: false } }
+            ]
+          }
+        ]
+      });
+
+      jobs = await db.collection('jobs').find({
+        $and: filterConditions
+      }, {
         projection: { 
           _id: 1, 
           uniqueIdentifier: 1,
           updatedAt: 1,
-          createdAt: 1
+          createdAt: 1,
+          title: 1,
+          company: 1
         }
       }).limit(10000).toArray(); // Limit to 10,000 to keep sitemap size manageable
+      
+      // Further filter jobs to ensure they have valid identifiers
+      jobs = jobs.filter((job: Job) => {
+        const jobIdentifier = job.uniqueIdentifier || job._id;
+        // Ensure the identifier exists and is not empty
+        return jobIdentifier && jobIdentifier.toString().trim() !== '';
+      });
       
       // Get categories if they exist
       try {
@@ -125,11 +208,11 @@ const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
       }
     });
     
-    // Add job URLs
+    // Add job URLs - only valid jobs that won't redirect
     jobs.forEach((job: Job) => {
       // Use uniqueIdentifier if available, otherwise fall back to _id
       const jobIdentifier = job.uniqueIdentifier || job._id;
-      if (jobIdentifier) {
+      if (jobIdentifier && jobIdentifier.toString().trim() !== '') {
         res.write(`  <url>\n`);
         res.write(`    <loc>${baseUrl}/jobs/${jobIdentifier}</loc>\n`);
         const lastmod = job.updatedAt || job.createdAt;
@@ -201,8 +284,7 @@ const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
     </urlset>`;
     
     res.setHeader('Content-Type', 'text/xml');
-    res.write(fallbackSitemap);
-    res.end();
+    res.status(500).send(fallbackSitemap);
   }
 };
 

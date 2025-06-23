@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 
 const AboutPage = () => {
@@ -88,11 +89,11 @@ const AboutPage = () => {
             <h2>Contact Us</h2>
             
             <p>
-              Have questions, feedback, or need assistance? We'd love to hear from you!
+              Have questions? <Link href="/contact" className="text-blue-600 hover:text-blue-800">Contact us</Link> – we&apos;d love to help!
             </p>
             
             <p>
-              Please use our <a href="/contact" className="text-blue-600 hover:text-blue-800">contact form</a> to get in touch with us.
+              Please use our <Link href="/contact" className="text-blue-600 hover:text-blue-800">contact form</Link> to get in touch with us.
             </p>
             
             <p>

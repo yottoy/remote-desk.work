@@ -9,12 +9,30 @@ export class MailerLiteWebhooks {
   }
 
   verifyWebhookSignature(payload: string, signature: string): boolean {
-    const hmac = crypto.createHmac('sha256', this.webhookSecret);
-    const calculatedSignature = hmac.update(payload).digest('hex');
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(calculatedSignature)
-    );
+    // Handle case where webhook secret is not configured
+    if (!this.webhookSecret) {
+      console.error('Webhook secret not configured');
+      return false;
+    }
+
+    try {
+      // MailerLite sends signature in format "sha256=<hash>"
+      const expectedSignature = signature.startsWith('sha256=') 
+        ? signature.slice(7) // Remove "sha256=" prefix
+        : signature;
+
+      const hmac = crypto.createHmac('sha256', this.webhookSecret);
+      const calculatedSignature = hmac.update(payload, 'utf8').digest('hex');
+      
+      // Use timing-safe comparison
+      return crypto.timingSafeEqual(
+        Buffer.from(expectedSignature, 'hex'),
+        Buffer.from(calculatedSignature, 'hex')
+      );
+    } catch (error) {
+      console.error('Error verifying webhook signature:', error);
+      return false;
+    }
   }
 
   parseWebhookEvent(payload: string): WebhookEvent {
@@ -44,26 +62,33 @@ export class MailerLiteWebhooks {
     }
 
     const event = this.parseWebhookEvent(payload);
+    
+    // Handle case where event data might be missing
+    if (!event.data) {
+      console.log('Webhook event has no data, skipping');
+      return;
+    }
+
     const { subscriber, campaign } = event.data;
 
     switch (event.event) {
       case 'subscriber.unsubscribed':
-        if (handlers.onUnsubscribe) {
+        if (handlers.onUnsubscribe && subscriber) {
           await handlers.onUnsubscribe(subscriber);
         }
         break;
       case 'subscriber.bounced':
-        if (handlers.onBounce) {
+        if (handlers.onBounce && subscriber) {
           await handlers.onBounce(subscriber);
         }
         break;
       case 'subscriber.spam_reported':
-        if (handlers.onSpamReport) {
+        if (handlers.onSpamReport && subscriber) {
           await handlers.onSpamReport(subscriber);
         }
         break;
       case 'subscriber.removed_from_group':
-        if (handlers.onRemovedFromGroup) {
+        if (handlers.onRemovedFromGroup && subscriber) {
           await handlers.onRemovedFromGroup(subscriber);
         }
         break;

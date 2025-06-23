@@ -1,7 +1,7 @@
 /**
  * MOCK DATA REMOVED
  * 
- * We've removed all mock job data from the application as it's no longer needed.
+ * We&apos;ve removed all mock job data from the application as it&apos;s no longer needed.
  * All job data should now come from the live API endpoints.
  * 
  * This file contains only the category definitions without any mock job functionality.
@@ -31,7 +31,7 @@ export const categoryDetails = {
 
 These roles are popular among work-from-home seekers because they often require minimal qualifications and can be performed entirely remotely. Many data entry positions are entry-level, making them accessible for those with limited experience or who are just starting their remote work careers.
 
-Companies typically pay between $14-20 per hour for data entry specialists, with experienced professionals commanding higher rates. While many positions are full-time, you'll also find numerous part-time and flexible schedule opportunities in this category.
+Companies typically pay between $14-20 per hour for data entry specialists, with experienced professionals commanding higher rates. While many positions are full-time, you&apos;ll also find numerous part-time and flexible schedule opportunities in this category.
 
 Common employers include insurance companies, healthcare providers, e-commerce businesses, and third-party business service providers. The tools most frequently used include Microsoft Excel, Google Sheets, and proprietary data management systems.`,
     requirements: [

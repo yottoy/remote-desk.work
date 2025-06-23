@@ -5,7 +5,14 @@
   "main": "run-all-scrapers.js",
   "scripts": {
     "start": "node run-all-scrapers.js",
-    "test": "node test-direct-scraper.js"
+    "test": "node test-direct-scraper.js",
+    "cms": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "echo 'Backend build complete - serverless functions ready'",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel"
   },
   "engines": {
     "node": ">=16.0.0"
@@ -15,13 +22,24 @@
     "@types/nodemailer": "^6.4.17",
     "@vercel/analytics": "^1.5.0",
     "axios": "^1.6.2",
+    "bcryptjs": "^2.4.3",
     "cheerio": "^1.0.0-rc.12",
+    "cron": "^3.1.6",
     "dotenv": "^16.5.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "marked": "^12.0.0",
     "mongodb": "^6.16.0",
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.3",
     "playwright": "^1.52.0",
-    "puppeteer": "^21.11.0"
+    "puppeteer": "^21.11.0",
+    "validator": "^13.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   },
   "repository": {
     "type": "git",

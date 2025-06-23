@@ -115,7 +115,7 @@ const CategoriesPage: React.FC<CategoriesPageProps> = ({ jobCategories }) => {
   
   return (
     <Layout
-      title="Remote Job Categories | Find Work From Home Positions | ClickClickJob.com"
+      title="Remote Job Categories | Work From Home Jobs | ClickClickJob"
       description="Browse all remote job categories. Find verified work-from-home positions in data entry, administrative support, customer service, and more."
     >
       {/* Hero Section */}

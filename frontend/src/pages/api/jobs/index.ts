@@ -51,48 +51,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const pageNum = Math.max(1, parseInt(page as string));
       let limitNum = parseInt(limit as string);
       
-      // Build filter object - start with an AND condition list
+      // Build filter object - MINIMAL filtering for emergency fix
       const filterConditions = [];
       
-      // Always filter for remote jobs
-      filterConditions.push({ remote: true });
-      
-      // IMPORTANT: Add filters to exclude mock jobs
+      // EMERGENCY: Only basic existence checks - no content filtering
       filterConditions.push({
-        $and: [
-          // Exclude jobs with ID like "job1", "job2", etc.
-          { _id: { $not: { $regex: /^job\d+$/ } } },
-          // Explicitly block any TechCorp jobs
-          { company: { $ne: "TechCorp Solutions" } },
-          // Extra safety: block anything with TechCorp in the name
-          { company: { $not: { $regex: /TechCorp/ } } },
-          // Exclude jobs explicitly marked as mock
-          { $or: [
-              { isMock: { $ne: true } },
-              { isMock: { $exists: false } }
-            ]
-          },
-          // Exclude jobs with mock data flag
-          { $or: [
-              { is_mock_data: { $ne: true } },
-              { is_mock_data: { $exists: false } }
-            ]
-          },
-          // Exclude jobs with example.com URLs
-          { $or: [
-              { url: { $not: { $regex: /example\.com|test|mock/ } } },
-              { url: { $exists: false } }
-            ]
-          },
-          // Exclude jobs with titles that suggest engineering roles
-          { title: { $not: { $regex: /engineer|developer|software|coding|programming|devops|architect|frontend|backend|fullstack|tech lead|IT manager|sys admin|network admin|security/i } } },
-          // Exclude jobs with irrelevant job categories
-          { $or: [
-              { jobCategory: { $not: { $regex: /engineering|development|programming|IT|security|networking/i } } },
-              { jobCategory: { $exists: false } }
-            ]
-          }
-        ]
+        description: { $exists: true, $ne: null },
+        title: { $exists: true, $ne: null }
       });
       
       console.log('Query params received:', req.query);
@@ -289,6 +254,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
       }
+      
+      // IMPORTANT: Add filters to exclude mock jobs
+      filterConditions.push({
+        $and: [
+          // Exclude jobs with ID like "job1", "job2", etc.
+          { _id: { $not: { $regex: /^job\d+$/ } } },
+          // Explicitly block any TechCorp jobs
+          { company: { $ne: "TechCorp Solutions" } },
+          // Extra safety: block anything with TechCorp in the name
+          { company: { $not: { $regex: /TechCorp/ } } },
+          // Exclude jobs explicitly marked as mock
+          { $or: [
+              { isMock: { $ne: true } },
+              { isMock: { $exists: false } }
+            ]
+          },
+          // Exclude jobs with mock data flag
+          { $or: [
+              { is_mock_data: { $ne: true } },
+              { is_mock_data: { $exists: false } }
+            ]
+          },
+          // Exclude jobs with example.com URLs
+          { $or: [
+              { url: { $not: { $regex: /example\.com|test|mock/ } } },
+              { url: { $exists: false } }
+            ]
+          },
+          // Exclude jobs with titles that suggest engineering roles
+          { title: { $not: { $regex: /engineer|developer|software|coding|programming|devops|architect|frontend|backend|fullstack|tech lead|IT manager|sys admin|network admin|security/i } } },
+          // Exclude jobs with irrelevant job categories
+          { $or: [
+              { jobCategory: { $not: { $regex: /engineering|development|programming|IT|security|networking/i } } },
+              { jobCategory: { $exists: false } }
+            ]
+          }
+        ]
+      });
       
       // Build the final filter object using $and to combine all conditions
       let filter: any = {};

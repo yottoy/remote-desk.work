@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { EnhancedJobListing } from '../../types/job';
 import { keywordTracking } from './KeywordAnalytics';
 import RegionalTerminology from './RegionalTerminology';
+import Link from 'next/link';
 
 interface JobApplicationModalProps {
   job: EnhancedJobListing;
@@ -214,7 +215,7 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                     )}
                     
                     <div className="mt-6 text-xs text-gray-500">
-                      <p>By applying, you agree to our <a href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</a> and <a href="/terms-of-service" className="text-blue-600 hover:underline">Terms of Service</a>.</p>
+                      <p>By applying, you agree to our <Link href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</Link> and <Link href="/terms-of-service" className="text-blue-600 hover:underline">Terms of Service</Link>.</p>
                       <p className="mt-1">* Some links may be affiliate links that generate a commission for ClickClickJob.com</p>
                     </div>
                   </form>

@@ -11,6 +11,8 @@ const BaseScraper = require('./BaseScraper');
 const adminEntryConfig = require('../../config/admin-entry-config');
 const database = require('../utils/database');
 const bridgeManager = require('../utils/bridgeManager');
+const { MongoClient } = require('mongodb');
+const smartBalancedValidator = require('../utils/smartBalancedRemoteValidator');
 
 /**
  * Admin and Data Entry specialized scraper using JobSpy
@@ -41,6 +43,15 @@ class AdminDataEntryScraper extends BaseScraper {
       startTime: null,
       endTime: null
     };
+
+    this.baseUrls = [
+      'https://remoteok.io/remote-admin-jobs',
+      'https://remoteok.io/remote-data-entry-jobs',
+      'https://weworkremotely.com/categories/customer-support',
+      'https://weworkremotely.com/categories/admin'
+    ];
+    this.maxPagesPerSite = 5;
+    this.rateLimitDelay = 2000; // 2 seconds between requests
   }
   
   /**
@@ -944,47 +955,75 @@ class AdminDataEntryScraper extends BaseScraper {
    */
   async _saveJobsToDatabase(jobs) {
     try {
-      // Filter out jobs with invalid URLs before saving
-      const validJobs = jobs.filter(job => {
-        if (!job.url || job.url.includes('example.com') || job.is_mock_data === true) {
-          logger.warn(`Skipping job with invalid URL or mock data: ${job.title} at ${job.company}`);
-          return false;
-        }
-        
-        try {
-          // Perform one final URL validation
-          new URL(job.url);
-          return true;
-        } catch (e) {
-          logger.warn(`Skipping job with malformed URL: ${job.url}`);
-          return false;
-        }
-      });
-      
-      logger.info(`Filtered out ${jobs.length - validJobs.length} jobs with invalid URLs before database insertion`);
-      
-      if (validJobs.length === 0) {
-        logger.warn('No valid jobs to save to database');
+      if (!jobs || jobs.length === 0) {
+        logger.info('No jobs to save');
         return { saved: 0, duplicates: 0 };
       }
+
+      logger.info(`Processing ${jobs.length} scraped jobs for database save`);
       
-      // Get collection reference
-      const db = await database.getConnection();
+      const client = new MongoClient(process.env.MONGODB_URI);
+      await client.connect();
+      const db = client.db('clickclickjob');
       const collection = db.collection('jobs');
+
+      // APPLY SMART BALANCED FILTERING TO NEW JOBS
+      logger.info('🎯 Applying smart balanced remote job filtering to new jobs...');
+      const filteredJobs = [];
+      const rejectedJobs = [];
       
-      // Check for existing URLs to avoid duplicates
-      const existingUrls = new Set();
-      const urlCursor = await collection.find({}, { projection: { url: 1 } });
-      const existingDocuments = await urlCursor.toArray();
-      
-      existingDocuments.forEach(doc => {
-        if (doc.url) {
-          existingUrls.add(doc.url);
+      for (const job of jobs) {
+        const validation = smartBalancedValidator.validateRemoteJob(job);
+        
+        // Only accept jobs that clearly pass the filter
+        if (validation.recommendation.startsWith('ACCEPT')) {
+          // Ensure job has proper description for SEO
+          const jobWithDescription = smartBalancedValidator.ensureJobHasDescription({ ...job });
+          filteredJobs.push(jobWithDescription);
+        } else {
+          rejectedJobs.push({
+            title: job.title,
+            company: job.company,
+            reason: validation.recommendation,
+            mainReason: validation.reasons[0] || 'Unknown'
+          });
         }
-      });
+      }
       
+      logger.info(`🎯 Filter results: ${filteredJobs.length} accepted, ${rejectedJobs.length} rejected`);
+      
+      if (rejectedJobs.length > 0) {
+        logger.info('🗑️  Sample rejected jobs:');
+        rejectedJobs.slice(0, 3).forEach(job => {
+          logger.info(`  - "${job.title}" at ${job.company} (${job.reason})`);
+        });
+      }
+
+      // Continue with only filtered jobs
+      const validJobs = filteredJobs;
+      
+      if (validJobs.length === 0) {
+        logger.info('No jobs passed the remote job filter');
+        await client.close();
+        return { saved: 0, duplicates: 0, filtered: rejectedJobs.length };
+      }
+
+      // Check for existing jobs to avoid duplicates
+      const existingJobs = await collection.find({}).toArray();
+      const existingJobsMap = new Map();
+      
+      existingJobs.forEach(job => {
+        const key = `${job.title}_${job.company}`.toLowerCase();
+        existingJobsMap.set(key, job);
+      });
+
       // Filter out duplicates
-      const newJobs = validJobs.filter(job => !existingUrls.has(job.url));
+      const newJobs = validJobs.filter(job => {
+        const key = `${job.title}_${job.company}`.toLowerCase();
+        return !existingJobsMap.has(key);
+      });
+
+      logger.info(`Found ${newJobs.length} new jobs after duplicate removal`);
       
       // Insert new jobs
       if (newJobs.length > 0) {
@@ -998,16 +1037,22 @@ class AdminDataEntryScraper extends BaseScraper {
         // Insert the jobs
         const result = await collection.insertMany(jobsToInsert);
         
-        logger.info(`Saved ${result.insertedCount} new jobs to database`);
+        logger.info(`✅ Saved ${result.insertedCount} new remote jobs to database`);
+        logger.info(`🎯 ${rejectedJobs.length} jobs filtered out as potentially onsite`);
+        
+        await client.close();
         return {
           saved: result.insertedCount,
-          duplicates: validJobs.length - newJobs.length
+          duplicates: validJobs.length - newJobs.length,
+          filtered: rejectedJobs.length
         };
       } else {
         logger.info(`No new jobs to save, all ${validJobs.length} jobs were duplicates`);
+        await client.close();
         return {
           saved: 0,
-          duplicates: validJobs.length
+          duplicates: validJobs.length,
+          filtered: rejectedJobs.length
         };
       }
     } catch (error) {

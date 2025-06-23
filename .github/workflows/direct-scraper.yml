@@ -3,7 +3,7 @@ name: Direct JobSpy Scraper
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */12 * * *'  # Run every 12 hours
+    - cron: '0 10 * * *'  # Daily at 10 AM UTC (reduced frequency)
 
 jobs:
   direct-scrape:
@@ -132,22 +132,35 @@ jobs:
             fi
           fi
 
-      - name: Upload job results
-        if: always()  # Always attempt to upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: job-results
-          path: |
-            results/
-            *.json
-          if-no-files-found: warn
+      # Upload job results - TEMPORARILY DISABLED to fix storage quota
+      # - name: Upload job results
+      #   if: always()  # Always attempt to upload
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: job-results
+      #     path: |
+      #       results/
+      #       *.json
+      #     retention-days: 1
+      #     if-no-files-found: warn
       
-      - name: Upload logs
-        if: always()  # Always attempt to upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: logs
-          path: |
-            logs/
-            *.log
-          if-no-files-found: warn 
+      # Upload logs - TEMPORARILY DISABLED to fix storage quota
+      # - name: Upload logs
+      #   if: always()  # Always attempt to upload
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: logs
+      #     path: |
+      #       logs/
+      #       *.log
+      #     retention-days: 1
+      #     if-no-files-found: warn 
+
+      # Database cleanup to prevent quota issues
+      - name: Cleanup old jobs  
+        if: always()
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          echo "🧹 Running database cleanup to prevent quota issues..."
+          node scripts/periodic-database-cleanup.js --max-age=45 || echo "⚠️ Cleanup failed but continuing" 

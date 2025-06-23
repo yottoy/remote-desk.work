@@ -5,7 +5,7 @@ import EmailCapture from '../components/common/EmailCapture';
 const NewsletterPage = () => {
   return (
     <Layout
-      title="Remote Work Newsletter | Weekly Data Entry & Administrative Job Updates | ClickClickJob.com"
+      title="Remote Work Newsletter | Weekly Job Updates | ClickClickJob.com"
       description="Subscribe to our weekly newsletter for remote job updates. Get verified data entry, virtual assistant, and administrative work-from-home opportunities delivered to your inbox every Monday."
     >
       <div className="bg-white">

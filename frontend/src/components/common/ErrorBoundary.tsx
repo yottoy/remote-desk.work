@@ -70,7 +70,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             <div className="ml-3">
               <h3 className="text-lg font-medium text-red-800">Something went wrong</h3>
               <div className="mt-2 text-sm text-red-700">
-                <p>We've encountered an error loading this content. Please try refreshing the page.</p>
+                <p className="text-gray-600 mb-4">
+                  We&apos;re sorry, but something went wrong. Please try refreshing the page or contact support if the problem persists.
+                </p>
               </div>
               <div className="mt-4">
                 <button

@@ -9,20 +9,15 @@ interface JobCardProps {
     title: string;
     company: string;
     location: string;
-    salary?: string;
     postedDate: Date;
-    qualityScore?: number;
-    featured?: boolean;
     description?: string;
-    descriptionText?: string;
-    verified?: boolean;
-    isMock?: boolean;
-    is_mock_data?: boolean;
+    [key: string]: any; // Allow additional properties
   };
+  className?: string;
   variant?: 'default' | 'compact' | 'featured';
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
+const JobCard: React.FC<JobCardProps> = React.memo(({ job, className = '', variant = 'default' }) => {
   // SAFETY: Never render TechCorp jobs or jobs with ID job1, etc.
   if (!job || 
       job.company === 'TechCorp Solutions' || 
@@ -34,7 +29,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
   }
   
   // Use explicit verified flag if available, otherwise use qualityScore as a fallback
-  const isVerified = job.verified || (job.qualityScore && job.qualityScore >= 8);
+  const isVerified = (job as any).verified || ((job as any).qualityScore && (job as any).qualityScore >= 8);
   
   // Prepare data attributes for CSS-based filtering as a last defense mechanism
   const dataAttributes = {
@@ -63,15 +58,15 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
   }
   
   // Format salary to be more visible/prominent if available
-  const formattedSalary = job.salary ? (
+  const formattedSalary = (job as any).salary ? (
     <span className="font-medium text-green-700 whitespace-nowrap">
-      {job.salary}
+      {(job as any).salary}
     </span>
   ) : null;
   
   // Extract a short description snippet if available, with cleaned formatting
   const getDescriptionSnippet = () => {
-    let text = job.descriptionText || job.description || '';
+    let text = (job as any).descriptionText || job.description || '';
     if (!text) return '';
     
     // Strip HTML tags and markdown for snippet
@@ -225,6 +220,6 @@ const JobCard: React.FC<JobCardProps> = ({ job, variant = 'default' }) => {
       </div>
     </div>
   );
-};
+});
 
 export default JobCard; 

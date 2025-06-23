@@ -5,6 +5,8 @@ import { useEffect } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import analytics from '../utils/analytics';
+import { initializePerformanceOptimizations, reportWebVitals } from '../utils/performanceOptimization';
+import { generateOrganizationSchema, generateWebSiteSchema, generateJSONLD } from '../utils/schemaGenerator';
 import '../styles/globals.css';
 import '../styles/jobDescription.css';
 
@@ -12,9 +14,27 @@ import '../styles/jobDescription.css';
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   
-  // Testing scripts removed to fix issues
+  // Initialize performance optimizations
   useEffect(() => {
     console.log('App initialized');
+    
+    // Initialize performance optimizations on client side
+    const perfOptimizations = initializePerformanceOptimizations({
+      enableLazyLoading: true,
+      imageOptimization: true,
+      preloadCriticalResources: true,
+      enableServiceWorker: process.env.NODE_ENV === 'production'
+    });
+    
+    return () => {
+      // Cleanup performance optimizations
+      if (perfOptimizations) {
+        perfOptimizations.monitor.disconnect();
+        if (perfOptimizations.imageOptimizer) {
+          perfOptimizations.imageOptimizer.disconnect();
+        }
+      }
+    };
   }, []);
   
   // Track page views
@@ -48,6 +68,20 @@ function MyApp({ Component, pageProps }: AppProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content="Find verified remote data entry & administrative jobs. Work from home opportunities updated daily." />
         <link rel="icon" href="/favicon.ico" />
+        
+        {/* Global Schema.org markup */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: generateJSONLD(generateOrganizationSchema())
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: generateJSONLD(generateWebSiteSchema())
+          }}
+        />
       </Head>
       <ErrorBoundary
         onError={(error, errorInfo) => {
@@ -66,5 +100,8 @@ function MyApp({ Component, pageProps }: AppProps) {
     </>
   );
 }
+
+// Export the Web Vitals reporting function for Next.js
+export { reportWebVitals };
 
 export default MyApp; 

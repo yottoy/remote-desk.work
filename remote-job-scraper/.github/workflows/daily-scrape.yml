@@ -32,11 +32,11 @@ jobs:
       
       - name: Archive results
         if: success()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: scrape-results
           path: results/
-          retention-days: 7
+          retention-days: 1
       
       - name: Notify on failure
         if: failure()

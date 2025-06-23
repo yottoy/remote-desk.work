@@ -1,0 +1,286 @@
+{
+  "metadata": {
+    "testDate": "2025-05-28T23:30:02.582Z",
+    "testType": "newsletter-monitor",
+    "version": "1.0"
+  },
+  "subscriptionInfo": {
+    "email": "test@example.com",
+    "subscriptionUrl": "https://remotejobs.com/#subscribe",
+    "instructions": [
+      "1. Visit https://remotejobs.com",
+      "2. Scroll to the newsletter subscription section",
+      "3. Enter your email address",
+      "4. Click Subscribe",
+      "5. Confirm subscription in your email"
+    ],
+    "automationNote": "For automation, you would need to integrate with their newsletter service API or use email monitoring"
+  },
+  "monitoringInfo": {
+    "status": "monitoring",
+    "emailProvider": "gmail",
+    "checkInterval": 3600000,
+    "implementation": "mock",
+    "realImplementationNotes": [
+      "For Gmail: Use Gmail API with OAuth2 authentication",
+      "For Outlook: Use Microsoft Graph API",
+      "For IMAP: Use node-imap library",
+      "Filter emails by sender: noreply@remotejobs.com",
+      "Parse email content for job listings",
+      "Store processed email IDs to avoid duplicates"
+    ],
+    "sampleEmailParsing": {
+      "sampleContent": "\n      Subject: The Week's Latest Remote Jobs - RemoteJobs.com\n\n      Hi there!\n\n      Here are this week's latest remote job opportunities:\n\n      Hypermode—Senior/Staff Front-end Engineer North America 1 hour ago $100k+,Full-time,Development\n\n      Altium—Senior Product Marketing Manager North America 6 hours ago $100k+,Full-time,Marketing\n\n      GR0—Freelance Ad Designer North America 2 days ago $50k-$75k,Freelance,Design\n\n      Rula—Director of Finance Systems North America 2 days ago $100k+,Full-time,Finance\n\n      View all jobs: https://remotejobs.com\n\n      Best regards,\n      The RemoteJobs.com Team\n    ",
+      "parsedJobs": [
+        {
+          "title": "Senior/Staff Front-end Engineer",
+          "company": "Hypermode",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Senior/Staff Front-end Engineer at Hypermode",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Senior/Staff Front-end Engineer at Hypermode",
+          "salary": "$100",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T22:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        },
+        {
+          "title": "Senior Product Marketing Manager",
+          "company": "Altium",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Senior Product Marketing Manager at Altium",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Senior Product Marketing Manager at Altium",
+          "salary": "$100",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T17:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        },
+        {
+          "title": "Freelance Ad Designer",
+          "company": "GR0",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Freelance Ad Designer at GR0",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Freelance Ad Designer at GR0",
+          "salary": "$50",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-26T23:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        },
+        {
+          "title": "Director of Finance Systems",
+          "company": "Rula",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Director of Finance Systems at Rula",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Director of Finance Systems at Rula",
+          "salary": "$100",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-26T23:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        },
+        {
+          "title": "Hypermode—Senior/Staff Front",
+          "company": "end Engineer North America 1 hour ago $100k+,Full",
+          "location": "time,Development",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Hypermode—Senior/Staff Front at end Engineer North America 1 hour ago $100k+,Full",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Hypermode—Senior/Staff Front at end Engineer North America 1 hour ago $100k+,Full",
+          "salary": "$100",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T23:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        }
+      ],
+      "jobCount": 5
+    }
+  },
+  "sampleParsing": {
+    "originalFormat": {
+      "emailContent": "\n      Subject: The Week's Latest Remote Jobs - RemoteJobs.com\n\n      Hi there!\n\n      Here are this week's latest remote job opportunities:\n\n      Hypermode—Senior/Staff Front-end Engineer North America 1 hour ago $100k+,Full-time,Development\n\n      Altium—Senior Product Marketing Manager North America 6 hours ago $100k+,Full-time,Marketing\n\n      GR0—Freelance Ad Designer North America 2 days ago $50k-$75k,Freelance,Design\n\n      Rula—Director of Finance Systems North America 2 days ago $100k+,Full-time,Finance\n\n      Carrot Fertility—Director of Communications North America 5 days ago $100k+,Full-time,Marketing\n\n      View all jobs: https://remotejobs.com\n\n      Best regards,\n      The RemoteJobs.com Team\n    ",
+      "parsedJobs": [
+        {
+          "title": "Senior/Staff Front-end Engineer",
+          "company": "Hypermode",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Senior/Staff Front-end Engineer at Hypermode",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Senior/Staff Front-end Engineer at Hypermode",
+          "salary": "$100",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T22:30:02.579Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.579Z"
+        },
+        {
+          "title": "Senior Product Marketing Manager",
+          "company": "Altium",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Senior Product Marketing Manager at Altium",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Senior Product Marketing Manager at Altium",
+          "salary": "$100",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T17:30:02.580Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.579Z"
+        },
+        {
+          "title": "Freelance Ad Designer",
+          "company": "GR0",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Freelance Ad Designer at GR0",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Freelance Ad Designer at GR0",
+          "salary": "$50",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-26T23:30:02.580Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.579Z"
+        },
+        {
+          "title": "Director of Finance Systems",
+          "company": "Rula",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Director of Finance Systems at Rula",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Director of Finance Systems at Rula",
+          "salary": "$100",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-26T23:30:02.580Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.579Z"
+        },
+        {
+          "title": "Director of Communications",
+          "company": "Carrot Fertility",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Director of Communications at Carrot Fertility",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Director of Communications at Carrot Fertility",
+          "salary": "$100",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-23T23:30:02.580Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.579Z"
+        },
+        {
+          "title": "Hypermode—Senior/Staff Front",
+          "company": "end Engineer North America 1 hour ago $100k+,Full",
+          "location": "time,Development",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Hypermode—Senior/Staff Front at end Engineer North America 1 hour ago $100k+,Full",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Hypermode—Senior/Staff Front at end Engineer North America 1 hour ago $100k+,Full",
+          "salary": "$100",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T23:30:02.579Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.579Z"
+        }
+      ],
+      "jobCount": 6
+    },
+    "alternativeFormat": {
+      "emailContent": "\n      **Senior Developer** at TechCorp (Remote) - $120k-150k\n      **Marketing Manager** at StartupXYZ (North America) - $80k-100k\n      **Designer** at CreativeAgency (Europe) - €60k-80k\n      \n      More jobs at: https://remotejobs.com/jobs/techcorp-senior-developer\n    ",
+      "parsedJobs": [
+        {
+          "title": "Senior Developer",
+          "company": "TechCorp",
+          "location": "Remote",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Senior Developer at TechCorp",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Senior Developer at TechCorp",
+          "salary": "$120",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T23:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        },
+        {
+          "title": "Marketing Manager",
+          "company": "StartupXYZ",
+          "location": "North America",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Marketing Manager at StartupXYZ",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Marketing Manager at StartupXYZ",
+          "salary": "$80",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T23:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        },
+        {
+          "title": "Designer",
+          "company": "CreativeAgency",
+          "location": "Europe",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: Designer at CreativeAgency",
+          "descriptionText": "Job from RemoteJobs.com newsletter: Designer at CreativeAgency",
+          "salary": "€60k-80k",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T23:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        },
+        {
+          "title": "**Senior Developer** at TechCorp (Remote)",
+          "company": "$120k",
+          "location": "150k",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: **Senior Developer** at TechCorp (Remote) at $120k",
+          "descriptionText": "Job from RemoteJobs.com newsletter: **Senior Developer** at TechCorp (Remote) at $120k",
+          "salary": "$80",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T23:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        },
+        {
+          "title": "**Designer** at CreativeAgency (Europe)",
+          "company": "€60k",
+          "location": "80k",
+          "url": "",
+          "description": "Job from RemoteJobs.com newsletter: **Designer** at CreativeAgency (Europe) at €60k",
+          "descriptionText": "Job from RemoteJobs.com newsletter: **Designer** at CreativeAgency (Europe) at €60k",
+          "salary": "More jobs at: https://remotejobs.com/jobs/techcorp-senior-developer",
+          "source": "remotejobs.com-newsletter",
+          "postedDate": "2025-05-28T23:30:02.581Z",
+          "credibilityScore": 9,
+          "isRemote": true,
+          "newsletterDate": "2025-05-28T23:30:02.581Z"
+        }
+      ],
+      "jobCount": 5
+    }
+  },
+  "status": {
+    "isMonitoring": true,
+    "config": {
+      "emailProvider": "gmail",
+      "checkInterval": 3600000,
+      "maxEmailsToCheck": 10
+    },
+    "lastCheck": "2025-05-28T23:30:02.581Z"
+  }
+}
