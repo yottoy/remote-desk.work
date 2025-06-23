@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/.next",
   "framework": "nextjs",
   "env": {
     "NEXT_PUBLIC_API_URL": "https://www.clickclickjob.com",
@@ -9,6 +11,12 @@
     "EMAIL_PASS": "***REMOVED***",
     "CRON_SECRET": "***REMOVED***"
   },
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/next"
+    }
+  ],
   "routes": [
     {
       "src": "/api/jobs/?(.*)",
