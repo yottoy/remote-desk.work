@@ -1,6 +1,0 @@
-# robots.txt for ClickClickJob.com
-User-agent: *
-Allow: /
-
-# Sitemaps
-Sitemap: https://clickclickjob.com/api/sitemap.xml 
