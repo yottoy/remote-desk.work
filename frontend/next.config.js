@@ -34,7 +34,7 @@ const nextConfig = {
       exclude: ['error', 'warn']
     } : false,
   },
-  output: 'standalone',
+  // output: 'standalone', // Disable for Vercel
   
   // Enable asset prefix for proper static file serving
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : undefined,
