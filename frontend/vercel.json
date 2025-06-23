@@ -9,6 +9,7 @@
     "EMAIL_PASS": "***REMOVED***",
     "CRON_SECRET": "***REMOVED***"
   },
+
   "routes": [
     {
       "src": "/api/jobs/?(.*)",
@@ -54,4 +55,4 @@
       "schedule": "0 14 * * 1"
     }
   ]
-}
+} 
