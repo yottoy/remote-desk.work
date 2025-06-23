@@ -80,7 +80,7 @@ export const getServerSideProps = async () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL 
       ? `${process.env.NEXT_PUBLIC_API_URL}/api/jobs`
       : (process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3000/api/jobs'
+        ? 'http://localhost:3004/api/jobs'
         : 'https://clickclickjob.vercel.app/api/jobs');
     console.log('Fetching jobs from:', apiUrl);
     

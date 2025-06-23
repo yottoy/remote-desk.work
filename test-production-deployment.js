@@ -2,7 +2,7 @@ const axios = require('axios');
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
-const PRODUCTION_URL = 'https://clickclickjob-25o7xbzx5-yottoys-projects.vercel.app';
+const PRODUCTION_URL = 'https://clickclickjob-jq0ca8piu-yottoys-projects.vercel.app';
 const colors = {
   green: '\x1b[32m',
   red: '\x1b[31m',

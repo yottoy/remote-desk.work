@@ -1,12 +1,12 @@
-name: Direct JobSpy Scraper
+name: Main Job Scraper
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 10 * * *'  # Daily at 10 AM UTC (reduced frequency)
+    - cron: '0 10 * * *'  # Daily at 10 AM UTC
 
 jobs:
-  direct-scrape:
+  scrape-jobs:
     runs-on: ubuntu-latest
     
     steps:
@@ -21,146 +21,76 @@ jobs:
       
       - name: Environment diagnostics
         run: |
+          echo "🔧 Environment Setup"
           echo "Python version: $(python --version)"
           echo "Pip version: $(pip --version)"
           echo "Current directory: $(pwd)"
-          echo "Directory contents: $(ls -la)"
           echo "GitHub runner: $RUNNER_OS"
-          echo "Current user: $(whoami)"
-          echo "Write permissions test: $(touch test_write_perm.txt && echo 'Success' || echo 'Failed')"
       
       - name: Create directories
         run: |
-          mkdir -p results
-          mkdir -p logs
-          touch results/.gitkeep
-          chmod -R 777 results
-          chmod -R 777 logs
-          echo "Created directories with permissions: $(ls -la | grep 'results\|logs')"
+          mkdir -p results logs
+          chmod -R 777 results logs
+          echo "✅ Created results and logs directories"
       
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install jobspy pandas pytest
+          pip install python-jobspy==1.1.80 pandas beautifulsoup4 markdownify
+          echo "✅ Installed Python dependencies"
       
-      - name: Create test file
+      - name: Run job scraper
         run: |
-          echo '{"test": "test file", "timestamp": "'$(date -u)'"}' > results/pre-run.json
-          echo "Test file created: $(ls -la results/)"
-      
-      - name: Run direct scraper
-        run: |
-          python direct_scraper.py 2>&1 | tee logs/direct_scraper.log
+          echo "🔍 Starting job scraping..."
+          python direct_scraper.py 2>&1 | tee logs/scraper.log
           echo "Scraper exit code: $?"
-      
-      - name: Run AdminDataEntryScraper
-        run: |
-          node src/scrapers/AdminDataEntryScraper.js 2>&1 | tee logs/admin_data_entry_scraper.log
-          echo "AdminDataEntryScraper exit code: $?"
-      
-      - name: Force create results if missing
-        if: always()
-        run: |
-          mkdir -p results
-          if [ "$(ls -A results 2>/dev/null)" == "" ]; then
-            echo "Results directory is empty, creating test files"
-            echo '{"error": "No results were generated", "timestamp": "'$(date -u)'"}' > results/fallback-result.json
-          else
-            echo "Results directory contains: $(ls -la results/)"
-          fi
-      
-      - name: List results
-        if: always()
-        run: |
-          echo "=== Results files ==="
-          find . -type f -name "*.json" | sort
-          for file in results/*.json logs/*.log; do
-            if [ -f "$file" ]; then
-              echo "$file exists ($(stat -c%s "$file" || echo 'unknown') bytes)"
-            else
-              echo "$file does not exist"
-            fi
-          done
           
-          # Show job counts from result files
-          find results -name "*.json" -type f -exec grep -l "jobs_count" {} \; | while read file; do
-            echo "Content overview of $file:"
-            jobs_count=$(grep -o '"jobs_count":[^,]*' "$file" || echo "No jobs_count found")
-            echo "$jobs_count"
-            # Show error if present
-            error=$(grep -o '"error":"[^"]*"' "$file" || echo "No error found")
-            if [ "$error" != "No error found" ]; then
-              echo "$error"
-            fi
+          echo "📊 Results summary:"
+          find results -name "*.json" -type f | while read file; do
+            jobs_count=$(grep -o '"jobs_count":[^,]*' "$file" 2>/dev/null || echo "0")
+            echo "$file: $jobs_count"
           done
       
       - name: Set up Node.js for MongoDB import
-        if: success()  # Only if scraping succeeded
+        if: success()
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Node.js dependencies for import
-        if: success()  # Only if scraping succeeded
+      - name: Install Node.js dependencies
+        if: success()
         run: npm ci
 
       - name: Import results to MongoDB
-        if: success()  # Only run if scrapers succeeded
+        if: success()
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           MONGODB_DB: ${{ secrets.MONGODB_DB }}
         run: |
-          echo "Starting MongoDB import..." | tee logs/mongodb-import.log
-          # Check if we have any result files to import
+          echo "📥 Starting MongoDB import..."
           result_files=$(find results -name "*results*.json" -size +100c | head -5)
+          
           if [ -z "$result_files" ]; then
-            echo "No significant result files found to import" | tee -a logs/mongodb-import.log
+            echo "⚠️  No significant result files found to import"
           else
-            echo "Found result files to import:" | tee -a logs/mongodb-import.log
-            echo "$result_files" | tee -a logs/mongodb-import.log
+            echo "📋 Found result files to import:"
+            echo "$result_files"
             
-            # Run the import with overwrite mode to replace old data with fresh data
-            node import-scraper-to-mongodb.js --overwrite 2>&1 | tee -a logs/mongodb-import.log
+            node import-scraper-to-mongodb.js --overwrite 2>&1 | tee logs/mongodb-import.log
             import_exit_code=$?
-            echo "MongoDB import exit code: $import_exit_code" | tee -a logs/mongodb-import.log
             
             if [ $import_exit_code -eq 0 ]; then
-              echo "✅ Successfully imported fresh jobs to MongoDB!" | tee -a logs/mongodb-import.log
+              echo "✅ Successfully imported jobs to MongoDB!"
             else
-              echo "❌ MongoDB import failed" | tee -a logs/mongodb-import.log
+              echo "❌ MongoDB import failed with exit code: $import_exit_code"
             fi
           fi
 
-      # Upload job results - TEMPORARILY DISABLED to fix storage quota
-      # - name: Upload job results
-      #   if: always()  # Always attempt to upload
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: job-results
-      #     path: |
-      #       results/
-      #       *.json
-      #     retention-days: 1
-      #     if-no-files-found: warn
-      
-      # Upload logs - TEMPORARILY DISABLED to fix storage quota
-      # - name: Upload logs
-      #   if: always()  # Always attempt to upload
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: logs
-      #     path: |
-      #       logs/
-      #       *.log
-      #     retention-days: 1
-      #     if-no-files-found: warn 
-
-      # Database cleanup to prevent quota issues
-      - name: Cleanup old jobs  
+      - name: Database cleanup
         if: always()
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: |
-          echo "🧹 Running database cleanup to prevent quota issues..."
-          node scripts/periodic-database-cleanup.js --max-age=45 || echo "⚠️ Cleanup failed but continuing" 
+          echo "🧹 Running database cleanup..."
+          node scripts/periodic-database-cleanup.js --max-age=45 || echo "⚠️ Cleanup completed with warnings" 
