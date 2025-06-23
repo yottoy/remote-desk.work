@@ -1,0 +1,89 @@
+name: Cleanup Old Artifacts
+
+on:
+  schedule:
+    # Run every 4 hours to prevent storage buildup
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  cleanup-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup old artifacts aggressively
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            
+            // Get all workflow runs
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner,
+              repo,
+              per_page: 100
+            });
+            
+            // Delete artifacts older than 12 hours (instead of 2 days)
+            const cutoffDate = new Date();
+            cutoffDate.setHours(cutoffDate.getHours() - 12);
+            
+            let deletedCount = 0;
+            let totalSizeFreed = 0;
+            
+            for (const run of runs.data.workflow_runs) {
+              const runDate = new Date(run.created_at);
+              
+              if (runDate < cutoffDate) {
+                try {
+                  // Get artifacts for this run
+                  const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+                    owner,
+                    repo,
+                    run_id: run.id
+                  });
+                  
+                  // Delete each artifact
+                  for (const artifact of artifacts.data.artifacts) {
+                    totalSizeFreed += artifact.size_in_bytes || 0;
+                    await github.rest.actions.deleteArtifact({
+                      owner,
+                      repo,
+                      artifact_id: artifact.id
+                    });
+                    deletedCount++;
+                    console.log(`Deleted artifact: ${artifact.name} (${Math.round((artifact.size_in_bytes || 0) / 1024 / 1024 * 100) / 100} MB) from run ${run.id}`);
+                  }
+                } catch (error) {
+                  console.log(`Error deleting artifacts for run ${run.id}: ${error.message}`);
+                }
+              }
+            }
+            
+            console.log(`Cleanup complete. Deleted ${deletedCount} artifacts, freed ${Math.round(totalSizeFreed / 1024 / 1024 * 100) / 100} MB of storage.`);
+            
+            // Also clean up old workflow runs to reduce clutter
+            const oldRuns = runs.data.workflow_runs.filter(run => {
+              const runDate = new Date(run.created_at);
+              const oldCutoff = new Date();
+              oldCutoff.setDate(oldCutoff.getDate() - 7); // Keep only 7 days of runs
+              return runDate < oldCutoff && run.conclusion !== 'success';
+            });
+            
+            let deletedRuns = 0;
+            for (const run of oldRuns.slice(0, 20)) { // Limit to prevent API rate limiting
+              try {
+                await github.rest.actions.deleteWorkflowRun({
+                  owner,
+                  repo,
+                  run_id: run.id
+                });
+                deletedRuns++;
+                console.log(`Deleted old workflow run: ${run.id} from ${run.created_at}`);
+              } catch (error) {
+                console.log(`Error deleting run ${run.id}: ${error.message}`);
+              }
+            }
+            
+            console.log(`Deleted ${deletedRuns} old workflow runs.`); 

@@ -1,0 +1,156 @@
+name: Optimized Job Scraper
+
+on:
+  # Run once daily to minimize storage usage
+  schedule:
+    - cron: '0 12 * * *'  # Daily at 12 PM UTC
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Enable debug output'
+        required: false
+        default: 'false'
+
+jobs:
+  scrape-and-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45  # Prevent hanging workflows
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # Cache disabled to save storage
+      
+      - name: Set up Python  
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          # Cache disabled to save storage
+      
+      - name: Install dependencies
+        run: |
+          # Install Python dependencies
+          python -m pip install --upgrade pip
+          pip install jobspy pandas uvicorn fastapi python-dotenv
+          
+          # Install Node.js dependencies  
+          npm ci
+          
+          # Install xml2js for RSS parsing
+          npm install xml2js --save
+      
+      - name: Create minimal directories
+        run: mkdir -p results
+      
+      - name: Configure environment
+        run: |
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "JOBSPY_BRIDGE_URL=http://127.0.0.1:8000" >> .env
+          echo "LOG_LEVEL=warning" >> .env
+      
+      - name: Start JobSpy bridge
+        run: |
+          # Start bridge silently
+          python jobspy_bridge.py > /dev/null 2>&1 &
+          echo $! > bridge_pid.txt
+          
+          # Wait for startup
+          sleep 10
+          
+          # Quick health check
+          if ! curl -s http://127.0.0.1:8000/health > /dev/null; then
+            echo "❌ Bridge failed to start"
+            exit 1
+          fi
+          echo "✅ Bridge started successfully"
+        timeout-minutes: 5
+      
+      - name: Run all scrapers
+        run: |
+          echo "🚀 Starting job scraping..."
+          
+          # Run WeWorkRemotely (RSS - no bridge needed)
+          echo "Scraping WeWorkRemotely..."
+          node scrape-weworkremotely.js > /dev/null 2>&1 || echo "WWR scraper failed"
+          
+          # Run JobSpy scrapers (requires bridge)
+          echo "Scraping Indeed/LinkedIn via JobSpy..."
+          JOBSPY_BRIDGE_URL=http://127.0.0.1:8000 node scrape-all-jobs.js > /dev/null 2>&1 || echo "JobSpy scraper failed"
+          
+          # Run alternative sites
+          echo "Scraping alternative sites..."
+          JOBSPY_BRIDGE_URL=http://127.0.0.1:8000 node scrape-alt-sites.js > /dev/null 2>&1 || echo "Alt sites scraper failed"
+          
+          # Run direct scraper
+          echo "Running direct scraper..."
+          python direct_scraper.py > /dev/null 2>&1 || echo "Direct scraper failed"
+          
+          # Combine all results
+          echo "Combining results..."
+          node run-all-scrapers.js > /dev/null 2>&1 || echo "Results combination failed"
+          
+          # Move final results
+          if [ -f "combined-results.json" ]; then
+            mv combined-results.json results/
+            echo "✅ Results combined successfully"
+          else
+            echo "❌ No combined results found"
+          fi
+        timeout-minutes: 30
+      
+      - name: Import to MongoDB
+        if: success()
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          if [ -f "results/combined-results.json" ]; then
+            echo "📥 Importing jobs to MongoDB..."
+            node import-scraper-to-mongodb.js --overwrite 2>&1 | head -10
+            echo "✅ MongoDB import completed"
+          else
+            echo "❌ No results to import"
+          fi
+      
+      - name: Database cleanup
+        if: always()
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          echo "🧹 Cleaning up old jobs..."
+          node scripts/periodic-database-cleanup.js --max-age=45 2>&1 | head -5 || echo "Cleanup completed"
+      
+      - name: Stop bridge
+        if: always()
+        run: |
+          if [ -f "bridge_pid.txt" ]; then
+            kill $(cat bridge_pid.txt) 2>/dev/null || true
+          fi
+          pkill -f "jobspy_bridge.py" 2>/dev/null || true
+      
+      - name: Final summary
+        if: always()
+        run: |
+          echo "🎯 Scraper Summary:"
+          echo "- Run completed at: $(date)"
+          if [ -f "results/combined-results.json" ]; then
+            jobs_count=$(node -e "
+              try { 
+                const data = require('./results/combined-results.json'); 
+                console.log(Array.isArray(data) ? data.length : 'unknown'); 
+              } catch(e) { 
+                console.log('error'); 
+              }")
+            echo "- Jobs scraped: $jobs_count"
+            echo "✅ Scraping successful"
+          else
+            echo "❌ No results generated"
+          fi
+          
+          # NO artifact uploads to save storage - results go directly to MongoDB 

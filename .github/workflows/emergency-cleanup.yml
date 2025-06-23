@@ -1,0 +1,128 @@
+name: Emergency Storage Cleanup
+
+on:
+  workflow_dispatch:
+    inputs:
+      aggressive:
+        description: 'Aggressive cleanup (delete all artifacts and old runs)'
+        required: false
+        default: 'true'
+
+jobs:
+  emergency-cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Emergency artifact and storage cleanup
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const aggressive = '${{ github.event.inputs.aggressive }}' === 'true';
+            
+            console.log(`🚨 Starting emergency cleanup (aggressive: ${aggressive})`);
+            
+            // Get ALL workflow runs
+            let allRuns = [];
+            let page = 1;
+            let hasMore = true;
+            
+            while (hasMore && page <= 10) { // Limit to prevent timeout
+              try {
+                const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                  owner,
+                  repo,
+                  per_page: 100,
+                  page: page
+                });
+                
+                allRuns = allRuns.concat(runs.data.workflow_runs);
+                hasMore = runs.data.workflow_runs.length === 100;
+                page++;
+              } catch (error) {
+                console.log(`Error fetching runs page ${page}: ${error.message}`);
+                break;
+              }
+            }
+            
+            console.log(`Found ${allRuns.length} workflow runs to process`);
+            
+            let deletedArtifacts = 0;
+            let totalSizeFreed = 0;
+            let deletedRuns = 0;
+            
+            // Clean up artifacts
+            for (const run of allRuns) {
+              try {
+                // Get artifacts for this run
+                const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+                  owner,
+                  repo,
+                  run_id: run.id
+                });
+                
+                // Delete artifacts based on cleanup level
+                for (const artifact of artifacts.data.artifacts) {
+                  const artifactAge = new Date() - new Date(artifact.created_at);
+                  const hoursOld = artifactAge / (1000 * 60 * 60);
+                  
+                  // Delete if aggressive mode OR artifact is older than 1 hour
+                  if (aggressive || hoursOld > 1) {
+                    try {
+                      totalSizeFreed += artifact.size_in_bytes || 0;
+                      await github.rest.actions.deleteArtifact({
+                        owner,
+                        repo,
+                        artifact_id: artifact.id
+                      });
+                      deletedArtifacts++;
+                      
+                      if (deletedArtifacts % 10 === 0) {
+                        console.log(`Deleted ${deletedArtifacts} artifacts so far...`);
+                      }
+                    } catch (deleteError) {
+                      console.log(`Error deleting artifact ${artifact.id}: ${deleteError.message}`);
+                    }
+                  }
+                }
+              } catch (error) {
+                console.log(`Error processing artifacts for run ${run.id}: ${error.message}`);
+              }
+            }
+            
+            // Clean up old workflow runs if aggressive
+            if (aggressive) {
+              const oldRuns = allRuns.filter(run => {
+                const runAge = new Date() - new Date(run.created_at);
+                const daysOld = runAge / (1000 * 60 * 60 * 24);
+                // Delete runs older than 3 days that aren't successful latest runs
+                return daysOld > 3 && run.conclusion !== 'success';
+              });
+              
+              console.log(`Found ${oldRuns.length} old runs to delete`);
+              
+              for (const run of oldRuns.slice(0, 50)) { // Limit to prevent timeout
+                try {
+                  await github.rest.actions.deleteWorkflowRun({
+                    owner,
+                    repo,
+                    run_id: run.id
+                  });
+                  deletedRuns++;
+                  
+                  if (deletedRuns % 5 === 0) {
+                    console.log(`Deleted ${deletedRuns} old runs so far...`);
+                  }
+                } catch (error) {
+                  console.log(`Error deleting run ${run.id}: ${error.message}`);
+                }
+              }
+            }
+            
+            const mbFreed = Math.round(totalSizeFreed / 1024 / 1024 * 100) / 100;
+            console.log(`🎉 Emergency cleanup complete!`);
+            console.log(`📊 Results:`);
+            console.log(`- Deleted artifacts: ${deletedArtifacts}`);
+            console.log(`- Storage freed: ${mbFreed} MB`);
+            console.log(`- Deleted old runs: ${deletedRuns}`);
+            console.log(`💡 Tip: Your scrapers will now store results directly in MongoDB instead of artifacts.`); 
