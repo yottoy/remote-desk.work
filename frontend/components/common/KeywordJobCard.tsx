@@ -7,7 +7,7 @@ import TimezoneCompatibility from './TimezoneCompatibility';
 import CurrencyDisplay from './CurrencyDisplay';
 import RegionalJobTitle from './RegionalJobTitle';
 import { keywordTracking } from './KeywordAnalytics';
-import { formatJobDescription } from '../../utils/jobUtils';
+import { formatJobDescription } from '../../src/utils/jobUtils';
 
 interface KeywordJobCardProps {
   job: EnhancedJobListing;

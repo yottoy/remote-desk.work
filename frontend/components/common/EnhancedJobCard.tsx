@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { formatJobDescription } from '../../utils/jobUtils';
+import { formatJobDescription } from '../../src/utils/jobUtils';
 
 interface Job {
   _id: string;
