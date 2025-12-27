@@ -1,0 +1,200 @@
+name: Run Job Scrapers
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */12 * * *'  # Run every 12 hours
+
+jobs:
+  scrape-jobs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Create log directories
+        run: |
+          mkdir -p logs
+          touch logs/debug.log
+          touch logs/scraper.log
+          chmod 777 logs
+          echo "Created logs directory and placeholder log files"
+          ls -la logs/
+      
+      - name: Environment diagnostics
+        run: |
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+          echo "Python version: $(python --version)"
+          echo "Pip version: $(pip --version)"
+          echo "Current directory: $(pwd)"
+          echo "Directory contents: $(ls -la)"
+          echo "Networking: $(ip addr || ifconfig || echo 'Network commands not available')"
+          echo "Environment diagnostics completed" > logs/environment.log
+          
+      - name: Install Node.js dependencies
+        run: npm ci
+      
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Install dependencies verbosely to see any errors
+          pip install -v pandas uvicorn fastapi jobspy python-dotenv
+          pip list | grep -E "pandas|uvicorn|fastapi|jobspy|python-dotenv" | tee logs/pip-packages.log
+      
+      - name: Test GitHub environment
+        run: node test-github-environment.js 2>&1 | tee logs/github-environment.log
+      
+      - name: Prepare for bridge
+        run: |
+          # Make sure we have the needed directories
+          touch logs/bridge-prep.log
+          # Create a simple .env file
+          echo "JOBSPY_BRIDGE_URL=http://127.0.0.1:8000" > .env
+          echo "JOBSPY_BRIDGE_HOST=127.0.0.1" >> .env
+          echo "JOBSPY_BRIDGE_PORT=8000" >> .env
+          echo "Created .env file with bridge configuration" | tee -a logs/bridge-prep.log
+      
+      - name: Start JobSpy bridge in background
+        run: |
+          echo "Starting JobSpy bridge..." | tee logs/bridge-start.log
+          # Force IPv4 for the Python server
+          python -c "import socket; socket.setdefaulttimeout(10); print('IPv4 address:', socket.gethostbyname('localhost'))" | tee -a logs/bridge-start.log
+          
+          # Start bridge with detailed logging
+          python jobspy_bridge.py > logs/jobspy_bridge_output.log 2>&1 &
+          echo $! > logs/bridge_pid.txt
+          
+          # Wait for bridge to start
+          echo "Waiting for bridge to start..." | tee -a logs/bridge-start.log
+          sleep 15  # Give more time to start
+          
+          # Check if bridge process is running
+          if ps -p $(cat logs/bridge_pid.txt) > /dev/null; then
+            echo "Bridge process is running" | tee -a logs/bridge-start.log
+          else
+            echo "Bridge process is NOT running!" | tee -a logs/bridge-start.log
+            cat logs/jobspy_bridge_output.log | tee -a logs/bridge-start.log
+            # Don't exit here, continue to collect diagnostic info
+          fi
+          
+          # Check if bridge is listening on port
+          if netstat -tuln | grep 8000; then
+            echo "Port 8000 is open" | tee -a logs/bridge-start.log
+          else
+            echo "Port 8000 is NOT open!" | tee -a logs/bridge-start.log
+            # Don't exit here, continue to collect diagnostic info
+          fi
+      
+      - name: Test bridge connection
+        run: |
+          node test-bridge.js 2>&1 | tee logs/test-bridge.log || true
+      
+      - name: Run WeWorkRemotely scraper
+        continue-on-error: true  # Don't stop on error, collect logs first
+        run: |
+          echo "Starting WeWorkRemotely scraper..." | tee logs/wwr-scraper.log
+          node --trace-warnings scrape-weworkremotely.js 2>&1 | tee -a logs/wwr-scraper.log
+          echo "WeWorkRemotely scraper exit code: $?" | tee -a logs/wwr-scraper.log
+      
+      - name: Run Indeed scraper (if WeWorkRemotely worked)
+        continue-on-error: true  # Don't stop on error, collect logs first
+        run: |
+          if [ -f "weworkremotely-results.json" ] && [ "$(cat weworkremotely-results.json | grep -c 'jobs')" -gt 0 ]; then
+            echo "WeWorkRemotely scraper succeeded, trying Indeed..." | tee logs/indeed-scraper.log
+            node --trace-warnings scrape-indeed.js 2>&1 | tee -a logs/indeed-scraper.log
+            echo "Indeed scraper exit code: $?" | tee -a logs/indeed-scraper.log
+          else
+            echo "Skipping Indeed scraper since WeWorkRemotely failed" | tee logs/indeed-scraper.log
+          fi
+      
+      - name: Run all scrapers
+        continue-on-error: true  # Don't stop on error, collect logs first
+        run: |
+          echo "Starting all scrapers..." | tee logs/all-scrapers.log
+          node --trace-warnings run-all-scrapers.js 2>&1 | tee -a logs/all-scrapers.log
+          echo "All scrapers exit code: $?" | tee -a logs/all-scrapers.log
+      
+      - name: Run AdminDataEntryScraper
+        continue-on-error: true  # Don't stop on error, collect logs first
+        run: |
+          echo "Starting AdminDataEntryScraper..." | tee logs/admin_data_entry_scraper.log
+          node src/scrapers/AdminDataEntryScraper.js 2>&1 | tee -a logs/admin_data_entry_scraper.log
+          echo "AdminDataEntryScraper exit code: $?" | tee -a logs/admin_data_entry_scraper.log
+      
+      - name: Dump system state for debugging
+        run: |
+          echo "==== Process List ====" | tee logs/system-state.log
+          ps aux | grep -E "node|python" | tee -a logs/system-state.log
+          echo "==== Network Connections ====" | tee -a logs/system-state.log
+          netstat -tuln | tee -a logs/system-state.log
+          echo "==== Directory Contents ====" | tee -a logs/system-state.log
+          find . -type f -name "*.log" | tee -a logs/system-state.log
+          find . -type f -name "*.json" | tee -a logs/system-state.log
+      
+      - name: Import results to MongoDB
+        if: success()  # Only run if scrapers succeeded
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+        run: |
+          echo "Starting MongoDB import..." | tee logs/mongodb-import.log
+          # Check if we have any result files to import
+          result_files=$(find . -name "*results*.json" -size +100c | head -5)
+          if [ -z "$result_files" ]; then
+            echo "No significant result files found to import" | tee -a logs/mongodb-import.log
+          else
+            echo "Found result files to import:" | tee -a logs/mongodb-import.log
+            echo "$result_files" | tee -a logs/mongodb-import.log
+            
+            # Run the import with overwrite mode to replace old data with fresh data
+            node import-scraper-to-mongodb.js --overwrite 2>&1 | tee -a logs/mongodb-import.log
+            import_exit_code=$?
+            echo "MongoDB import exit code: $import_exit_code" | tee -a logs/mongodb-import.log
+            
+            if [ $import_exit_code -eq 0 ]; then
+              echo "✅ Successfully imported fresh jobs to MongoDB!" | tee -a logs/mongodb-import.log
+            else
+              echo "❌ MongoDB import failed" | tee -a logs/mongodb-import.log
+            fi
+          fi
+
+      # Upload job results - DISABLED to reduce storage quota  
+      # Results are saved directly to MongoDB instead
+      # - name: Upload job results
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: job-results
+      #     path: |
+      #       *.json
+      #       results/*.json
+      #     retention-days: 1
+      #     if-no-files-found: ignore
+      
+      # Upload logs - DISABLED to reduce storage quota
+      # Logs are visible in GitHub Actions console output
+      # - name: Upload logs
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: debug-logs
+      #     path: |
+      #       logs/
+      #       *.log
+      #       **/*.log
+      #     retention-days: 1
+      #     if-no-files-found: warn 
