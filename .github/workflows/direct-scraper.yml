@@ -1,6 +1,7 @@
 name: Main Job Scraper
 
 on:
+  workflow_dispatch:  # Manual trigger button
   push:
     branches: [ main ]
   schedule:
