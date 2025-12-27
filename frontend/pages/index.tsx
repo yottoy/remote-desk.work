@@ -29,9 +29,13 @@ interface HomePageProps {
   error?: string;
 }
 
-// Function to ensure no mock jobs are ever displayed
+// Function to ensure no mock jobs are ever displayed and only show recent jobs
 function filterMockJobs(jobs: any[]): any[] {
   if (!jobs || jobs.length === 0) return [];
+  
+  // Calculate date 30 days ago
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
   return jobs.filter((job: any) => {
     // If job doesn't exist or is missing critical data, filter it out
@@ -56,6 +60,10 @@ function filterMockJobs(jobs: any[]): any[] {
     
     // Make sure job has required fields for display
     if (!job.postedDate) return false;
+    
+    // Filter out jobs older than 30 days
+    const jobDate = new Date(job.postedDate || job.scrapedDate || job.createdAt);
+    if (jobDate < thirtyDaysAgo) return false;
     
     // Filter out engineering and other irrelevant job types that don't match our focus
     if (job.title && typeof job.title === 'string') {
@@ -135,7 +143,7 @@ export const getServerSideProps = async () => {
     
     return {
       props: {
-        featuredJobs: validJobs.slice(0, 15), // Increase to 15 jobs to support both featured and recent sections
+        featuredJobs: validJobs.slice(0, 50), // Increased from 15 to 50 jobs to create more internal links
         recentJobsCount
       }
     };
@@ -185,17 +193,17 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
 
   return (
     <Layout
-      title="Remote Data Entry Jobs | Work From Home | ClickClickJob"
-      description="Find verified remote data entry & administrative jobs. 100+ work-from-home opportunities updated daily. No experience options available."
+      title="Remote Admin Jobs Hiring Now | Entry Level Welcome | ClickClickJob"
+      description="Remote administrative assistant and data entry jobs from verified employers. Entry-level positions available. No scams. Free daily job alerts."
     >
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Find Remote Admin & Data Entry Jobs
+            Remote Admin Jobs Hiring Now
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Find verified work-from-anywhere opportunities for admin professionals and data entry specialists with or without experience
+            Legitimate opportunities updated regularly. Entry-level positions available. No experience required jobs included.
           </p>
           
           <div className="max-w-3xl mx-auto mt-8">
@@ -287,7 +295,7 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
             <div className="mt-10 bg-gray-50 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">More Recent Opportunities</h3>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {featuredJobs.slice(6, 15).map((job) => (
+                {featuredJobs.slice(6, 30).map((job) => (
                   <div key={job._id} className="bg-white rounded-md p-3 border border-gray-200 hover:border-blue-300 transition-colors">
                     <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
                       <Link href={`/jobs/${job._id}`} className="hover:text-blue-600">
@@ -307,6 +315,33 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
                   className="text-blue-600 hover:text-blue-800 font-medium text-sm"
                 >
                   View all recent jobs →
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Recently Posted Jobs - Additional links for orphan pages */}
+          {featuredJobs && featuredJobs.length > 30 && (
+            <div className="mt-10 bg-blue-50 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recently Posted Jobs</h3>
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
+                {featuredJobs.slice(30, 50).map((job) => (
+                  <div key={job._id} className="bg-white rounded-md p-2 border border-gray-200 hover:border-blue-300 transition-colors">
+                    <h4 className="text-xs font-medium text-gray-900 line-clamp-2">
+                      <Link href={`/jobs/${job._id}`} className="hover:text-blue-600">
+                        {job.title}
+                      </Link>
+                    </h4>
+                    <p className="text-xs text-gray-600 mt-1">{job.company}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 text-center">
+                <Link
+                  href="/jobs"
+                  className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                >
+                  Browse all job opportunities →
                 </Link>
               </div>
             </div>

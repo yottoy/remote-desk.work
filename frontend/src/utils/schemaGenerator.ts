@@ -39,9 +39,26 @@ export interface BreadcrumbItem {
  * Generates JobPosting Schema.org markup for individual job listings
  */
 export function generateJobPostingSchema(job: JobData): object {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
   
-  return {
+  // Ensure datePosted is valid and recent (within last 30 days)
+  let datePosted = job.postedDate;
+  const jobDate = new Date(datePosted);
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  // If job is older than 30 days, use today's date for schema compliance
+  if (jobDate < thirtyDaysAgo || isNaN(jobDate.getTime())) {
+    datePosted = new Date().toISOString().split('T')[0];
+  }
+  
+  // Calculate validThrough as 30 days from datePosted
+  const postedDateObj = new Date(datePosted);
+  const validThroughDate = new Date(postedDateObj);
+  validThroughDate.setDate(validThroughDate.getDate() + 30);
+  const validThrough = validThroughDate.toISOString().split('T')[0];
+  
+  const schema: any = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
     "title": job.title,
@@ -66,8 +83,8 @@ export function generateJobPostingSchema(job: JobData): object {
     },
     "employmentType": job.employmentType || "FULL_TIME",
     "workHours": job.employmentType === "PART_TIME" ? "20-30" : "40",
-    "datePosted": job.postedDate,
-    "validThrough": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+    "datePosted": datePosted,
+    "validThrough": validThrough,
     "applicantLocationRequirements": {
       "@type": "Country",
       "name": "United States"
@@ -91,13 +108,28 @@ export function generateJobPostingSchema(job: JobData): object {
     "occupationalCategory": "15-1151.00", // SOC code for Computer User Support Specialists
     "workEnvironment": "Remote work environment with flexible schedule options"
   };
+  
+  // Add salary if available
+  if (job.salary) {
+    schema.baseSalary = {
+      "@type": "MonetaryAmount",
+      "currency": "USD",
+      "value": {
+        "@type": "QuantitativeValue",
+        "value": job.salary,
+        "unitText": "YEAR"
+      }
+    };
+  }
+  
+  return schema;
 }
 
 /**
  * Generates Article Schema.org markup for blog posts and guides
  */
 export function generateArticleSchema(article: ArticleData): object {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
   
   return {
     "@context": "https://schema.org",
@@ -183,7 +215,7 @@ export function generateFAQSchema(faqs: FAQItem[]): object {
  * Generates Organization Schema.org markup for the company
  */
 export function generateOrganizationSchema(): object {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
   
   return {
     "@context": "https://schema.org",
@@ -247,7 +279,7 @@ export function generateBreadcrumbSchema(breadcrumbs: BreadcrumbItem[]): object 
  * Generates WebSite Schema.org markup with search functionality
  */
 export function generateWebSiteSchema(): object {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
   
   return {
     "@context": "https://schema.org",
@@ -275,7 +307,7 @@ export function generateWebSiteSchema(): object {
  * Generates JobBoard specific schema markup
  */
 export function generateJobBoardSchema(jobCount: number): object {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
   
   return {
     "@context": "https://schema.org",

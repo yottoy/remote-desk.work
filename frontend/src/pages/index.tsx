@@ -29,9 +29,13 @@ interface HomePageProps {
   error?: string;
 }
 
-// Function to ensure no mock jobs are ever displayed
+// Function to ensure no mock jobs are ever displayed and only show recent jobs
 function filterMockJobs(jobs: any[]): any[] {
   if (!jobs || jobs.length === 0) return [];
+  
+  // Calculate date 30 days ago
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
   return jobs.filter((job: any) => {
     // If job doesn't exist or is missing critical data, filter it out
@@ -56,6 +60,10 @@ function filterMockJobs(jobs: any[]): any[] {
     
     // Make sure job has required fields for display
     if (!job.postedDate) return false;
+    
+    // Filter out jobs older than 30 days
+    const jobDate = new Date(job.postedDate || job.scrapedDate || job.createdAt);
+    if (jobDate < thirtyDaysAgo) return false;
     
     // Filter out engineering and other irrelevant job types that don't match our focus
     if (job.title && typeof job.title === 'string') {
@@ -185,17 +193,17 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
 
   return (
     <Layout
-      title="Remote Data Entry Jobs | Work From Home | ClickClickJob"
-      description="Find verified remote data entry & administrative jobs. 100+ work-from-home opportunities updated daily. No experience options available."
+      title="Remote Admin Jobs Hiring Now | Entry Level Welcome | ClickClickJob"
+      description="Remote administrative assistant and data entry jobs from verified employers. Entry-level positions available. No scams. Free daily job alerts."
     >
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Find Remote Admin & Data Entry Jobs
+            Remote Admin Jobs Hiring Now
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Find verified work-from-anywhere opportunities for admin professionals and data entry specialists with or without experience
+            Legitimate opportunities updated regularly. Entry-level positions available. No experience required jobs included.
           </p>
           
           <div className="max-w-3xl mx-auto mt-8">
