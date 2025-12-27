@@ -1,0 +1,29 @@
+name: Test Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simple test
+        run: echo "✅ GitHub Actions is working!"
+      
+      - name: Check secrets
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+        run: |
+          if [ -z "$MONGODB_URI" ]; then
+            echo "❌ MONGODB_URI secret not set"
+          else
+            echo "✅ MONGODB_URI is set"
+          fi
+          
+          if [ -z "$MONGODB_DB" ]; then
+            echo "⚠️  MONGODB_DB secret not set (using default)"
+          else
+            echo "✅ MONGODB_DB is set to: $MONGODB_DB"
+          fi
+
