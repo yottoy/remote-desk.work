@@ -1,0 +1,277 @@
+name: Test MongoDB Connection
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Run in debug mode'
+        required: false
+        default: 'false'
+
+jobs:
+  test-mongodb:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci
+      
+      # Create diagnostic log directory
+      - name: Create log directory
+        run: mkdir -p logs
+      
+      # Diagnostic information
+      - name: System diagnostic info
+        run: |
+          echo "=== SYSTEM DIAGNOSTICS ===" > logs/mongodb-test.log
+          echo "Runner hostname: $(hostname)" >> logs/mongodb-test.log
+          echo "Date and time: $(date)" >> logs/mongodb-test.log
+          echo "Node.js version: $(node -v)" >> logs/mongodb-test.log
+          echo "NPM version: $(npm -v)" >> logs/mongodb-test.log
+          
+          echo "Network info:" >> logs/mongodb-test.log
+          ip addr >> logs/mongodb-test.log
+          
+          echo "DNS resolver:" >> logs/mongodb-test.log
+          cat /etc/resolv.conf >> logs/mongodb-test.log
+          
+          echo "MongoDB packages:" >> logs/mongodb-test.log
+          npm list mongodb mongoose >> logs/mongodb-test.log
+      
+      # Debug GitHub secrets presence
+      - name: Check for MongoDB URI secret
+        run: |
+          echo "=== MONGODB URI CHECK ===" >> logs/mongodb-test.log
+          if [ -n "${{ secrets.MONGODB_URI }}" ]; then
+            echo "MONGODB_URI secret is set (value hidden for security)" >> logs/mongodb-test.log
+            # Print first few characters to verify format without exposing credentials
+            URI="${{ secrets.MONGODB_URI }}"
+            echo "URI starts with: ${URI:0:10}..." >> logs/mongodb-test.log
+            if [[ "$URI" == mongodb* ]]; then
+              echo "URI has correct prefix format" >> logs/mongodb-test.log
+            else
+              echo "WARNING: URI does not start with 'mongodb'" >> logs/mongodb-test.log
+            fi
+          else
+            echo "ERROR: MONGODB_URI secret is NOT set in GitHub repository secrets" >> logs/mongodb-test.log
+          fi
+          
+          # Output to GitHub Actions console as well
+          cat logs/mongodb-test.log
+      
+      # Create MongoDB test script
+      - name: Create test script
+        run: |
+          cat > test-mongodb.js << 'EOF'
+          require('dotenv').config();
+          const { MongoClient } = require('mongodb');
+          const fs = require('fs');
+
+          // Function to log to both console and file
+          function log(message, isError = false) {
+            const timestamp = new Date().toISOString();
+            const logMessage = `[${timestamp}] ${message}`;
+            
+            if (isError) {
+              console.error(logMessage);
+            } else {
+              console.log(logMessage);
+            }
+            
+            // Append to log file
+            fs.appendFileSync('logs/mongodb-test.log', logMessage + '\n');
+          }
+
+          async function testMongoConnection() {
+            log('=== MONGODB CONNECTION DIAGNOSTICS ===');
+            
+            const uri = process.env.MONGODB_URI;
+            if (!uri) {
+              log('ERROR: MONGODB_URI not provided in environment variables', true);
+              return false;
+            }
+            
+            log('MongoDB URI exists: true');
+            
+            // Basic URI format validation
+            if (!uri.startsWith('mongodb')) {
+              log(`ERROR: MONGODB_URI does not start with "mongodb" prefix (starts with: ${uri.substring(0, 10)}...)`, true);
+              return false;
+            }
+            
+            log('URI format appears valid');
+            log(`URI begins with: ${uri.substring(0, 10)}...`);
+            
+            let client;
+            try {
+              log('Creating MongoDB client...');
+              client = new MongoClient(uri);
+              
+              log('Attempting to connect...');
+              await client.connect();
+              log('✅ Successfully connected to MongoDB');
+              
+              try {
+                // Get database info
+                log('Retrieving database information...');
+                const adminDb = client.db().admin();
+                const dbInfo = await adminDb.listDatabases();
+                
+                log('Available databases:');
+                dbInfo.databases.forEach(db => {
+                  log(`- ${db.name} (${db.sizeOnDisk} bytes)`);
+                });
+                
+                // Get current database name
+                const db = client.db();
+                log(`Current database: ${db.databaseName}`);
+                
+                // List collections
+                const collections = await db.listCollections().toArray();
+                
+                if (collections.length === 0) {
+                  log('No collections found in current database');
+                } else {
+                  log('Collections in current database:');
+                  collections.forEach(collection => {
+                    log(`- ${collection.name}`);
+                  });
+                }
+                
+                // Create test document
+                log('Creating test document...');
+                const testCollection = db.collection('connection_tests');
+                const result = await testCollection.insertOne({
+                  test_id: new Date().toISOString(),
+                  message: 'GitHub Actions test',
+                  timestamp: new Date()
+                });
+                log(`Inserted test document with ID: ${result.insertedId}`);
+                
+                // Check for jobs collection
+                if (collections.some(c => c.name === 'jobs')) {
+                  const jobsCollection = db.collection('jobs');
+                  const jobCount = await jobsCollection.countDocuments();
+                  log(`Number of jobs in the database: ${jobCount}`);
+                } else {
+                  log('No jobs collection found - this indicates the scraper has not run successfully yet');
+                }
+                
+              } catch (error) {
+                log(`Error during database operations: ${error.message}`, true);
+                if (error.message.includes('not authorized') || error.message.includes('auth failed')) {
+                  log('Authentication error - please check MongoDB username and password', true);
+                }
+                return false;
+              }
+              
+              return true;
+            } catch (error) {
+              log(`MongoDB connection error: ${error.message}`, true);
+              
+              // Detailed error diagnostics
+              if (error.message.includes('ENOTFOUND')) {
+                log('Host not found error - check hostname in MongoDB URI', true);
+              } else if (error.message.includes('ETIMEDOUT')) {
+                log('Connection timeout - check network connectivity and firewall settings', true);
+              } else if (error.message.includes('authentication failed')) {
+                log('Authentication error - check username and password', true);
+              } else if (error.message.includes('ssl')) {
+                log('SSL/TLS error - check SSL configuration', true);
+              }
+              
+              return false;
+            } finally {
+              if (client) {
+                log('Closing MongoDB connection...');
+                try {
+                  await client.close();
+                  log('Connection closed');
+                } catch (err) {
+                  log(`Error closing connection: ${err.message}`, true);
+                }
+              }
+            }
+          }
+
+          testMongoConnection()
+            .then(success => {
+              if (success) {
+                log('✅ MongoDB connection test completed successfully');
+                process.exit(0);
+              } else {
+                log('❌ MongoDB connection test failed', true);
+                process.exit(1);
+              }
+            })
+            .catch(error => {
+              log(`Unhandled error: ${error}`, true);
+              process.exit(1);
+            });
+          EOF
+      
+      # Set up environment variables
+      - name: Set up environment
+        run: |
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" > .env
+      
+      # Run MongoDB ping test if possible
+      - name: MongoDB connectivity test
+        if: ${{ github.event.inputs.debug == 'true' }}
+        run: |
+          # Extract host from URI if possible (simplified, doesn't handle all URI formats)
+          URI="${{ secrets.MONGODB_URI }}"
+          echo "=== CONNECTIVITY TEST ===" >> logs/mongodb-test.log
+          if [[ "$URI" == mongodb* ]]; then
+            # Extract hostname from the URI (basic extraction - won't work for all formats)
+            HOSTNAME=$(echo "$URI" | sed -E 's|mongodb(\+srv)?://([^:@/]+:[^@/]+@)?([^:/]+).*|\3|')
+            if [[ -n "$HOSTNAME" ]]; then
+              echo "Attempting to reach MongoDB host: $HOSTNAME" | tee -a logs/mongodb-test.log
+              if ping -c 3 "$HOSTNAME" >> logs/mongodb-test.log 2>&1; then
+                echo "Ping successful" | tee -a logs/mongodb-test.log
+              else 
+                echo "Ping failed - Note that ping failure doesn't always mean the host is unreachable" | tee -a logs/mongodb-test.log
+              fi
+              
+              echo "Attempting TCP connection to common MongoDB ports..." | tee -a logs/mongodb-test.log
+              # Test common MongoDB ports
+              for PORT in 27017 27018 27019; do
+                echo "Testing port $PORT..." | tee -a logs/mongodb-test.log
+                if nc -z -w 5 "$HOSTNAME" $PORT 2>> logs/mongodb-test.log; then
+                  echo "Port $PORT is open" | tee -a logs/mongodb-test.log
+                else
+                  echo "Port $PORT is closed or filtered" | tee -a logs/mongodb-test.log
+                fi
+              done
+            else
+              echo "Could not extract hostname from MongoDB URI" | tee -a logs/mongodb-test.log
+            fi
+          else
+            echo "URI doesn't start with 'mongodb', skipping connectivity test" | tee -a logs/mongodb-test.log
+          fi
+      
+      # Run the test
+      - name: Test MongoDB connection
+        run: |
+          node test-mongodb.js
+          echo "Test exit code: $?" >> logs/mongodb-test.log
+        
+      # Upload test logs as artifacts (even on failure)
+      - name: Archive test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mongodb-test-logs
+          path: logs/
+          retention-days: 1 

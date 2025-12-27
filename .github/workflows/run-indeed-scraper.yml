@@ -1,0 +1,63 @@
+name: Run Indeed Scraper (Debug Mode)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Environment diagnostics
+        run: |
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+          echo "Current directory: $(pwd)"
+          echo "Directory contents: $(ls -la)"
+          echo "ENV variables: $(env | grep -i node || true)"
+          echo "GitHub runner OS: $RUNNER_OS"
+          free -h || echo "Memory info not available"
+          
+      - name: Install dependencies
+        run: |
+          npm install axios fast-xml-parser dotenv
+          npm list || true
+        
+      - name: Create placeholder files
+        run: |
+          echo '{}' > admin-data-entry-keywords.json
+          echo '# Example proxies' > proxies.txt
+          touch .env
+          
+      - name: Run Indeed Scraper with debugging
+        run: |
+          echo "Starting scraper..."
+          node --trace-warnings scrape-indeed.js 2>&1 | tee indeed-scraper-debug.log
+          echo "Scraper completed with exit code: $?"
+          
+      - name: Check for common issues
+        if: ${{ always() }}
+        run: |
+          echo "Checking for common issues..."
+          echo "File permissions:"
+          ls -la
+          echo "Checking logs for errors:"
+          grep -i "error\|exception\|fail" indeed-scraper-debug.log || echo "No errors found in log"
+          
+      - name: Upload debug logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-logs
+          path: |
+            indeed-scraper-debug.log
+            *.log
+          retention-days: 1
+          if-no-files-found: warn 

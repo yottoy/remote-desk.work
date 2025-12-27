@@ -1,0 +1,416 @@
+name: JobSpy Scraper
+
+on:
+  # Run on schedule (every 24 hours instead of 6 to reduce artifact storage)
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Run in debug mode'
+        required: false
+        default: 'false'
+      use_proxies:
+        description: 'Use proxies from secrets'
+        required: false
+        default: 'false'
+
+jobs:
+  scrape-indeed:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      # Set up Python environment for JobSpy bridge
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      # Create log directories
+      - name: Create log and result directories
+        run: |
+          mkdir -p logs
+          mkdir -p python-bridge/logs
+          mkdir -p results
+          touch logs/scraper.log
+          touch python-bridge/jobspy_bridge.log
+      
+      # Install Python dependencies for JobSpy bridge
+      - name: Install Python dependencies
+        run: |
+          cd python-bridge
+          pip install -r requirements.txt
+      
+      # Install Node.js dependencies
+      - name: Install Node.js dependencies
+        run: npm ci
+      
+      # Configure proxies if enabled
+      - name: Configure proxies
+        if: github.event.inputs.use_proxies == 'true'
+        run: |
+          cd python-bridge
+          echo "${{ secrets.PROXY_LIST }}" > proxies.txt
+          echo "USE_PROXIES=true" >> .env
+          echo "Proxies configured successfully"
+      
+      # Configure environment
+      - name: Setup environment variables
+        run: |
+          # Global env vars
+          echo "ENABLE_JOBSPY_INDEED=true" >> .env
+          echo "ENABLE_JOBSPY_LINKEDIN=true" >> .env
+          echo "ENABLE_JOBSPY_NAUKRI=true" >> .env
+          echo "JOBSPY_BRIDGE_URL=http://127.0.0.1:8000" >> .env
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "LOG_LEVEL=debug" >> .env
+          
+          # Create .env file for Python bridge
+          cd python-bridge
+          echo "JOBSPY_BRIDGE_HOST=127.0.0.1" >> .env
+          echo "JOBSPY_BRIDGE_PORT=8000" >> .env
+          echo "MAX_RETRY_ATTEMPTS=3" >> .env
+          echo "RETRY_DELAY=5" >> .env 
+          echo "MIN_REQUEST_INTERVAL=2.5" >> .env
+          echo "USE_RANDOM_USER_AGENTS=true" >> .env
+          echo "DISABLE_PYDANTIC_VALIDATION_WARNINGS=true" >> .env
+          
+          # If not using proxies, explicitly set to false
+          if [ "${{ github.event.inputs.use_proxies }}" != "true" ]; then
+            echo "USE_PROXIES=false" >> .env
+          fi
+      
+      # Modify the scrape-all-jobs.js to ensure it uses the correct URL
+      - name: Update connection settings
+        run: |
+          # Force IPv4 in the scrape-all-jobs.js file
+          sed -i 's/const API_HOST = process.env.JOBSPY_BRIDGE_URL || .*/const API_HOST = process.env.JOBSPY_BRIDGE_URL || "http:\/\/127.0.0.1:8000";/' python-bridge/scrape-all-jobs.js
+          
+          # Show network interfaces for debugging
+          echo "Network interfaces:"
+          ip addr
+          
+          # Ensure Python is using IPv4
+          cd python-bridge
+          # Modify jobspy_bridge.py to bind to both IPv4 and IPv6
+          if grep -q "uvicorn.run" jobspy_bridge.py; then
+            sed -i 's/uvicorn.run(app, host=host, port=port)/uvicorn.run(app, host=host, port=port, log_level="info")/' jobspy_bridge.py
+          fi
+      
+      # Run JobSpy bridge in background
+      - name: Start JobSpy bridge
+        run: |
+          cd python-bridge
+          # Force IPv4 for the Python server
+          python -c "import socket; socket.setdefaulttimeout(10); print('IPv4 address:', socket.gethostbyname('localhost'))"
+          python jobspy_bridge.py > jobspy_bridge_startup.log 2>&1 &
+          echo $! > bridge_pid.txt
+          
+          # Wait for bridge to start up
+          echo "Waiting for bridge to start..."
+          sleep 15 
+          
+          # Check if bridge is running
+          if curl -s -v http://127.0.0.1:8000/health; then
+            echo "Bridge started successfully!"
+          else
+            echo "Bridge failed to start. Checking logs:"
+            cat jobspy_bridge_startup.log
+            echo "Checking if process is running:"
+            ps aux | grep python
+            echo "Checking netstat for port 8000:"
+            netstat -tuln | grep 8000 || echo "Port 8000 not found in netstat"
+            exit 1
+          fi
+        timeout-minutes: 5
+      
+      # Run the main scraper
+      - name: Run JobSpy scraper
+        run: |
+          cd python-bridge
+          
+          # Record start time
+          echo "Starting JobSpy scraper at $(date)" | tee -a ../logs/scraper.log
+          
+          # Check bridge status before starting
+          echo "Verifying bridge connection..."
+          if curl -s -v http://127.0.0.1:8000/health; then
+            echo "Bridge is running, starting scraper"
+          else
+            echo "Bridge is not running! Aborting."
+            exit 1
+          fi
+          
+          # Install xml2js for WeWorkRemotely RSS parser
+          cd ..
+          npm install xml2js --save
+          cd python-bridge
+          
+          # Run the main scraper and capture output
+          echo "=== Running Original JobSpy Scraper (Indeed/LinkedIn) ===" | tee -a ../logs/scraper.log
+          JOBSPY_BRIDGE_URL=http://127.0.0.1:8000 node ../scrape-all-jobs.js 2>&1 | tee -a ../logs/scraper.log
+          
+          # Run alternative sites scraper
+          echo "=== Running Alternative Sites Scraper (ZipRecruiter/Glassdoor/Bayt/Naukri) ===" | tee -a ../logs/scraper.log
+          JOBSPY_BRIDGE_URL=http://127.0.0.1:8000 node ../scrape-alt-sites.js 2>&1 | tee -a ../logs/scraper.log
+          
+          # Run WeWorkRemotely RSS scraper (doesn't need the bridge)
+          echo "=== Running WeWorkRemotely RSS Scraper ===" | tee -a ../logs/scraper.log
+          node ../scrape-weworkremotely.js 2>&1 | tee -a ../logs/scraper.log
+          
+          # Run the results combiner
+          echo "=== Combining Results from All Scrapers ===" | tee -a ../logs/scraper.log
+          node ../run-all-scrapers.js 2>&1 | tee -a ../logs/scraper.log
+          
+          # Record completion
+          echo "JobSpy scraper completed at $(date)" | tee -a ../logs/scraper.log
+          
+          # Copy results files to results directory if they exist
+          for file in scrape-results.json alt-sites-results.json weworkremotely-results.json combined-results.json; do
+            if [ -f "../$file" ]; then
+              cp "../$file" ../results/
+              echo "Copied $file to results directory"
+            fi
+          done
+        timeout-minutes: 30
+      
+      # Update MongoDB with job results
+      - name: Update MongoDB with results
+        run: |
+          echo "Importing jobs to MongoDB..."
+          
+          # Check if combined results file exists
+          if [ -f "results/combined-results.json" ]; then
+            # Import jobs to MongoDB using a Node.js script
+            node -e "
+              const fs = require('fs');
+              const { MongoClient } = require('mongodb');
+              require('dotenv').config();
+              
+              async function importJobs() {
+                try {
+                  console.log('Reading combined results file...');
+                  const jobs = JSON.parse(fs.readFileSync('results/combined-results.json', 'utf8'));
+                  
+                  if (!Array.isArray(jobs) || jobs.length === 0) {
+                    console.log('No jobs found in combined results');
+                    return;
+                  }
+                  
+                  console.log(`Found ${jobs.length} jobs in combined results`);
+                  
+                  const client = new MongoClient(process.env.MONGODB_URI);
+                  await client.connect();
+                  const db = client.db();
+                  const collection = db.collection('jobs');
+                  
+                  console.log('Connected to MongoDB');
+                  
+                  // Get existing job URLs to avoid duplicates
+                  const existingJobUrls = new Set();
+                  const cursor = collection.find({}, { projection: { job_url: 1 } });
+                  await cursor.forEach(job => {
+                    if (job.job_url) {
+                      existingJobUrls.add(job.job_url);
+                    }
+                  });
+                  
+                  console.log(`Found ${existingJobUrls.size} existing jobs in database`);
+                  
+                  // Filter out existing jobs
+                  const newJobs = jobs.filter(job => !existingJobUrls.has(job.job_url));
+                  console.log(`Found ${newJobs.length} new jobs to import`);
+                  
+                  if (newJobs.length > 0) {
+                    // Prepare jobs for import (add timestamp, etc.)
+                    const jobsToImport = newJobs.map(job => ({
+                      ...job,
+                      imported_at: new Date(),
+                      scrape_date: new Date()
+                    }));
+                    
+                    // Insert new jobs
+                    const result = await collection.insertMany(jobsToImport);
+                    console.log(`Successfully imported ${result.insertedCount} new jobs`);
+                  } else {
+                    console.log('No new jobs to import');
+                  }
+                  
+                  // Show current job count in database
+                  const count = await collection.countDocuments();
+                  console.log('Total jobs in database: ' + count);
+                  
+                  await client.close();
+                } catch(e) {
+                  console.error('Error importing jobs:', e.message);
+                }
+              }
+              
+              importJobs().catch(console.error);
+            " 2>&1 | tee -a logs/mongodb-import.log
+          else
+            echo "Combined results file not found. Checking individual result files..." | tee -a logs/mongodb-import.log
+            
+            # Try the original scrape-results.json as fallback
+            if [ -f "results/scrape-results.json" ]; then
+              echo "Using scrape-results.json instead" | tee -a logs/mongodb-import.log
+              # Import the standard results file
+              node -e "
+                const fs = require('fs');
+                const { MongoClient } = require('mongodb');
+                require('dotenv').config();
+                
+                async function importJobs() {
+                  try {
+                    console.log('Reading scrape-results.json...');
+                    const jobs = JSON.parse(fs.readFileSync('results/scrape-results.json', 'utf8'));
+                    
+                    if (!Array.isArray(jobs) || jobs.length === 0) {
+                      console.log('No jobs found in scrape results');
+                      return;
+                    }
+                    
+                    console.log(`Found ${jobs.length} jobs in results`);
+                    
+                    // Process jobs as above...
+                  } catch(e) {
+                    console.error('Error importing jobs:', e.message);
+                  }
+                }
+                
+                importJobs().catch(console.error);
+              " 2>&1 | tee -a logs/mongodb-import.log
+            else
+              echo "No results files found. Skipping MongoDB import." | tee -a logs/mongodb-import.log
+            fi
+          fi
+      
+      # Stop the bridge process
+      - name: Stop JobSpy bridge
+        if: always()
+        run: |
+          if [ -f "python-bridge/bridge_pid.txt" ]; then
+            PID=$(cat python-bridge/bridge_pid.txt)
+            if ps -p $PID > /dev/null; then
+              echo "Stopping JobSpy bridge process (PID: $PID)"
+              kill $PID || true
+            else
+              echo "JobSpy bridge process (PID: $PID) is not running"
+            fi
+          else
+            echo "No bridge PID file found, trying to find by process name"
+            pkill -f "python jobspy_bridge.py" || true
+          fi
+      
+      # Create summary
+      - name: Create summary
+        if: always()
+        run: |
+          # Create a results summary
+          echo "=== SCRAPING RESULTS SUMMARY ===" > logs/summary.log
+          echo "Scraper run completed at: $(date)" >> logs/summary.log
+          
+          # Include JobSpy logs in summary
+          if [ -f "python-bridge/jobspy_bridge.log" ]; then
+            echo "" >> logs/summary.log
+            echo "=== JOBSPY BRIDGE LOG EXCERPTS ===" >> logs/summary.log
+            tail -n 50 python-bridge/jobspy_bridge.log >> logs/summary.log
+          fi
+          
+          # Include startup logs in summary
+          if [ -f "python-bridge/jobspy_bridge_startup.log" ]; then
+            echo "" >> logs/summary.log
+            echo "=== JOBSPY BRIDGE STARTUP LOG ===" >> logs/summary.log
+            cat python-bridge/jobspy_bridge_startup.log >> logs/summary.log
+          fi
+          
+          # Include scraper results in summary if available
+          if [ -f "python-bridge/scrape-results.json" ]; then
+            echo "" >> logs/summary.log
+            echo "=== SCRAPER RESULTS SUMMARY ===" >> logs/summary.log
+            node -e "
+              const fs = require('fs');
+              try {
+                const results = JSON.parse(fs.readFileSync('python-bridge/scrape-results.json', 'utf8'));
+                console.log('Total jobs found: ' + results.totalJobs);
+                console.log('Duration: ' + results.duration + ' seconds');
+                console.log('\\nSource statistics:');
+                for (const source in results.sourceStats) {
+                  console.log('- ' + source + ': ' + results.sourceStats[source].jobsFound + ' jobs, ' + 
+                              results.sourceStats[source].errors + ' errors');
+                }
+                console.log('\\nErrors: ' + results.errors.length);
+              } catch(e) {
+                console.error('Error parsing results:', e.message);
+              }
+            " >> logs/summary.log
+          fi
+          
+          # Try to get job count from MongoDB
+          echo "" >> logs/summary.log
+          echo "=== MONGODB STATUS ===" >> logs/summary.log
+          node -e "
+            require('dotenv').config();
+            const { MongoClient } = require('mongodb');
+            async function checkCount() {
+              try {
+                const client = new MongoClient(process.env.MONGODB_URI);
+                await client.connect();
+                const db = client.db();
+                const count = await db.collection('jobs').countDocuments();
+                console.log('Total jobs in database: ' + count);
+                await client.close();
+              } catch(e) {
+                console.error('Error checking job count:', e.message);
+              }
+            }
+            checkCount().catch(console.error);
+          " 2>&1 >> logs/summary.log
+          
+          # Output summary to console
+          cat logs/summary.log
+      
+      # Upload logs as artifacts - TEMPORARILY DISABLED to fix storage quota
+      # - name: Archive logs
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: logs
+      #     path: |
+      #       logs/
+      #       python-bridge/*.log
+      #     retention-days: 1
+      #     if-no-files-found: warn
+      
+      # Upload results as artifacts - TEMPORARILY DISABLED to fix storage quota  
+      # - name: Archive results
+      #   if: always() && hashFiles('results/*', 'python-bridge/scrape-results.json') != ''
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: scrape-results
+      #     path: results/
+      #     retention-days: 1
+      #     if-no-files-found: warn
+      
+      # Create an empty results directory if it doesn't exist
+      - name: Ensure results directory exists
+        if: always()
+        run: |
+          mkdir -p results
+          # Create a dummy file if no results exist
+          if [ ! -f "python-bridge/scrape-results.json" ]; then
+            echo '{"info": "No jobs found in this run", "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"}' > results/empty-results.json
+          fi 
