@@ -98,4 +98,4 @@ MIT
 
 ## Credits
 
-This project uses the [JobSpy](https://github.com/speedyapply/JobSpy) library for job scraping functionality. 
+This project uses the [JobSpy](https://github.com/speedyapply/JobSpy) library for job scraping functionality. # Test Fri Dec 26 19:53:18 PST 2025
