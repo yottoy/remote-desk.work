@@ -2,6 +2,10 @@ name: Main Job Scraper
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/direct-scraper.yml'  # Only run when this workflow is updated
   schedule:
     - cron: '0 10 * * *'  # Daily at 10 AM UTC
 
