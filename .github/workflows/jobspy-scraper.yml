@@ -171,15 +171,23 @@ jobs:
           echo "=== Running WeWorkRemotely RSS Scraper ===" | tee -a ../logs/scraper.log
           node ../scrape-weworkremotely.js 2>&1 | tee -a ../logs/scraper.log
           
+          # Run RemoteOK scraper (NEW)
+          echo "=== Running RemoteOK Scraper ===" | tee -a ../logs/scraper.log
+          node ../scrape-remoteok.js 2>&1 | tee -a ../logs/scraper.log
+          
+          # Run Remotive scraper (NEW)
+          echo "=== Running Remotive Scraper ===" | tee -a ../logs/scraper.log
+          node ../scrape-remotive.js 2>&1 | tee -a ../logs/scraper.log
+          
           # Run the results combiner
           echo "=== Combining Results from All Scrapers ===" | tee -a ../logs/scraper.log
-          node ../run-all-scrapers.js 2>&1 | tee -a ../logs/scraper.log
+          node ../combine-scraper-results.js 2>&1 | tee -a ../logs/scraper.log
           
           # Record completion
           echo "JobSpy scraper completed at $(date)" | tee -a ../logs/scraper.log
           
           # Copy results files to results directory if they exist
-          for file in scrape-results.json alt-sites-results.json weworkremotely-results.json combined-results.json; do
+          for file in scrape-results.json alt-sites-results.json weworkremotely-results.json remoteok-results.json remotive-results.json combined-results.json; do
             if [ -f "../$file" ]; then
               cp "../$file" ../results/
               echo "Copied $file to results directory"
