@@ -19,7 +19,10 @@ const logger = {
 };
 
 // Configuration
-const RESULTS_FILE = path.join(__dirname, 'results', 'combined-results.json');
+// Try root directory first, then results subdirectory
+const RESULTS_FILE = fs.existsSync(path.join(__dirname, 'combined-results.json'))
+  ? path.join(__dirname, 'combined-results.json')
+  : path.join(__dirname, 'results', 'combined-results.json');
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.MONGODB_DB || 'clickclickjob';
 const COLLECTION_NAME = 'jobs';
@@ -128,7 +131,8 @@ async function importToMongoDB(jobs) {
             
             // Additional fields for job quality
             jobType: 'admin_data_entry',
-            site_source: job.site_source || job.source || 'direct_scraper',
+            site: job.site || job.site_source || job.source || 'unknown',
+            site_source: job.site_source || job.site || job.source || 'direct_scraper',
             
             // Timestamps
             scrapedDate: new Date(),
@@ -310,7 +314,8 @@ async function overwriteAllJobs(jobs) {
         
         // Additional fields for job quality
         jobType: 'admin_data_entry',
-        site_source: job.site_source || job.source || 'direct_scraper',
+        site: job.site || job.site_source || job.source || 'unknown',
+        site_source: job.site_source || job.site || job.source || 'direct_scraper',
         
         // Timestamps
         scrapedDate: new Date(),
