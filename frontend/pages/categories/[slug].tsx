@@ -360,7 +360,7 @@ Major employers hiring remote captioners include streaming platforms (Netflix, H
     faqs: [
       {
         question: 'Can I get captioning jobs with no experience?',
-        answer: 'Yes! Many companies hire entry-level captioners and provide training. Rev, 3Play Media, and Aberdeen offer opportunities for beginners. You\'ll typically need to pass a skills assessment testing grammar, spelling, and basic captioning guidelines. Entry-level positions start at $15-18/hour. Some companies offer paid training programs to help you get started.'
+        answer: 'Yes! Many companies hire entry-level captioners and provide training. Rev, 3Play Media, and Aberdeen offer opportunities for beginners. You will typically need to pass a skills assessment testing grammar, spelling, and basic captioning guidelines. Entry-level positions start at $15-18/hour. Some companies offer paid training programs to help you get started.'
       },
       {
         question: 'What typing speed do I need for captioning jobs?',
