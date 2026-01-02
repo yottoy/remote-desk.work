@@ -597,6 +597,7 @@ function filterMockJobs(jobs: any[]): any[] {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // Pre-generate all valid category pages at build time
+  // Force rebuild: 2026-01-02 20:15 UTC
   return {
     paths: validCategorySlugs.map(slug => ({ params: { slug } })),
     fallback: 'blocking' // Generate page server-side on first request if not pre-generated
