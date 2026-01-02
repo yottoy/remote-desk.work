@@ -596,10 +596,10 @@ function filterMockJobs(jobs: any[]): any[] {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // Get all valid category slugs instead of just the ones with defined data
+  // Pre-generate all valid category pages at build time
   return {
     paths: validCategorySlugs.map(slug => ({ params: { slug } })),
-    fallback: true // Show a loading state and generate pages on demand
+    fallback: 'blocking' // Generate page server-side on first request if not pre-generated
   };
 };
 
