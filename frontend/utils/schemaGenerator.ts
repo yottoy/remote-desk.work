@@ -213,6 +213,7 @@ export function generateFAQSchema(faqs: FAQItem[]): object {
 
 /**
  * Generates Organization Schema.org markup for the company
+ * Enhanced with brand name variations for better search recognition
  */
 export function generateOrganizationSchema(): object {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
@@ -221,6 +222,13 @@ export function generateOrganizationSchema(): object {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "ClickClickJob",
+    "alternateName": [
+      "Click Click Job",
+      "Click Click Jobs",
+      "ClickJob",
+      "Click Jobs",
+      "ClickClickJobs"
+    ],
     "url": baseUrl,
     "logo": {
       "@type": "ImageObject",
@@ -228,7 +236,7 @@ export function generateOrganizationSchema(): object {
       "width": 512,
       "height": 512
     },
-    "description": "ClickClickJob is a leading platform for remote administrative and data entry job opportunities, helping professionals find verified work-from-home positions.",
+    "description": "ClickClickJob is a leading platform for remote administrative, data entry, data processing, and captioning job opportunities, helping professionals find verified work-from-home positions.",
     "founder": {
       "@type": "Organization",
       "name": "ClickClickJob Team"
@@ -242,6 +250,9 @@ export function generateOrganizationSchema(): object {
     "knowsAbout": [
       "Remote work opportunities",
       "Data entry jobs",
+      "Data processing jobs",
+      "Captioning jobs",
+      "Transcription jobs",
       "Administrative positions",
       "Work from home careers",
       "Virtual assistant jobs"
@@ -255,7 +266,9 @@ export function generateOrganizationSchema(): object {
       "contactType": "customer service",
       "email": "support@clickclickjob.com",
       "availableLanguage": "English"
-    }
+    },
+    "slogan": "Find Remote Jobs - Work From Home Opportunities",
+    "keywords": "remote jobs, data processing jobs from home, captioning jobs remote, work from home, data entry, administrative assistant jobs"
   };
 }
 

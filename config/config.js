@@ -69,6 +69,14 @@ module.exports = {
     jobspy_indeed: {
       enabled: process.env.ENABLE_JOBSPY_INDEED === 'true' || false,
       queries: [
+        // PRIORITY 1: High-value categories with proven search demand
+        'data processing remote',
+        'data processing jobs from home',
+        'remote data processing jobs',
+        'captioning jobs',
+        'captioning jobs remote',
+        'transcription jobs remote',
+        // Standard queries
         'data entry remote',
         'administrative assistant remote', 
         'virtual assistant remote',
@@ -87,6 +95,12 @@ module.exports = {
     jobspy_linkedin: {
       enabled: process.env.ENABLE_JOBSPY_LINKEDIN === 'true' || false,
       queries: [
+        // PRIORITY 1: High-value categories
+        'data processing remote',
+        'captioning jobs remote',
+        'closed captioning remote',
+        'transcription remote',
+        // Standard queries
         'data entry remote',
         'administrative assistant remote', 
         'virtual assistant remote',
@@ -264,22 +278,60 @@ module.exports = {
     ],
     relevanceKeywords: {
       high: [
+        // PRIORITY 1: High-value keywords (561+ impressions)
+        'data processing',
+        'data processor',
+        'data analyst remote',
+        'captioning',
+        'captioner',
+        'closed captioning',
+        'subtitling',
+        // Standard high-value keywords
         'data entry',
         'administrative assistant',
         'admin assistant',
         'customer service',
         'virtual assistant',
-        'remote admin'
+        'remote admin',
+        'transcription',
+        'transcriptionist'
       ],
       medium: [
         'clerk',
         'secretary',
         'receptionist',
         'typist',
-        'transcription',
-        'support'
+        'support',
+        'data specialist',
+        'entry level remote'
       ]
-    }
+    },
+    // Exclude hyper-local and mis-targeted job sources
+    excludedCompanyPatterns: [
+      // Local businesses (Tony's Plumbing pattern)
+      /\b(tony's?|joe's?|mike's?|bob's?)\s+(plumbing|restaurant|cafe|diner|pizza|bar|grill)/i,
+      // Location + service type patterns
+      /\b(modesto|henderson|miami|dallas|austin)\s+(plumbing|hvac|roofing|electrical|landscaping)/i,
+      // Specific companies generating mis-targeted traffic
+      /indulge\s+travels?/i,
+      /talentify/i,
+      // Generic local business patterns
+      /\b(local|hometown)\s+(business|shop|store)/i,
+      // Hyper-local indicators
+      /must\s+(live|be\s+located)\s+(in|within|near)/i,
+      // On-site only positions
+      /\bon-?site\s+only/i,
+      /no\s+remote\s+option/i
+    ],
+    // Exclude specific search queries (for filtering scraped results)
+    excludedQueryPatterns: [
+      'careers', // Filters out "[Company] careers" searches
+      'reviews', // Filters out job board review searches
+      'gsi umich', // Specific institutional searches
+      'ccboe jobs', // School district jobs
+      'plumbing modesto', // Hyper-local service searches
+      'travels data entry' // Specific company searches like "indulge travels"
+    ]
   },
   database: {
     ttlDays: parseInt(process.env.TTL_DAYS) || 30

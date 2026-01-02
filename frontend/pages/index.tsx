@@ -13,14 +13,15 @@ import type { Job } from '../types/job';
 import { isMockJob } from '../types/job';
 import { countRecentJobs } from '../utils/jobUtils';
 
-// Job categories
+// Job categories - prioritized based on Google Search Console data
 const jobCategories = [
+  { name: 'Data Processing', slug: 'data-processing' }, // PRIORITY 1: 561 impressions
+  { name: 'Captioning', slug: 'captioning' }, // PRIORITY 2: 143 impressions, high CTR potential
   { name: 'Data Entry', slug: 'data-entry' },
+  { name: 'Transcription', slug: 'transcription' },
   { name: 'Administrative', slug: 'administrative' },
   { name: 'Customer Support', slug: 'customer-service' },
-  { name: 'Transcription', slug: 'transcription' },
-  { name: 'Virtual Assistant', slug: 'virtual-assistant' },
-  { name: 'Data Processing', slug: 'data-processing' }
+  { name: 'Virtual Assistant', slug: 'virtual-assistant' }
 ];
 
 interface HomePageProps {
@@ -88,7 +89,7 @@ export const getServerSideProps = async () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL 
       ? `${process.env.NEXT_PUBLIC_API_URL}/api/jobs`
       : (process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3004/api/jobs'
+        ? 'http://localhost:3000/api/jobs'
         : 'https://clickclickjob.vercel.app/api/jobs');
     console.log('Fetching jobs from:', apiUrl);
     
@@ -353,6 +354,174 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
               className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Browse All Jobs
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Job Searches Section - NEW */}
+      <section className="py-12 bg-white border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              🔥 Most Searched Remote Jobs
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Explore our most popular job categories and specialized searches. Find exactly what you're looking for.
+            </p>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {/* Top 3 - Featured */}
+            <Link 
+              href="/remote-jobs-near-me"
+              className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 hover:shadow-lg hover:border-blue-400 transition-all group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-600 text-white mb-2">
+                    Most Popular
+                  </span>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600">
+                    Remote Jobs Near Me
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Find work-from-home opportunities in your area
+                  </p>
+                </div>
+                <svg className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            <Link 
+              href="/part-time-remote-admin-jobs"
+              className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 hover:shadow-lg hover:border-purple-400 transition-all group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-600 text-white mb-2">
+                    Trending
+                  </span>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-purple-600">
+                    Part-Time Admin Jobs
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Flexible scheduling for work-life balance
+                  </p>
+                </div>
+                <svg className="w-5 h-5 text-purple-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            <Link 
+              href="/work-from-home-administrative-jobs"
+              className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 hover:shadow-lg hover:border-green-400 transition-all group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-600 text-white mb-2">
+                    High Demand
+                  </span>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-600">
+                    Work from Home Admin
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    100% remote administrative positions
+                  </p>
+                </div>
+                <svg className="w-5 h-5 text-green-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
+
+            {/* Rest of searches - Standard cards */}
+            <Link 
+              href="/data-processing-jobs-remote"
+              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-blue-600">
+                Data Processing Jobs
+              </h3>
+              <p className="text-sm text-gray-600">
+                Entry-level friendly positions
+              </p>
+            </Link>
+
+            <Link 
+              href="/remote-medical-administrative-jobs"
+              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-blue-600">
+                Medical Admin Jobs
+              </h3>
+              <p className="text-sm text-gray-600">
+                Healthcare administration roles
+              </p>
+            </Link>
+
+            <Link 
+              href="/remote-captioning-jobs"
+              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-blue-600">
+                Captioning Jobs
+              </h3>
+              <p className="text-sm text-gray-600">
+                Transcription & media captioning
+              </p>
+            </Link>
+
+            <Link 
+              href="/remote-proofreading-jobs"
+              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-blue-600">
+                Proofreading Jobs
+              </h3>
+              <p className="text-sm text-gray-600">
+                Editing & content review
+              </p>
+            </Link>
+
+            <Link 
+              href="/remote-school-administrative-jobs"
+              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-blue-600">
+                School Admin Jobs
+              </h3>
+              <p className="text-sm text-gray-600">
+                K-12 & higher education roles
+              </p>
+            </Link>
+
+            <Link 
+              href="/usps-remote-jobs"
+              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-blue-600">
+                USPS Remote Jobs
+              </h3>
+              <p className="text-sm text-gray-600">
+                Government & postal opportunities
+              </p>
+            </Link>
+
+            <Link 
+              href="/remote-admin-jobs-texas"
+              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-blue-600">
+                Texas Remote Jobs 🤠
+              </h3>
+              <p className="text-sm text-gray-600">
+                Admin positions for TX residents
+              </p>
             </Link>
           </div>
         </div>

@@ -19,6 +19,7 @@ const validCategorySlugs = [
   'transcription',
   'virtual-assistant',
   'data-processing',
+  'captioning',
   'customer-support',
   'bookkeeping',
   'content-writing',
@@ -36,7 +37,8 @@ const createGenericCategory = (slug: string) => {
     'customer-service': 'Remote Customer Service Jobs',
     'transcription': 'Remote Transcription Jobs',
     'virtual-assistant': 'Remote Virtual Assistant Jobs',
-    'data-processing': 'Remote Data Processing Jobs',
+    'data-processing': 'Remote Data Processing Jobs - Work From Home Opportunities',
+    'captioning': 'Remote Captioning Jobs - No Experience Needed',
     'customer-support': 'Remote Customer Support Jobs',
     'bookkeeping': 'Remote Bookkeeping Jobs',
     'content-writing': 'Remote Content Writing Jobs',
@@ -291,6 +293,92 @@ Industries hiring remote QA professionals include software development, e-commer
       { name: 'Data Entry Jobs', slug: 'data-entry' },
       { name: 'Project Management Jobs', slug: 'project-management' },
       { name: 'Content Writing Jobs', slug: 'content-writing' }
+    ]
+  },
+  'data-processing': {
+    name: 'Remote Data Processing Jobs - Work From Home Opportunities',
+    description: `Data processing jobs involve organizing, analyzing, and managing data for businesses and organizations. Unlike basic data entry, data processing requires understanding how to interpret, verify, and transform raw data into useful information. Remote data processing positions offer excellent work-from-home opportunities for detail-oriented professionals.
+
+What Does a Data Processor Do? Data processors review and verify information accuracy, organize data into usable formats, identify errors or inconsistencies, generate reports from datasets, and ensure data quality standards are met. These roles bridge the gap between raw data collection and actionable business insights.
+
+Remote data processing jobs typically pay between $16-28 per hour, with experienced data processors earning $25-35+ per hour depending on specialization. Many positions are entry-level friendly, requiring only basic computer skills and attention to detail, making them ideal for those starting a remote career.
+
+Top companies hiring for remote data processing include healthcare providers, insurance companies, financial institutions, research organizations, and e-commerce businesses. With the growing importance of data-driven decision making, demand for remote data processing professionals continues to increase across all industries.`,
+    requirements: [
+      { title: 'Data Analysis Skills', description: 'Ability to review, verify, and organize data accurately' },
+      { title: 'Software Proficiency', description: 'Microsoft Excel, Google Sheets, database management tools' },
+      { title: 'Attention to Detail', description: 'Critical for ensuring data accuracy and quality' },
+      { title: 'Problem Solving', description: 'Identifying and resolving data inconsistencies' }
+    ],
+    faqs: [
+      {
+        question: 'What is the difference between data entry and data processing?',
+        answer: 'Data entry involves typing information into systems, while data processing requires analyzing, organizing, and verifying that data. Data processing roles typically require more critical thinking, may involve working with formulas and databases, and often pay higher rates ($16-28/hour vs $14-20/hour for data entry). Many data processors also generate reports and identify trends, whereas data entry focuses primarily on accurate input.'
+      },
+      {
+        question: 'Do I need experience for remote data processing jobs?',
+        answer: 'Many remote data processing positions welcome entry-level candidates. While some specialized roles require experience (especially in healthcare or finance), entry-level positions typically need only basic computer skills, proficiency with Excel or Google Sheets, strong attention to detail, and the ability to follow instructions. Some employers provide on-the-job training for their specific data processing systems.'
+      },
+      {
+        question: 'How much do remote data processing jobs pay in 2025?',
+        answer: 'Remote data processing jobs typically pay between $16-28 per hour for entry to mid-level positions. Specialized data processing roles (medical coding, financial data processing, research data management) can pay $25-35+ per hour. Many positions are full-time with benefits, though part-time and contract opportunities are also available. Pay varies based on industry, experience level, and the complexity of data being processed.'
+      },
+      {
+        question: 'What skills do I need to become a remote data processor?',
+        answer: 'Essential skills include proficiency with Microsoft Excel or Google Sheets (including formulas and pivot tables), strong attention to detail, basic understanding of databases, ability to identify data errors, good communication skills for remote collaboration, and time management skills. Familiarity with specific software (CRM systems, data management platforms) is often provided through training. Some specialized fields may require additional certifications.'
+      },
+      {
+        question: 'Are remote data processing jobs legitimate?',
+        answer: 'Yes, remote data processing is a legitimate and growing field as companies increasingly rely on data-driven decisions. Major employers include healthcare systems, insurance companies, financial institutions, and research organizations. However, be cautious of positions requiring upfront payment for software or training - legitimate employers never charge fees to work for them. Always research companies thoroughly before applying.'
+      },
+      {
+        question: 'Can I do data processing jobs from home with no experience?',
+        answer: 'Yes! Many companies hire entry-level remote data processors and provide training. Start by building basic Excel skills (free tutorials available online), practice with sample datasets, and highlight transferable skills like attention to detail and organization. Entry-level positions may start at $16-20/hour, with opportunities to advance as you gain experience. Some companies offer internships or apprenticeships for complete beginners.'
+      }
+    ],
+    relatedCategories: [
+      { name: 'Data Entry Jobs', slug: 'data-entry' },
+      { name: 'Administrative Jobs', slug: 'administrative' },
+      { name: 'Transcription Jobs', slug: 'transcription' }
+    ]
+  },
+  'captioning': {
+    name: 'Remote Captioning Jobs - No Experience Needed',
+    description: `Captioning jobs involve creating text versions of audio content for videos, live events, and multimedia. Remote captioning positions are perfect for fast typists who want flexible work-from-home opportunities. Many positions welcome beginners with no prior captioning experience.
+
+Types of Captioning Work: Closed captioning for TV and streaming services, live captioning for events and broadcasts, video captioning for YouTube and social media, educational content captioning for online courses, and meeting captioning for corporate communications.
+
+Remote captioning jobs typically pay between $15-30 per hour depending on experience and specialization. Entry-level captioning positions start around $15-18/hour, while experienced captioners handling live events or specialized content can earn $25-35+/hour. Most positions offer flexible scheduling with opportunities for both full-time and part-time work.
+
+Major employers hiring remote captioners include streaming platforms (Netflix, Hulu, Amazon), media companies, educational institutions, accessibility service providers, and corporate captioning services. The demand for captioning continues to grow due to accessibility requirements and the explosion of video content online.`,
+    requirements: [
+      { title: 'Typing Speed', description: '60+ WPM for offline captioning, 180+ WPM for live captioning' },
+      { title: 'Grammar & Spelling', description: 'Excellent written English skills required' },
+      { title: 'Audio Equipment', description: 'Quality headphones and reliable internet connection' },
+      { title: 'Attention to Detail', description: 'Accuracy in transcribing spoken words and sounds' }
+    ],
+    faqs: [
+      {
+        question: 'Can I get captioning jobs with no experience?',
+        answer: 'Yes! Many companies hire entry-level captioners and provide training. Rev, 3Play Media, and Aberdeen offer opportunities for beginners. You\'ll typically need to pass a skills assessment testing grammar, spelling, and basic captioning guidelines. Entry-level positions start at $15-18/hour. Some companies offer paid training programs to help you get started.'
+      },
+      {
+        question: 'What typing speed do I need for captioning jobs?',
+        answer: 'For offline/post-production captioning, you need 60+ words per minute (WPM) with high accuracy. For live captioning (real-time), you need 180-200+ WPM, which requires specialized stenography training. Most entry-level positions focus on offline captioning where speed requirements are more achievable. Free typing tests are available online to check your current speed.'
+      },
+      {
+        question: 'How much do remote captioning jobs pay?',
+        answer: 'Entry-level captioning positions pay $15-18 per hour. Experienced offline captioners earn $20-25/hour. Live captioners with stenography training earn $25-35+/hour. Some companies pay per video minute ($1-6 per minute depending on complexity). Full-time positions often include benefits. Specialized captioning (medical, legal, technical) commands higher rates.'
+      },
+      {
+        question: 'What equipment do I need for remote captioning work?',
+        answer: 'Essential equipment includes a reliable computer, high-speed internet (minimum 10 Mbps), quality headphones or speakers, and a quiet workspace. Some companies provide captioning software, while others require specific tools. For live captioning, you may need a stenography machine (provided by some employers). Most entry-level positions require only basic equipment you likely already have.'
+      }
+    ],
+    relatedCategories: [
+      { name: 'Transcription Jobs', slug: 'transcription' },
+      { name: 'Data Entry Jobs', slug: 'data-entry' },
+      { name: 'Virtual Assistant Jobs', slug: 'virtual-assistant' }
     ]
   },
 };
