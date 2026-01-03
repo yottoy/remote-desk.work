@@ -276,12 +276,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               { is_mock_data: { $exists: false } }
             ]
           },
-          // REQUIRE valid URLs - exclude jobs without proper application links
-          { url: { $exists: true } },
-          { url: { $ne: null } },
-          { url: { $ne: '' } },
-          { url: { $regex: /^https?:/ } },  // Must contain http: or https:
-          { url: { $not: { $regex: /example\.com|localhost|test\.com|mock|placeholder/i } } },
+          // Exclude jobs with invalid or test URLs, but allow jobs without URLs
+          { $or: [
+              { url: { $exists: false } },
+              { $and: [
+                  { url: { $exists: true } },
+                  { url: { $ne: null } },
+                  { url: { $ne: '' } },
+                  { url: { $not: { $regex: /example\.com|localhost|test\.com|^mock|placeholder/i } } }
+                ]
+              }
+            ]
+          },
           // Exclude jobs with titles that suggest engineering roles
           { title: { $not: { $regex: /engineer|developer|software|coding|programming|devops|architect|frontend|backend|fullstack|tech lead|IT manager|sys admin|network admin|security/i } } },
           // Exclude jobs with irrelevant job categories
