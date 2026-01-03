@@ -126,7 +126,8 @@ async function importToMongoDB(jobs) {
                        job.date_posted ? new Date(job.date_posted) : 
                        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Default to 7 days ago instead of today
             remote: true, // Admin and data entry jobs are remote
-            url: job.url || '',
+            // FIX: JobSpy returns 'job_url' not 'url'
+            url: job.url || job.job_url || job.job_url_direct || '',
             source: job.source || job.site_source || 'direct_scraper',
             
             // Additional fields for job quality
