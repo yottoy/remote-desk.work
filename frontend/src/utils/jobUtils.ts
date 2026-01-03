@@ -299,6 +299,13 @@ export function formatJobDescription(description: string): string {
   formatted = formatted.replace(/â„¢/g, '™');  // trademark
   formatted = formatted.replace(/Â®/g, '®');   // registered trademark
   formatted = formatted.replace(/Â©/g, '©');   // copyright
+  // Additional fixes for common patterns
+  formatted = formatted.replace(/â/g, "'");    // standalone â is often apostrophe
+  formatted = formatted.replace(/Ã©/g, 'é');   // é character
+  formatted = formatted.replace(/Ã¨/g, 'è');   // è character
+  formatted = formatted.replace(/Ã /g, 'à');   // à character
+  formatted = formatted.replace(/Ã¡/g, 'á');   // á character
+  formatted = formatted.replace(/Â´/g, "'");   // acute accent used as apostrophe
   
   // First, check if we have HTML content and clean up markdown within it
   const hasHTMLTags = /<[^>]+>/g.test(formatted);
