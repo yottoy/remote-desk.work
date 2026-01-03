@@ -280,9 +280,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           { url: { $exists: true } },
           { url: { $ne: null } },
           { url: { $ne: '' } },
-          { url: { $regex: /^https?:\/\// } },  // Must start with http:// or https://
-          // Exclude jobs with example.com or invalid URLs
-          { url: { $not: { $regex: /example\.com|test|mock|placeholder/i } } },
+          { url: { $regex: /^https?:/ } },  // Must contain http: or https:
+          { url: { $not: { $regex: /example\.com|localhost|test\.com|mock|placeholder/i } } },
           // Exclude jobs with titles that suggest engineering roles
           { title: { $not: { $regex: /engineer|developer|software|coding|programming|devops|architect|frontend|backend|fullstack|tech lead|IT manager|sys admin|network admin|security/i } } },
           // Exclude jobs with irrelevant job categories
