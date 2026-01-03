@@ -93,7 +93,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
   const { addJobToRecentlyViewed } = useRecentlyViewedJobs();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -358,17 +358,15 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                       </svg>
                     </a>
                   ) : (
-                    <a 
-                      href={`mailto:apply@clickclickjob.com?subject=Application for ${encodeURIComponent(job.title)} at ${encodeURIComponent(job.company)}&body=I am interested in applying for the ${encodeURIComponent(job.title)} position at ${encodeURIComponent(job.company)}. Job ID: ${encodeURIComponent(job._id)}`}
-                      className="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      title="Contact for application instructions"
+                    <span 
+                      className="inline-flex justify-center items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-500 bg-gray-100 cursor-not-allowed"
+                      title="Please see job description for application instructions"
                     >
-                      Contact to Apply
+                      See Description for Apply Instructions
                       <svg className="ml-2 -mr-1 w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                       </svg>
-                    </a>
+                    </span>
                   )}
                   <CopyToClipboard 
                     textToCopy={currentUrl} 
@@ -513,7 +511,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                     <div className="bg-white rounded-lg shadow border border-gray-200 p-6 mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Related Jobs</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {relatedJobs.slice(0, 6).map((relatedJob) => (
+                        {relatedJobs.slice(0, 12).map((relatedJob) => (
                           <div key={relatedJob._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
                             <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
                               <Link href={`/jobs/${relatedJob._id}`} className="hover:text-blue-600">
@@ -546,7 +544,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                         More Jobs from {job.company}
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {moreFromCompany.slice(0, 4).map((companyJob) => (
+                        {moreFromCompany.slice(0, 8).map((companyJob) => (
                           <div key={companyJob._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
                             <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
                               <Link href={`/jobs/${companyJob._id}`} className="hover:text-blue-600">
@@ -667,7 +665,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const relatedJobs = await db.collection('jobs')
       .find(relatedJobsQuery)
-      .limit(6)
+      .limit(12)
       .sort({ qualityScore: -1, postedDate: -1 })
       .toArray();
 
@@ -677,7 +675,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         _id: { $ne: job._id },
         company: job.company
       })
-      .limit(4)
+      .limit(8)
       .sort({ postedDate: -1 })
       .toArray();
 

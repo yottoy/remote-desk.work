@@ -283,6 +283,23 @@ export function formatJobDescription(description: string): string {
   
   let formatted = description;
   
+  // Fix common UTF-8 encoding issues (mojibake) - these occur when UTF-8 is incorrectly interpreted as Windows-1252
+  // This fixes existing bad data in the database
+  formatted = formatted.replace(/â€"/g, '—');  // em dash
+  formatted = formatted.replace(/â€"/g, '–');  // en dash
+  formatted = formatted.replace(/â€™/g, "'");  // right single quote
+  formatted = formatted.replace(/â€˜/g, "'");  // left single quote
+  formatted = formatted.replace(/â€œ/g, '"');  // left double quote
+  formatted = formatted.replace(/â€/g, '"');  // right double quote
+  formatted = formatted.replace(/â€¢/g, '•');  // bullet
+  formatted = formatted.replace(/â€¦/g, '…');  // ellipsis
+  formatted = formatted.replace(/Â /g, ' ');   // non-breaking space
+  formatted = formatted.replace(/Â°/g, '°');   // degree symbol
+  formatted = formatted.replace(/â‚¬/g, '€');  // euro sign
+  formatted = formatted.replace(/â„¢/g, '™');  // trademark
+  formatted = formatted.replace(/Â®/g, '®');   // registered trademark
+  formatted = formatted.replace(/Â©/g, '©');   // copyright
+  
   // First, check if we have HTML content and clean up markdown within it
   const hasHTMLTags = /<[^>]+>/g.test(formatted);
   

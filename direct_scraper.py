@@ -101,14 +101,14 @@ def create_empty_result_file(site_name, error_message="No scraping attempted"):
     """Create an empty result file for a given site"""
     try:
         filename = f"results/{site_name}-results.json"
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding='utf-8') as f:
             json.dump({
                 "source": site_name,
                 "scrape_date": datetime.now().isoformat(),
                 "error": error_message,
                 "jobs_count": 0,
                 "jobs": []
-            }, f, indent=2)
+            }, f, indent=2, ensure_ascii=False)
         logger.info(f"Created empty result file: {filename}")
         return True
     except Exception as e:
@@ -267,7 +267,7 @@ def create_fallback_results():
     
     # Create a results file with clear MOCK indicator in filename
     filename = f"results/MOCK-fallback-results.json"
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding='utf-8') as f:
         results = {
             "source": "mock_data",
             "scrape_date": datetime.now().isoformat(),
@@ -276,7 +276,7 @@ def create_fallback_results():
             "jobs_count": len(mock_jobs),
             "jobs": mock_jobs
         }
-        json.dump(results, f, indent=2)
+        json.dump(results, f, indent=2, ensure_ascii=False)
     
     logger.info(f"Created {len(mock_jobs)} mock jobs as fallback data in {filename}")
     return mock_jobs
@@ -493,8 +493,8 @@ def save_jobs_to_file(df, site_name, search_term):
         
         # Save to file
         filename = f"results/{site_name}-results.json"
-        with open(filename, "w") as f:
-            json.dump(results, f, indent=2)
+        with open(filename, "w", encoding='utf-8') as f:
+            json.dump(results, f, indent=2, ensure_ascii=False)
         logger.info(f"Saved results to {filename}")
         return jobs_list
     except Exception as e:
@@ -697,8 +697,8 @@ def try_all_search_variations(site, base_terms):
         }
         
         filename = f"results/{site_str}-results.json"
-        with open(filename, "w") as f:
-            json.dump(results, f, indent=2)
+        with open(filename, "w", encoding='utf-8') as f:
+            json.dump(results, f, indent=2, ensure_ascii=False)
         logger.info(f"Saved combined results to {filename}")
     
     return all_jobs
@@ -836,13 +836,13 @@ def merge_results():
     
     # Save combined results (even if empty)
     try:
-        with open("results/combined-results.json", "w") as f:
-            json.dump(combined_results, f, indent=2)
+        with open("results/combined-results.json", "w", encoding='utf-8') as f:
+            json.dump(combined_results, f, indent=2, ensure_ascii=False)
         logger.info(f"Saved {len(all_jobs)} jobs to results/combined-results.json")
         
         # Also save as scrape-results.json for compatibility with existing code
-        with open("results/scrape-results.json", "w") as f:
-            json.dump(all_jobs, f, indent=2)
+        with open("results/scrape-results.json", "w", encoding='utf-8') as f:
+            json.dump(all_jobs, f, indent=2, ensure_ascii=False)
         logger.info(f"Saved {len(all_jobs)} jobs to results/scrape-results.json")
     except Exception as e:
         logger.error(f"Error saving combined results: {str(e)}")
@@ -859,8 +859,8 @@ def main():
         return False
     
     # Start with a simple test file for the artifact upload
-    with open("results/test-result.json", "w") as f:
-        json.dump({"test": "This is a test file", "timestamp": datetime.now().isoformat()}, f)
+    with open("results/test-result.json", "w", encoding='utf-8') as f:
+        json.dump({"test": "This is a test file", "timestamp": datetime.now().isoformat()}, f, ensure_ascii=False)
     
     # Setup dependencies
     if not setup_dependencies():
@@ -874,17 +874,17 @@ def main():
         mock_jobs = create_fallback_results()
         
         # Save fallback data in the standard format
-        with open("results/scrape-results.json", "w") as f:
-            json.dump(mock_jobs, f, indent=2)
+        with open("results/scrape-results.json", "w", encoding='utf-8') as f:
+            json.dump(mock_jobs, f, indent=2, ensure_ascii=False)
         
         # Also save as combined-results.json
-        with open("results/combined-results.json", "w") as f:
+        with open("results/combined-results.json", "w", encoding='utf-8') as f:
             results = {
                 "scrape_date": datetime.now().isoformat(),
                 "total_jobs": len(mock_jobs),
                 "jobs": mock_jobs
             }
-            json.dump(results, f, indent=2)
+            json.dump(results, f, indent=2, ensure_ascii=False)
         
         return True  # Return success to avoid failing the workflow
     
@@ -979,8 +979,8 @@ def main():
         
         # Create fallback mock results even when there's an error
         mock_jobs = create_fallback_results()
-        with open("results/scrape-results.json", "w") as f:
-            json.dump(mock_jobs, f, indent=2)
+        with open("results/scrape-results.json", "w", encoding='utf-8') as f:
+            json.dump(mock_jobs, f, indent=2, ensure_ascii=False)
         
         # Return True to avoid failing the workflow
         return True
@@ -989,19 +989,19 @@ if __name__ == "__main__":
     try:
         # Start with directories and test files to ensure we have artifacts
         ensure_directories()
-        with open("results/script-started.json", "w") as f:
-            json.dump({"status": "Script started", "timestamp": datetime.now().isoformat()}, f)
+        with open("results/script-started.json", "w", encoding='utf-8') as f:
+            json.dump({"status": "Script started", "timestamp": datetime.now().isoformat()}, f, ensure_ascii=False)
         
         # Run the main function
         success = main()
         
         # Create a final status file
-        with open("results/script-status.json", "w") as f:
+        with open("results/script-status.json", "w", encoding='utf-8') as f:
             json.dump({
                 "status": "Completed" if success else "Failed",
                 "timestamp": datetime.now().isoformat(),
                 "success": success
-            }, f)
+            }, f, ensure_ascii=False)
         
         sys.exit(0)  # Always exit with success to ensure artifacts are generated
     except Exception as e:
@@ -1011,17 +1011,17 @@ if __name__ == "__main__":
         # Create a final status file even on critical error
         try:
             ensure_directories()
-            with open("results/script-error.json", "w") as f:
+            with open("results/script-error.json", "w", encoding='utf-8') as f:
                 json.dump({
                     "status": "Critical Error",
                     "timestamp": datetime.now().isoformat(),
                     "error": str(e)
-                }, f)
+                }, f, ensure_ascii=False)
             
             # Ensure we have at least some job results
             mock_jobs = create_fallback_results()
-            with open("results/scrape-results.json", "w") as f:
-                json.dump(mock_jobs, f, indent=2)
+            with open("results/scrape-results.json", "w", encoding='utf-8') as f:
+                json.dump(mock_jobs, f, indent=2, ensure_ascii=False)
         except:
             pass
         
