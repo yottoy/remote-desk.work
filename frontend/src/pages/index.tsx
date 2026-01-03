@@ -203,7 +203,8 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
             Remote Admin Jobs Hiring Now
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Real opportunities updated daily. Entry-level positions available. No experience required jobs included. Always Free.
+            Remote & work-from-home jobs updated daily.<br />
+            Entry-level, data entry, and no-experience positions. Always free.
           </p>
           
           <div className="max-w-3xl mx-auto mt-8">
