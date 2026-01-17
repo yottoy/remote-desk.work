@@ -1,9 +1,9 @@
-name: Run Job Scrapers
+name: Run Job Scrapers (DISABLED - Use direct-scraper.yml instead)
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 */12 * * *'  # Run every 12 hours
+  workflow_dispatch:  # Manual only
+  # schedule:
+  #   - cron: '0 */12 * * *'  # Run every 12 hours
 
 jobs:
   scrape-jobs:

@@ -1,9 +1,7 @@
-name: Scrape Remote Admin/Data Entry Jobs
+name: Scrape Remote Admin/Data Entry Jobs (DISABLED - USE direct-scraper.yml instead)
 
 on:
-  schedule:
-    - cron: '0 */12 * * *'  # Run every 12 hours
-  workflow_dispatch:  # Allow manual runs
+  workflow_dispatch:  # Allow manual runs only
 
 jobs:
   scrape:

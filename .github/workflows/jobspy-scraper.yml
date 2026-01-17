@@ -1,9 +1,9 @@
-name: JobSpy Scraper
+name: JobSpy Scraper (DISABLED - Broken dependencies)
 
 on:
-  # Run on schedule (every 24 hours instead of 6 to reduce artifact storage)
-  schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  # DISABLED - JobSpy module import issues, use direct-scraper.yml instead
+  # schedule:
+  #   - cron: '0 2 * * *'  # Daily at 2 AM UTC
   
   # Allow manual trigger
   workflow_dispatch:
