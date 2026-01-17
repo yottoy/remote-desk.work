@@ -50,8 +50,14 @@ jobs:
             jobs_count=$(grep -o '"jobs_count":[^,]*' "$file" 2>/dev/null || echo "0")
             echo "$file: $jobs_count"
           done
+          
+          # Copy scrape-results.json to root for combining
+          if [ -f "results/scrape-results.json" ]; then
+            cp results/scrape-results.json scrape-results.json
+            echo "✅ Copied scrape-results.json to root directory"
+          fi
       
-      - name: Set up Node.js for MongoDB import
+      - name: Set up Node.js for additional scrapers
         if: success()
         uses: actions/setup-node@v4
         with:
@@ -61,6 +67,58 @@ jobs:
       - name: Install Node.js dependencies
         if: success()
         run: npm ci
+
+      - name: Run RSS-based scrapers
+        continue-on-error: true
+        run: |
+          echo "🌐 Running additional RSS-based scrapers..."
+          
+          # WeWorkRemotely scraper
+          echo "📡 Running WeWorkRemotely scraper..."
+          node scrape-weworkremotely.js 2>&1 | tee logs/weworkremotely-scraper.log
+          wwr_exit=$?
+          if [ $wwr_exit -eq 0 ]; then
+            echo "✅ WeWorkRemotely scraper completed successfully"
+          else
+            echo "⚠️ WeWorkRemotely scraper failed with exit code: $wwr_exit"
+          fi
+          
+          # RemoteOK scraper
+          echo "📡 Running RemoteOK scraper..."
+          node scrape-remoteok.js 2>&1 | tee logs/remoteok-scraper.log
+          remoteok_exit=$?
+          if [ $remoteok_exit -eq 0 ]; then
+            echo "✅ RemoteOK scraper completed successfully"
+          else
+            echo "⚠️ RemoteOK scraper failed with exit code: $remoteok_exit"
+          fi
+          
+          # Remotive scraper
+          echo "📡 Running Remotive scraper..."
+          node scrape-remotive.js 2>&1 | tee logs/remotive-scraper.log
+          remotive_exit=$?
+          if [ $remotive_exit -eq 0 ]; then
+            echo "✅ Remotive scraper completed successfully"
+          else
+            echo "⚠️ Remotive scraper failed with exit code: $remotive_exit"
+          fi
+          
+          echo "📊 RSS scrapers completed"
+          echo "Results files created:"
+          ls -lh weworkremotely-results.json remoteok-results.json remotive-results.json 2>/dev/null || echo "Some result files may not exist"
+
+      - name: Combine all scraper results
+        if: success()
+        run: |
+          echo "🔄 Combining results from all scrapers..."
+          node combine-scraper-results.js 2>&1 | tee logs/combine-results.log
+          
+          if [ -f "combined-results.json" ]; then
+            total_jobs=$(grep -o '"total":[^,}]*' combined-results.json | head -1 | cut -d':' -f2 || echo "0")
+            echo "✅ Combined results created with $total_jobs jobs"
+          else
+            echo "⚠️ Combined results file not created"
+          fi
 
       - name: Import results to MongoDB
         if: success()
