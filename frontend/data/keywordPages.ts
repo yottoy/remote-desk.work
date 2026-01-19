@@ -262,6 +262,215 @@ export const keywordPagesData: Record<string, KeywordPageData> = {
         answer: 'Absolutely! Remote administrative work provides valuable transferable skills in communication, organization, problem-solving, and technology that can be applied to many career paths. Many professionals start in admin roles before specializing in project management, HR, operations, or other fields.'
       }
     ]
+  },
+  'medical-data-entry-jobs': {
+    slug: 'medical-data-entry-jobs',
+    title: 'Medical Data Entry Jobs Remote - Healthcare Data Entry Positions | ClickClickJob',
+    h1: 'Remote Medical Data Entry Jobs - Work From Home in Healthcare',
+    description: 'Find remote medical data entry jobs. Work from home in healthcare data entry. Entry-level positions available. HIPAA-compliant opportunities. Apply today.',
+    valueProposition: 'Discover legitimate medical data entry positions in healthcare. All listings are verified for legitimacy. Entry-level roles with training available.',
+    jobFilters: {
+      category: 'data-entry',
+      specialization: 'medical'
+    },
+    faqItems: [
+      {
+        question: 'Do I need medical experience for medical data entry jobs?',
+        answer: 'Most entry-level medical data entry positions do not require prior medical experience. Basic knowledge of medical terminology is helpful but can often be learned on the job. Employers typically provide training on their specific systems and HIPAA compliance requirements. Strong typing skills and attention to detail are more important for beginners.'
+      },
+      {
+        question: 'What does medical data entry pay?',
+        answer: 'Remote medical data entry positions typically pay between $15-22 per hour, depending on experience and specialization. Entry-level positions usually start at $15-17/hour, while experienced medical data entry specialists with knowledge of medical coding or billing can earn $20-25/hour or more.'
+      },
+      {
+        question: 'Can I work medical data entry jobs from home?',
+        answer: 'Yes, many medical data entry positions are fully remote and allow you to work from home. Healthcare organizations have increasingly adopted remote work models for data entry roles, especially since the COVID-19 pandemic. You\'ll need a secure internet connection and quiet workspace to handle sensitive patient information in compliance with HIPAA regulations.'
+      },
+      {
+        question: 'What software is used in medical data entry?',
+        answer: 'Common software includes Electronic Health Record (EHR) systems like Epic, Cerner, or Meditech, medical billing software, practice management systems, and Microsoft Office or Google Workspace. Most employers provide specific training on their proprietary systems. Basic computer skills and the ability to learn new software quickly are essential.'
+      },
+      {
+        question: 'Do medical data entry jobs require HIPAA certification?',
+        answer: 'While HIPAA certification is not always required for entry-level positions, understanding HIPAA privacy and security rules is mandatory. Most employers provide HIPAA training as part of their onboarding process. Having HIPAA certification beforehand can make you a more competitive candidate and may qualify you for higher-paying positions.'
+      }
+    ]
+  },
+  'entry-level-data-analyst-jobs': {
+    slug: 'entry-level-data-analyst-jobs',
+    title: 'Entry Level Data Analyst Jobs Remote - No Experience Required | ClickClickJob',
+    h1: 'Entry Level Remote Data Analyst Jobs - No Experience Needed',
+    description: 'Entry level data analyst jobs remote with no experience required. Work from home analyst positions. Paid training available. Start your data career today.',
+    valueProposition: 'Break into the data analytics field with remote positions designed for beginners. Many offer paid training and mentorship.',
+    jobFilters: {
+      experienceLevel: 'entry-level'
+    },
+    faqItems: [
+      {
+        question: 'Can I become a data analyst with no experience?',
+        answer: 'Yes, many companies hire entry-level data analysts with no prior experience and provide on-the-job training. Focus on building foundational skills in Excel, SQL basics, and data visualization. Free courses like Google Data Analytics Certificate or platforms like DataCamp can help you build a portfolio. Entry-level positions often look for analytical thinking and willingness to learn rather than extensive experience.'
+      },
+      {
+        question: 'What\'s the difference between data entry and data analyst?',
+        answer: 'Data entry involves inputting and organizing existing data into systems, requiring accuracy and attention to detail. Data analysts, on the other hand, examine data to find patterns, create reports, and provide insights that help businesses make decisions. Data analysts use tools like Excel, SQL, and visualization software, while data entry typically requires just basic computer skills. Data analyst roles generally offer higher pay ($45-65K vs $30-40K) and more career growth opportunities.'
+      },
+      {
+        question: 'Do I need a degree for entry level data analyst jobs?',
+        answer: 'While many employers prefer a bachelor\'s degree in a related field (statistics, math, business, computer science), it\'s not always required for entry-level positions. Many successful data analysts are self-taught or have completed online certifications. Focus on building a strong portfolio with real projects, learning SQL and Excel, and obtaining relevant certifications like Google Data Analytics or Microsoft Excel Expert. Demonstrable skills often matter more than formal education for entry-level roles.'
+      },
+      {
+        question: 'What does entry level data analyst pay?',
+        answer: 'Entry-level remote data analysts typically earn between $45,000-$65,000 annually, or approximately $22-32 per hour. Salary varies by company size, industry, and location (some remote positions adjust for geographic location). Junior analysts with specialized skills in Python, SQL, or specific industries like finance or healthcare can earn on the higher end. With 1-2 years of experience, you can often move into mid-level positions paying $65,000-$85,000.'
+      },
+      {
+        question: 'What skills do I need to learn for an entry-level data analyst job?',
+        answer: 'Essential skills include: Microsoft Excel (pivot tables, VLOOKUP, basic formulas), SQL for database queries, data visualization basics (Tableau or Power BI), critical thinking, and communication skills to present findings. Nice-to-have skills include: Python or R basics, statistics fundamentals, understanding of data cleaning processes, and domain knowledge in a specific industry. Most entry-level positions provide training on their specific tools and systems.'
+      }
+    ]
+  },
+  'remote-data-entry-jobs': {
+    slug: 'remote-data-entry-jobs',
+    title: 'Remote Data Entry Jobs - Work From Home Data Entry Positions 2026 | ClickClickJob',
+    h1: 'Remote Data Entry Jobs - Legitimate Work From Home Opportunities',
+    description: 'Find legitimate remote data entry jobs. Work from home data entry positions hiring now. Entry level & no experience options. Part-time & full-time. Apply today.',
+    valueProposition: 'Discover verified remote data entry jobs from legitimate companies. We screen all listings to ensure quality opportunities with real employers.',
+    jobFilters: {
+      category: 'data-entry'
+    },
+    faqItems: [
+      {
+        question: 'Are remote data entry jobs legitimate?',
+        answer: 'Yes, legitimate remote data entry jobs exist, though scams are common in this field. ClickClickJob.com manually verifies all job listings to ensure legitimacy. Red flags include: requests for upfront payment, promises of unrealistic pay for simple tasks, vague job descriptions, and requests for sensitive financial information. Legitimate employers never ask you to pay for training or equipment upfront.'
+      },
+      {
+        question: 'How much do remote data entry jobs pay?',
+        answer: 'Remote data entry jobs typically pay between $12-18 per hour for entry-level positions, or $25,000-$38,000 annually for full-time work. Specialized data entry roles (medical, legal, technical) can pay $18-25 per hour. Payment structure varies: some jobs pay hourly, others pay per project or per piece. Be wary of jobs promising significantly higher rates for simple data entry work.'
+      },
+      {
+        question: 'Can I do data entry jobs with no experience?',
+        answer: 'Yes, many remote data entry positions are entry-level and require no prior experience. Employers typically look for basic computer skills, attention to detail, and typing proficiency (usually 40+ WPM). Most companies provide training on their specific systems and processes. Starting with entry-level positions helps you build experience for higher-paying specialized data entry roles.'
+      },
+      {
+        question: 'What equipment do I need for data entry work from home?',
+        answer: 'Most remote data entry jobs require: a reliable computer (desktop or laptop), stable high-speed internet connection, quiet workspace, and sometimes a headset for audio transcription tasks. Some employers provide specific software, while others require Microsoft Office or Google Workspace. Minimal investment is needed - legitimate employers don\'t require you to purchase expensive equipment upfront.'
+      },
+      {
+        question: 'How do I find legitimate data entry jobs online?',
+        answer: 'Find legitimate data entry jobs by: using verified job boards like ClickClickJob.com, researching company reputations on Glassdoor or Indeed, avoiding jobs requiring upfront payment, checking for clear job descriptions with realistic requirements, and verifying the company exists with a real website and contact information. Apply directly through company websites when possible.'
+      },
+      {
+        question: 'Are there part-time data entry jobs available?',
+        answer: 'Yes, many remote data entry positions offer part-time hours (10-30 hours/week) with flexible scheduling. Part-time data entry is popular among students, parents, and those seeking supplemental income. Some companies offer project-based work, allowing you to set your own hours. Part-time positions typically pay hourly rather than salary.'
+      }
+    ]
+  },
+  'customer-service-work-from-home-jobs': {
+    slug: 'customer-service-work-from-home-jobs',
+    title: 'Customer Service Work From Home Jobs - Remote Support Positions | ClickClickJob',
+    h1: 'Customer Service Work From Home Jobs - Remote & Flexible Positions',
+    description: 'Customer service work from home jobs hiring now. Remote customer service representative positions. Entry level, no experience, chat & phone support. Apply today.',
+    valueProposition: 'Find legitimate remote customer service jobs with flexible schedules. Entry-level positions available with training provided.',
+    jobFilters: {
+      category: 'customer-service'
+    },
+    faqItems: [
+      {
+        question: 'Can I work customer service from home with no experience?',
+        answer: 'Yes, many remote customer service positions hire candidates with no prior experience and provide comprehensive training. Entry-level roles typically look for good communication skills, problem-solving abilities, patience, and basic computer proficiency. Companies often provide 1-4 weeks of paid training covering their products, systems, and customer service best practices. Starting in chat support or email support roles can be easier than phone-based positions for beginners.'
+      },
+      {
+        question: 'What does customer service work from home pay?',
+        answer: 'Remote customer service representatives typically earn between $14-20 per hour for entry-level positions, or $30,000-$42,000 annually for full-time work. Specialized roles (technical support, bilingual support, sales support) can pay $18-25 per hour. Many companies offer performance bonuses, shift differentials for evening/weekend work, and opportunities for advancement to team lead or supervisor roles paying $45,000-$60,000 annually.'
+      },
+      {
+        question: 'Do I need a landline for customer service jobs?',
+        answer: 'Most modern remote customer service jobs do not require a traditional landline. Companies typically provide VoIP (Voice over Internet Protocol) software or phone systems that work through your computer and internet connection. Some employers provide company phones or require a dedicated smartphone. The key requirements are usually a reliable high-speed internet connection (minimum 10-25 Mbps), a USB headset with noise-canceling microphone, and a quiet workspace. Always check specific requirements in job postings.'
+      },
+      {
+        question: 'What are the best companies for remote customer service jobs?',
+        answer: 'Top employers for remote customer service include: Amazon (flexible hours, benefits), Apple At Home Advisors (premium pay, technical support), American Express (strong benefits, career advancement), Concentrix, TTEC, LiveOps (contract work), Alorica, Sutherland, Working Solutions, and Arise. Research each company on Glassdoor for reviews. Look for companies offering paid training, benefits, career growth opportunities, and reasonable performance metrics. Avoid companies requiring large upfront investments.'
+      },
+      {
+        question: 'Are there part-time customer service work from home jobs?',
+        answer: 'Yes, many companies hire part-time remote customer service representatives, typically requiring 15-30 hours per week. Part-time positions often offer flexible scheduling, including evening and weekend shifts. Some companies allow you to set your own availability within certain parameters. Part-time customer service is popular for students, parents, with childcare needs, and those seeking supplemental income. Pay rates for part-time positions are generally the same hourly rate as full-time roles.'
+      },
+      {
+        question: 'What is chat support vs phone support?',
+        answer: 'Chat support (live chat) involves helping customers through text-based conversations on company websites or apps. It requires strong written communication, multitasking (often handling 2-3 chats simultaneously), and typing speed (40+ WPM). Phone support involves voice conversations with customers, requiring clear verbal communication and active listening. Chat support is often preferred by introverts or those uncomfortable with phone conversations. Some positions combine both. Chat support roles may allow slightly more flexibility in where you work since they don\'t require voice clarity.'
+      }
+    ]
+  },
+  'online-tutoring-jobs-college-students': {
+    slug: 'online-tutoring-jobs-college-students',
+    title: 'Online Tutoring Jobs for College Students - Flexible Teaching Positions | ClickClickJob',
+    h1: 'Online Tutoring Jobs for College Students - Earn While You Learn',
+    description: 'Online tutoring jobs for college students. Flexible remote teaching positions. ESL, subject tutoring, test prep. No teaching degree required for many. Start earning today.',
+    valueProposition: 'Discover flexible online tutoring opportunities perfect for college students. Work around your class schedule while earning good money helping others learn.',
+    jobFilters: {
+      category: 'tutoring'
+    },
+    faqItems: [
+      {
+        question: 'Can college students get online tutoring jobs?',
+        answer: 'Yes, many online tutoring platforms specifically hire college students. Most don\'t require a teaching degree - just strong knowledge in your subject area and good communication skills. Platforms like Chegg, Tutor.com, Wyzant, and Course Hero hire current college students to tutor K-12 students or peers. You typically need to be enrolled in or have completed relevant coursework, pass subject assessments, and maintain good academic standing. Flexible hours make it perfect for working around class schedules.'
+      },
+      {
+        question: 'Do I need a teaching degree to tutor online?',
+        answer: 'No, most online tutoring positions for college students don\'t require a teaching degree. What you need: strong knowledge in your subject area (often demonstrated through coursework or testing), good communication skills, patience, and reliable internet. ESL teaching platforms may require TEFL/TESOL certification (can be obtained online in 1-2 weeks), but many platforms provide training. Subject tutoring (math, science, writing) typically just requires proven expertise through your academic record.'
+      },
+      {
+        question: 'How much do online tutors make?',
+        answer: 'College student online tutors typically earn $15-30 per hour, depending on the subject, platform, and experience. ESL tutors for companies like VIPKid or Cambly earn $14-22/hour. Subject tutors (math, science, SAT prep) on platforms like Wyzant or Varsity Tutors can charge $20-40/hour, with the platform taking a percentage. Test prep tutoring (SAT, ACT, GRE) often pays more ($25-50/hour). Many tutors work 5-20 hours per week around their class schedule, earning $300-800/month supplemental income.'
+      },
+      {
+        question: 'Can I teach English online as a college student?',
+        answer: 'Yes, many ESL (English as a Second Language) teaching platforms hire college students. Major platforms include: Cambly (no TEFL required, conversational English), Palfish, SayABC, Magic Ears, and Qkids. Most require: being a native English speaker, having a college degree (or being currently enrolled), neutral accent, and reliable internet. Some require TEFL/TESOL certification (120-hour courses available online for $30-50). Hours are flexible, with many students tutoring early mornings or evenings (due to time zone differences with Asian students).'
+      },
+      {
+        question: 'What\'s the best online tutoring platform for students?',
+        answer: 'Best platforms for college students: Chegg Tutors (multiple subjects, flexible, $20/hour), Tutor.com (high school subjects, regular hours available), Wyzant (set your own rates, build clientele), Course Hero (flexible Q&A format), Varsity Tutors (professional platform, test prep), and Cambly (ESL, no TEFL required). Choose based on: your subject expertise, desired hours (some require minimum commitments), whether you want set rates vs setting your own, and payment structure. Read reviews on Reddit r/onlinetutoring for student experiences.'
+      },
+      {
+        question: 'How many hours can I work as an online tutor?',
+        answer: 'Most online tutoring platforms offer complete flexibility - you set your availability and can work as little as 1-2 hours or up to 30+ hours per week. Many college students tutor 5-15 hours weekly around their class schedules. Platforms like Tutor.com and Chegg have minimum hour requirements (often 5-10 hours/week), while Wyzant and Cambly let you work whenever you want. Peak demand is typically after school (3-8 PM) and weekends. ESL tutoring often requires early morning availability (6-9 AM) to match Asian time zones.'
+      }
+    ]
+  },
+  'remote-administrative-assistant-jobs': {
+    slug: 'remote-administrative-assistant-jobs',
+    title: 'Remote Administrative Assistant Jobs - Virtual Admin Positions | ClickClickJob',
+    h1: 'Remote Administrative Assistant Jobs - Virtual Admin Positions',
+    description: 'Remote administrative assistant jobs and executive assistant positions. Virtual admin jobs from home. Entry level to senior roles. Part-time & full-time. Apply now.',
+    valueProposition: 'Discover verified remote administrative assistant opportunities. Entry-level to executive positions with competitive pay and benefits.',
+    jobFilters: {
+      category: 'admin'
+    },
+    faqItems: [
+      {
+        question: 'What does a remote administrative assistant do?',
+        answer: 'Remote administrative assistants provide virtual support including: email and calendar management, scheduling meetings and appointments, data entry and file organization, travel arrangements, correspondence preparation, document management, expense reporting, customer service support, and project coordination. Daily tasks vary by industry and company size. Most work is conducted through digital tools like Microsoft Office, Google Workspace, Slack, Zoom, and project management platforms. Remote admin assistants work independently while maintaining regular communication with team members and supervisors.'
+      },
+      {
+        question: 'How much do remote administrative assistants make?',
+        answer: 'Remote administrative assistants typically earn $15-25 per hour or $32,000-$52,000 annually for full-time positions. Entry-level positions start at $15-18/hour ($32,000-$38,000/year), mid-level experienced assistants earn $18-22/hour ($38,000-$46,000/year), and senior administrative assistants earn $22-25/hour ($46,000-$52,000/year). Executive assistants supporting C-suite executives earn significantly more: $25-35/hour or $52,000-$72,000 annually. Specialized administrative assistants (medical, legal, technical) often command premium rates. Many positions offer benefits including health insurance, PTO, and 401(k).'
+      },
+      {
+        question: 'Can I be an administrative assistant with no experience?',
+        answer: 'Yes, many entry-level remote administrative assistant positions accept candidates with no prior experience. Employers look for: strong organizational skills, attention to detail, good written and verbal communication, basic computer proficiency (Microsoft Office or Google Workspace), ability to multitask, and reliability. Many companies provide training on their specific systems and processes. Consider starting with part-time or contractor positions to build experience. Transferable skills from retail, customer service, or office environments are valuable. Taking free online courses in Microsoft Office or administrative skills can boost your resume.'
+      },
+      {
+        question: 'What\'s the difference between admin assistant and executive assistant?',
+        answer: 'Administrative assistants provide general support to teams or departments: data entry, filing, scheduling, correspondence, and routine administrative tasks. They typically support multiple people and handle more standardized work. Executive assistants support senior executives (directors, VPs, C-suite): manage complex calendars, coordinate high-level meetings, handle confidential information, act as gatekeeper, prepare presentations and reports, make strategic decisions on executive\'s behalf, and serve as liaison between executive and stakeholders. Executive assistants require more experience, discretion, and strategic thinking. Pay reflects the difference: admin assistants earn $32-52K while executive assistants earn $52-72K+ annually.'
+      },
+      {
+        question: 'What software do I need to know?',
+        answer: 'Essential software for remote administrative assistants: Microsoft Office Suite (Word, Excel, Outlook, PowerPoint) or Google Workspace (Docs, Sheets, Gmail, Slides), email clients and calendar management tools, video conferencing (Zoom, Microsoft Teams, Google Meet), and basic internet navigation. Commonly used tools include: project management platforms (Asana, Trello, Monday.com), communication tools (Slack, Microsoft Teams), file sharing (Dropbox, Google Drive), and scheduling software (Calendly, Doodle). Most companies provide training on their specific systems. Being tech-savvy and quick to learn new software is more important than knowing every tool beforehand.'
+      },
+      {
+        question: 'Are there part-time remote administrative assistant jobs?',
+        answer: 'Yes, many companies hire part-time remote administrative assistants, typically 15-30 hours per week. Part-time positions offer flexible scheduling, making them popular for parents, students, or those seeking supplemental income. Pay rates are usually the same hourly rate as full-time positions ($15-25/hour). Some companies offer contract or project-based work. Virtual assistant agencies often hire part-time assistants to support multiple clients. Part-time roles may have fewer benefits than full-time positions, but offer work-life balance. Many administrative professionals start part-time and transition to full-time as opportunities arise.'
+      }
+    ]
   }
 };
 

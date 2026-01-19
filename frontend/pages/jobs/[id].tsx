@@ -77,6 +77,11 @@ interface JobDetailsPageProps {
   relatedJobs: EnhancedJobListing[];
   moreFromCompany: EnhancedJobListing[];
   error?: string;
+  deletedInfo?: {
+    deletedAt: string;
+    originalTitle: string;
+    originalCompany: string;
+  } | null;
 }
 
 const JobDetailsPage: React.FC<JobDetailsPageProps> = ({ 
@@ -86,7 +91,8 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
   relatedCategories,
   relatedJobs,
   moreFromCompany,
-  error
+  error,
+  deletedInfo
 }) => {
   const router = useRouter();
   const descriptionRef = useRef<HTMLDivElement>(null);
@@ -94,6 +100,39 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
+  
+  // Handle 410 Gone - job was deleted
+  if (error === 'gone') {
+    return (
+      <Layout>
+        <Head>
+          <title>Job No Longer Available | ClickClickJob.com</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Head>
+        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+          <h1 className="text-3xl font-bold mb-4">Job No Longer Available</h1>
+          <p className="text-gray-600 mb-6">
+            {deletedInfo ? (
+              <>This job posting for <strong>{deletedInfo.originalTitle}</strong> at <strong>{deletedInfo.originalCompany}</strong> has been removed and is no longer available.</>
+            ) : (
+              <>This job posting has been removed and is no longer available.</>
+            )}
+          </p>
+          <p className="text-gray-500 mb-8">
+            This position may have been filled or the listing has expired.
+          </p>
+          <div className="space-x-4">
+            <Link href="/jobs" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+              Browse All Jobs
+            </Link>
+            <Link href="/" className="inline-block bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300">
+              Go to Homepage
+            </Link>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -592,6 +631,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params || {};
+  const { res } = context;
   
   if (!id || typeof id !== 'string') {
     return { 
@@ -612,6 +652,39 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           destination: '/jobs',
           permanent: false,
         }
+      };
+    }
+    
+    // Check if this job was previously deleted
+    // Return 410 Gone for deleted jobs (better for SEO than redirect)
+    const { wasJobDeleted, getDeletedJobInfo } = require('../../utils/deletedJobsTracker');
+    const wasDeleted = await wasJobDeleted(id);
+    
+    if (wasDeleted) {
+      console.log(`Job ${id} was previously deleted, returning 410 Gone`);
+      const deletedInfo = await getDeletedJobInfo(id);
+      
+      // Set 410 status and cache headers
+      res.statusCode = 410; // Gone - indicates resource was deleted
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow'); // Tell search engines not to index
+      
+      // Return props with deleted flag to show appropriate message
+      return {
+        props: {
+          job: null,
+          similarJobs: [],
+          peopleAlsoViewed: [],
+          relatedCategories: [],
+          relatedJobs: [],
+          moreFromCompany: [],
+          error: 'gone',
+          deletedInfo: deletedInfo ? {
+            deletedAt: deletedInfo.deletedAt.toISOString(),
+            originalTitle: deletedInfo.originalTitle || 'Job',
+            originalCompany: deletedInfo.originalCompany || 'Unknown Company'
+          } : null
+        },
       };
     }
     
@@ -639,14 +712,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       });
     }
 
-    // If job still not found, redirect to jobs page instead of showing "Job Not Found"
+    // If job still not found, return 404 (job never existed)
     if (!job) {
-      console.log(`Job not found for ID: ${id}, redirecting to /jobs`);
+      console.log(`Job not found for ID: ${id}, returning 404`);
       return {
-        redirect: {
-          destination: '/jobs',
-          permanent: false,
-        }
+        notFound: true,
       };
     }
 

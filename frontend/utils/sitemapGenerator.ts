@@ -162,10 +162,22 @@ export function generateJobPageEntries(baseUrl: string, jobIds: string[]): Sitem
  */
 export function generateKeywordPageEntries(baseUrl: string): SitemapEntry[] {
   const keywordPages = [
+    // Original keyword pages
     'remote-data-entry-jobs-no-experience',
     'online-administrative-jobs-no-scams',
     'work-from-anywhere-data-entry-positions',
-    'virtual-assistant-jobs-part-time-remote'
+    'virtual-assistant-jobs-part-time-remote',
+    // New SEO landing pages (December 2025)
+    'part-time-remote-admin-jobs',
+    'data-processing-jobs-remote',
+    'work-from-home-administrative-jobs',
+    'remote-captioning-jobs',
+    'remote-school-administrative-jobs',
+    'remote-medical-administrative-jobs',
+    'remote-proofreading-jobs',
+    'usps-remote-jobs',
+    'remote-admin-jobs-texas',
+    'remote-jobs-near-me'
   ];
   
   const today = new Date().toISOString().split('T')[0];

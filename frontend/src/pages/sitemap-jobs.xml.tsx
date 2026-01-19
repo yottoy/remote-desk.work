@@ -8,7 +8,7 @@ export default function JobsSitemap() {
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
     
     // Fetch job IDs from the API
     let jobIds: string[] = [];
@@ -59,7 +59,8 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     
     // Set appropriate headers
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=1800'); // Cache for 1 hour
+    // Cache for 5 minutes to ensure freshness after job deletions
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=1800');
     
     // Write the XML to the response
     res.write(sitemapXML);

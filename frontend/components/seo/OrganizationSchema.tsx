@@ -9,8 +9,8 @@ interface OrganizationSchemaProps {
 
 const OrganizationSchema: React.FC<OrganizationSchemaProps> = ({ 
   name, 
-  url = 'https://clickclickjob.com', 
-  logo = 'https://clickclickjob.com/logo.png',
+  url = 'https://www.clickclickjob.com', 
+  logo = 'https://www.clickclickjob.com/logo.png',
   description = 'A specialized job board focused exclusively on remote admin and data entry jobs.'
 }) => {
   const orgData = {

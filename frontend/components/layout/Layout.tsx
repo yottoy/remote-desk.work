@@ -22,6 +22,7 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
   
   // Generate full URL for Open Graph
   const currentUrl = ogUrl || `https://www.clickclickjob.com${router.asPath}`;
@@ -127,6 +128,50 @@ const Layout: React.FC<LayoutProps> = ({
                   Jobs
                 </Link>
                 
+                {/* Popular Searches Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setSearchDropdownOpen(!searchDropdownOpen)}
+                    onBlur={() => setTimeout(() => setSearchDropdownOpen(false), 200)}
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1"
+                  >
+                    Popular Searches
+                    <svg className={`w-4 h-4 transition-transform ${searchDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {searchDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <Link href="/part-time-remote-admin-jobs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        Part-Time Admin Jobs
+                      </Link>
+                      <Link href="/work-from-home-administrative-jobs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        Work from Home Admin
+                      </Link>
+                      <Link href="/data-processing-jobs-remote" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        Data Processing Jobs
+                      </Link>
+                      <Link href="/remote-medical-administrative-jobs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        Medical Admin Jobs
+                      </Link>
+                      <Link href="/remote-jobs-near-me" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        Jobs Near Me
+                      </Link>
+                      <div className="border-t border-gray-200 my-2"></div>
+                      <Link href="/remote-captioning-jobs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        Captioning Jobs
+                      </Link>
+                      <Link href="/remote-proofreading-jobs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        Proofreading Jobs
+                      </Link>
+                      <Link href="/usps-remote-jobs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        USPS Remote Jobs
+                      </Link>
+                    </div>
+                  )}
+                </div>
+                
                 <Link 
                   href="/categories" 
                   className={`text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors ${router.pathname.startsWith('/categories') ? 'text-blue-600 border-b-2 border-blue-600' : ''}`}
@@ -192,6 +237,31 @@ const Layout: React.FC<LayoutProps> = ({
                   >
                     Jobs
                   </Link>
+                  
+                  {/* Popular Searches Section */}
+                  <div className="px-4 py-2">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      Popular Searches
+                    </div>
+                    <div className="space-y-1 pl-2">
+                      <Link href="/part-time-remote-admin-jobs" className="block py-1.5 text-sm text-gray-600 hover:text-blue-600" onClick={() => setMenuOpen(false)}>
+                        Part-Time Admin Jobs
+                      </Link>
+                      <Link href="/work-from-home-administrative-jobs" className="block py-1.5 text-sm text-gray-600 hover:text-blue-600" onClick={() => setMenuOpen(false)}>
+                        Work from Home Admin
+                      </Link>
+                      <Link href="/data-processing-jobs-remote" className="block py-1.5 text-sm text-gray-600 hover:text-blue-600" onClick={() => setMenuOpen(false)}>
+                        Data Processing Jobs
+                      </Link>
+                      <Link href="/remote-medical-administrative-jobs" className="block py-1.5 text-sm text-gray-600 hover:text-blue-600" onClick={() => setMenuOpen(false)}>
+                        Medical Admin Jobs
+                      </Link>
+                      <Link href="/remote-jobs-near-me" className="block py-1.5 text-sm text-gray-600 hover:text-blue-600" onClick={() => setMenuOpen(false)}>
+                        Jobs Near Me
+                      </Link>
+                    </div>
+                  </div>
+                  
                   <Link 
                     href="/categories" 
                     className={`block px-4 py-2 text-sm font-medium ${router.pathname.startsWith('/categories') ? 'text-blue-600 bg-blue-50' : 'text-gray-700'}`}
@@ -284,28 +354,61 @@ const Layout: React.FC<LayoutProps> = ({
                 </h2>
                 <ul className="mt-4 space-y-2">
                   <li>
-                    <Link href="/categories/data-entry" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      Data Entry Jobs
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/categories/administrative" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                    <Link href="/work-from-home-administrative-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
                       Administrative Jobs
                     </Link>
                   </li>
                   <li>
-                    <Link href="/categories/customer-service" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      Customer Service Jobs
+                    <Link href="/data-processing-jobs-remote" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Data Processing Jobs
                     </Link>
                   </li>
                   <li>
-                    <Link href="/categories/virtual-assistant" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      Virtual Assistant Jobs
+                    <Link href="/part-time-remote-admin-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Part-Time Admin Jobs
                     </Link>
                   </li>
                   <li>
-                    <Link href="/jobs/editors-picks" className="text-purple-600 hover:text-purple-800 text-sm transition-colors font-medium">
-                      Editor's Picks
+                    <Link href="/remote-medical-administrative-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Medical Admin Jobs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/remote-jobs-near-me" className="text-blue-600 hover:text-blue-800 text-sm transition-colors font-medium">
+                      Jobs Near Me
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                  More Jobs
+                </h2>
+                <ul className="mt-4 space-y-2">
+                  <li>
+                    <Link href="/remote-captioning-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Captioning Jobs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/remote-proofreading-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Proofreading Jobs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/remote-school-administrative-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      School Admin Jobs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/usps-remote-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      USPS Remote Jobs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/remote-admin-jobs-texas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Texas Remote Jobs
                     </Link>
                   </li>
                 </ul>
@@ -322,13 +425,13 @@ const Layout: React.FC<LayoutProps> = ({
                     </Link>
                   </li>
                   <li>
-                    <Link href="/about" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      Remote Admin Guide
+                    <Link href="/jobs/editors-picks" className="text-purple-600 hover:text-purple-800 text-sm transition-colors font-medium">
+                      Editor's Picks
                     </Link>
                   </li>
                   <li>
-                    <Link href="/about" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      Career Resources
+                    <Link href="/categories" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Job Categories
                     </Link>
                   </li>
                   <li>

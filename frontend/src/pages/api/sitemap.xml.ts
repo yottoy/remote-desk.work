@@ -35,7 +35,7 @@ const STATIC_CATEGORY_SLUGS = [
 
 const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickclickjob.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.clickclickjob.com';
 
     // Try to connect to MongoDB
     let jobs: Job[] = [];
@@ -231,7 +231,7 @@ const sitemapXml = async (req: NextApiRequest, res: NextApiResponse) => {
   } catch (error) {
     console.error('Error generating sitemap:', error);
     // Provide a basic fallback sitemap with just the main pages
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://clickclickjob.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.clickclickjob.com';
     const fallbackSitemap = `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
       <url>

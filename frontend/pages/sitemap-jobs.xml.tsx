@@ -8,7 +8,7 @@ export default function JobsSitemap() {
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
     
     // Fetch job IDs from the API
     let jobIds: string[] = [];

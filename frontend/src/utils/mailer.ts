@@ -208,7 +208,7 @@ function generateEmailHtml(jobs: Array<{ title: string; company: string; locatio
             <div style="margin-top: 40px; padding: 32px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 12px; text-align: center;">
               <h3 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Want More Job Opportunities?</h3>
               <p style="margin: 0 0 24px 0; color: #dbeafe; font-size: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Browse hundreds of verified remote positions on our website</p>
-              <a href="https://clickclickjob.com/jobs" 
+              <a href="https://www.clickclickjob.com/jobs" 
                  style="display: inline-block; padding: 16px 32px; background-color: #ffffff; color: #2563eb; font-weight: 600; border-radius: 8px; text-decoration: none; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;"
                  target="_blank">
                 Browse All Jobs →
@@ -232,9 +232,9 @@ function generateEmailHtml(jobs: Array<{ title: string; company: string; locatio
             <div style="margin-bottom: 24px;">
               <p style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600; color: #1f2937; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Stay Connected</p>
               <div style="display: inline-flex; gap: 16px;">
-                <a href="https://clickclickjob.com" style="color: #2563eb; text-decoration: none; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Website</a>
-                <a href="https://clickclickjob.com/categories" style="color: #2563eb; text-decoration: none; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Categories</a>
-                <a href="https://clickclickjob.com/about" style="color: #2563eb; text-decoration: none; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">About</a>
+                <a href="https://www.clickclickjob.com" style="color: #2563eb; text-decoration: none; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Website</a>
+                <a href="https://www.clickclickjob.com/categories" style="color: #2563eb; text-decoration: none; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Categories</a>
+                <a href="https://www.clickclickjob.com/about" style="color: #2563eb; text-decoration: none; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">About</a>
               </div>
             </div>
             
@@ -247,7 +247,7 @@ function generateEmailHtml(jobs: Array<{ title: string; company: string; locatio
               <div style="margin-top: 16px;">
                 <a href="[UNSUBSCRIBE_LINK]" style="color: #6b7280; text-decoration: underline; font-size: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Unsubscribe</a>
                 <span style="color: #d1d5db; margin: 0 8px;">|</span>
-                <a href="https://clickclickjob.com/privacy-policy" style="color: #6b7280; text-decoration: underline; font-size: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Privacy Policy</a>
+                <a href="https://www.clickclickjob.com/privacy-policy" style="color: #6b7280; text-decoration: underline; font-size: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Privacy Policy</a>
               </div>
               
               <p style="margin: 16px 0 0 0; font-size: 12px; color: #9ca3af; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">

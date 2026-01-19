@@ -28,7 +28,7 @@ const SchemaHead: React.FC<SchemaHeadProps> = ({
   noindex = false,
   openGraph
 }) => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
   
   return (
     <Head>

@@ -8,7 +8,7 @@ export default function Sitemap() {
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://clickclickjob.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
     
     // Generate the main sitemap XML
     const sitemapXML = generateMainSitemap({

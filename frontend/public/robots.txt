@@ -1,0 +1,14 @@
+# robots.txt for ClickClickJob.com
+User-agent: *
+Allow: /
+Allow: /_next/static/
+Allow: /_next/image
+
+# Disallow admin and test pages
+Disallow: /admin/
+Disallow: /test/
+Disallow: /data-test/
+Disallow: /api/
+
+# Sitemaps
+Sitemap: https://www.clickclickjob.com/sitemap.xml 

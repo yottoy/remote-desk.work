@@ -16,8 +16,8 @@ export interface FAQItem {
 export interface JobFilters {
   experienceLevel?: 'no-experience' | 'entry-level' | 'mid-level' | 'senior';
   jobType?: 'full-time' | 'part-time' | 'freelance' | 'contract';
-  category?: 'admin' | 'data-entry' | 'virtual-assistant' | 'executive-assistant';
-  specialization?: 'medical' | 'legal' | 'bookkeeping' | 'customer-service';
+  category?: 'admin' | 'data-entry' | 'virtual-assistant' | 'executive-assistant' | 'customer-service' | 'tutoring' | 'data-analyst';
+  specialization?: 'medical' | 'legal' | 'bookkeeping' | 'customer-service' | 'esl' | 'analytics';
   timezoneCompatible?: boolean;
   salaryRange?: {
     min: number;

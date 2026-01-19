@@ -38,7 +38,7 @@ const KeywordMetadata: React.FC<KeywordMetadataProps> = ({
   ];
   
   // Get canonical URL
-  const baseUrl = 'https://clickclickjob.com';
+  const baseUrl = 'https://www.clickclickjob.com';
   const canonicalUrl = `${baseUrl}${canonicalPath}`;
   
   return (

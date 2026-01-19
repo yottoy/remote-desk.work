@@ -10,6 +10,7 @@ import analytics from '../../utils/analytics';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import type { Job } from '../../types/job';
 import { isVerified } from '../../types/job';
+import Link from 'next/link';
 
 interface JobsPageProps {
   initialJobs: Job[];
@@ -41,8 +42,8 @@ export const getServerSideProps: GetServerSideProps<JobsPageProps> = async (cont
 
     // Direct production API URL to avoid URL construction issues
     const apiUrl = process.env.NEXT_PUBLIC_API_URL 
-      ? `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/?limit=100` 
-      : 'https://www.clickclickjob.com/api/jobs/?limit=100';
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/jobs/?limit=200` 
+      : 'https://www.clickclickjob.com/api/jobs/?limit=200';
     console.log('Fetching jobs from:', apiUrl);
     
     try {
@@ -150,7 +151,7 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'relevance'>('newest');
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [jobsPerPage, setJobsPerPage] = useState<number>(24);
+  const [jobsPerPage, setJobsPerPage] = useState<number>(48);
   const [hasMoreJobs, setHasMoreJobs] = useState<boolean>(true);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   
@@ -438,7 +439,15 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
     >
       <ErrorBoundary>
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">{jobListTitle}</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">{jobListTitle}</h1>
+            <Link
+              href="/jobs/archive"
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
+              View Archive →
+            </Link>
+          </div>
           
           <div className="mb-6">
             <SearchBar
