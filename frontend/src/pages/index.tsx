@@ -193,8 +193,8 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
 
   return (
     <Layout
-      title="Remote Admin Jobs Hiring Now | Entry Level Welcome | ClickClickJob"
-      description="Remote administrative assistant and data entry jobs from verified employers. Entry-level positions available. No scams. Free daily job alerts."
+      title="Remote Jobs: Data Entry, Customer Service & Admin Positions | ClickClickJob"
+      description="Work-from-home data entry, customer service, administrative, and tutoring jobs. Entry-level and no experience welcome. Updated daily, always free."
     >
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
