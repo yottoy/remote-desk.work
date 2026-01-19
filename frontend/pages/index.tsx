@@ -194,14 +194,14 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
 
   return (
     <Layout
-      title="Remote Jobs: Data Entry, Customer Service & Admin Positions | ClickClickJob"
+      title="Remote Data Entry, Customer Service & Admin Positions | ClickClickJob"
       description="Work-from-home data entry, customer service, administrative, and tutoring jobs. Entry-level and no experience welcome. Updated daily, always free."
     >
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Remote Jobs: Data Entry, Customer Service & Admin Positions
+            Remote Data Entry, Customer Service & Admin Positions
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             Work-from-home data entry, customer service, administrative, and tutoring jobs.<br />
