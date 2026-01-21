@@ -11,4 +11,5 @@ Disallow: /data-test/
 Disallow: /api/
 
 # Sitemaps
-Sitemap: https://www.clickclickjob.com/sitemap.xml 
+Sitemap: https://www.clickclickjob.com/sitemap.xml
+Sitemap: https://www.clickclickjob.com/sitemap-jobs.xml 

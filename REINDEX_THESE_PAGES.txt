@@ -1,0 +1,49 @@
+📋 REQUEST RE-INDEXING FOR THESE 20 PAGES IN GOOGLE SEARCH CONSOLE
+=================================================================
+
+Copy each URL and submit via: Google Search Console > URL Inspection > Request Indexing
+
+ALL 20 SEO LANDING PAGES (Fixed from 404 to 200):
+--------------------------------------------------
+
+1. https://www.clickclickjob.com/customer-service-work-from-home-jobs
+2. https://www.clickclickjob.com/data-processing-jobs-remote
+3. https://www.clickclickjob.com/entry-level-data-analyst-jobs
+4. https://www.clickclickjob.com/medical-data-entry-jobs
+5. https://www.clickclickjob.com/online-administrative-jobs-no-scams
+6. https://www.clickclickjob.com/online-tutoring-jobs-college-students
+7. https://www.clickclickjob.com/part-time-remote-admin-jobs
+8. https://www.clickclickjob.com/remote-admin-jobs-texas
+9. https://www.clickclickjob.com/remote-administrative-assistant-jobs
+10. https://www.clickclickjob.com/remote-captioning-jobs
+11. https://www.clickclickjob.com/remote-data-entry-jobs
+12. https://www.clickclickjob.com/remote-data-entry-jobs-no-experience
+13. https://www.clickclickjob.com/remote-jobs-near-me
+14. https://www.clickclickjob.com/remote-medical-administrative-jobs
+15. https://www.clickclickjob.com/remote-proofreading-jobs
+16. https://www.clickclickjob.com/remote-school-administrative-jobs
+17. https://www.clickclickjob.com/usps-remote-jobs
+18. https://www.clickclickjob.com/virtual-assistant-jobs-part-time-remote
+19. https://www.clickclickjob.com/work-from-anywhere-data-entry-positions
+20. https://www.clickclickjob.com/work-from-home-administrative-jobs
+
+PRIORITY: These pages target 67K monthly searches combined!
+
+HOW TO SUBMIT:
+--------------
+1. Go to: https://search.google.com/search-console
+2. Select property: clickclickjob.com
+3. Use "URL Inspection" tool (top bar)
+4. Paste each URL
+5. Click "Request Indexing"
+6. Wait ~1 minute between requests (rate limit)
+
+EXPECTED TIMELINE:
+------------------
+- Submission: ~20-30 minutes (all 20 pages)
+- Google crawl: 1-24 hours
+- Index update: 24-48 hours
+- Full recovery: 3-7 days
+
+TIP: You can also submit your sitemap for a refresh:
+https://www.clickclickjob.com/sitemap.xml

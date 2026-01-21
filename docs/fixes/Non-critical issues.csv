@@ -1,0 +1,7 @@
+Issue,Validation,Items
+"Missing field ""streetAddress"" (in ""jobLocation.address"")",N/A,0
+"Missing field ""addressRegion"" (in ""jobLocation.address"")",N/A,0
+"Missing field ""postalCode"" (in ""jobLocation.address"")",N/A,0
+"Missing field ""employmentType""",N/A,0
+"Missing field ""validThrough""",N/A,0
+"Missing field ""baseSalary""",N/A,0
