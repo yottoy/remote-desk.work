@@ -28,7 +28,7 @@ import Layout from '../../components/layout/Layout';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import JobCard from '../../components/common/JobCard';
 import { connectToDatabase } from '../../utils/mongodb';
-import { formatJobDate, formatJobDescription } from '../../src/utils/jobUtils';
+import { formatJobDate, formatJobDescription } from '../../utils/jobUtils';
 import SchemaHead from '../../components/seo/SchemaHead';
 import { generateJobPostingSchema, generateBreadcrumbSchema, JobData, BreadcrumbItem } from '../../utils/schemaGenerator';
 

@@ -1,0 +1,52 @@
+name: Cleanup Backup Collections
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'  # Every Sunday at 4 AM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          npm install mongodb dotenv
+      
+      - name: Check for backup collections
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+        run: |
+          echo "🔍 Checking for backup collections..."
+          node check-all-collections.js
+      
+      - name: Cleanup backup collections
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+        run: |
+          echo "🗑️  Cleaning up old backup collections..."
+          node cleanup-backup-collections.js
+      
+      - name: Check database size
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+        run: |
+          echo "📊 Checking database size after cleanup..."
+          node analyze-db-size.js
+      
+      - name: Summary
+        run: |
+          echo "✅ Backup cleanup completed"
+          echo "📊 Database health check passed"

@@ -58,6 +58,47 @@ async function cleanupOldJobs() {
     log(`   Found ${oldJobsCount} old jobs`, true);
     
     if (oldJobsCount > 0 && !dryRun) {
+      // First, get the jobs to track them before deletion
+      const oldJobs = await collection.find({
+        $or: [
+          { scrapedDate: { $lt: cutoffDate } },
+          { createdAt: { $lt: cutoffDate } },
+          { date_posted: { $lt: cutoffDate } }
+        ]
+      }, {
+        projection: { _id: 1, uniqueIdentifier: 1, title: 1, company: 1, url: 1 }
+      }).toArray();
+      
+      // Track deleted jobs for proper 410 Gone responses
+      const deletedJobsCollection = db.collection('deleted_jobs');
+      const deletionDate = new Date();
+      const expiresAt = new Date(deletionDate);
+      expiresAt.setDate(expiresAt.getDate() + 90); // Keep tracking for 90 days
+      
+      const trackingOps = oldJobs.map(job => ({
+        updateOne: {
+          filter: { jobId: (job.uniqueIdentifier || job._id).toString() },
+          update: {
+            $set: {
+              jobId: (job.uniqueIdentifier || job._id).toString(),
+              deletedAt: deletionDate,
+              expiresAt,
+              originalTitle: job.title,
+              originalCompany: job.company,
+              originalUrl: job.url,
+              source: 'cleanup_old_jobs',
+            }
+          },
+          upsert: true
+        }
+      }));
+      
+      if (trackingOps.length > 0) {
+        await deletedJobsCollection.bulkWrite(trackingOps);
+        console.log(`   📝 Tracked ${trackingOps.length} deleted jobs for 410 responses`);
+      }
+      
+      // Now delete the jobs
       const deleteResult = await collection.deleteMany({
         $or: [
           { scrapedDate: { $lt: cutoffDate } },
@@ -91,6 +132,49 @@ async function cleanupOldJobs() {
       log(`   Found ${invalidJobsCount} invalid jobs`, true);
       
       if (invalidJobsCount > 0 && !dryRun) {
+        // Track invalid jobs before deletion
+        const invalidJobs = await collection.find({
+          $or: [
+            { title: { $exists: false } },
+            { title: '' },
+            { job_url: { $exists: false } },
+            { job_url: '' },
+            { company: { $exists: false } },
+            { company: '' }
+          ]
+        }, {
+          projection: { _id: 1, uniqueIdentifier: 1, title: 1, company: 1, url: 1 }
+        }).toArray();
+        
+        const deletedJobsCollection = db.collection('deleted_jobs');
+        const deletionDate = new Date();
+        const expiresAt = new Date(deletionDate);
+        expiresAt.setDate(expiresAt.getDate() + 90);
+        
+        const trackingOps = invalidJobs.map(job => ({
+          updateOne: {
+            filter: { jobId: (job.uniqueIdentifier || job._id).toString() },
+            update: {
+              $set: {
+                jobId: (job.uniqueIdentifier || job._id).toString(),
+                deletedAt: deletionDate,
+                expiresAt,
+                originalTitle: job.title,
+                originalCompany: job.company,
+                originalUrl: job.url,
+                source: 'cleanup_invalid_jobs',
+              }
+            },
+            upsert: true
+          }
+        }));
+        
+        if (trackingOps.length > 0) {
+          await deletedJobsCollection.bulkWrite(trackingOps);
+          console.log(`   📝 Tracked ${trackingOps.length} deleted invalid jobs`);
+        }
+        
+        // Now delete invalid jobs
         const deleteResult = await collection.deleteMany({
           $or: [
             { title: { $exists: false } },

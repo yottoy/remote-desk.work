@@ -9,12 +9,11 @@
     "administrative support",
     "data entry clerk",
     "office coordinator",
-    "receptionist",
-    "secretary",
-    "office manager",
-    "clerical",
     "customer service representative",
-    "transcriptionist"
+    "customer support",
+    "data analyst",
+    "tutor",
+    "online teacher"
   ],
   "keywords": [
     "remote",
@@ -22,57 +21,395 @@
     "wfh",
     "virtual",
     "telecommute",
-    "hybrid",
-    "remote-first",
-    "remotely"
+    "online"
   ],
   "exclude_keywords": [
     "on-site only",
     "in-office",
     "no remote",
-    "local candidates only"
+    "local candidates only",
+    "must relocate",
+    "pay to work",
+    "investment required",
+    "MLM"
   ],
   "locations": [
     "United States",
-    "Canada",
-    "UK",
-    "Australia",
+    "USA",
     "remote"
   ],
-  "distance": 25,
-  "required_skills": [
-    "Microsoft Office",
-    "Excel",
-    "Word",
-    "typing",
-    "data management",
-    "communication",
-    "organization"
-  ],
+  "distance": 50,
   "search_combinations": [
     {
+      "term": "medical data entry remote",
+      "site": "indeed",
+      "category": "medical-data-entry"
+    },
+    {
+      "term": "healthcare data entry remote",
+      "site": "indeed",
+      "category": "medical-data-entry"
+    },
+    {
+      "term": "medical billing data entry",
+      "site": "indeed",
+      "category": "medical-data-entry"
+    },
+    {
+      "term": "medical data entry work from home",
+      "site": "linkedin",
+      "category": "medical-data-entry"
+    },
+    {
+      "term": "healthcare data entry jobs",
+      "site": "linkedin",
+      "category": "medical-data-entry"
+    },
+    {
+      "term": "entry level data analyst remote",
+      "site": "indeed",
+      "category": "data-analyst"
+    },
+    {
+      "term": "junior data analyst remote",
+      "site": "indeed",
+      "category": "data-analyst"
+    },
+    {
+      "term": "data analyst no experience remote",
+      "site": "indeed",
+      "category": "data-analyst"
+    },
+    {
+      "term": "associate data analyst remote",
+      "site": "linkedin",
+      "category": "data-analyst"
+    },
+    {
+      "term": "entry level business analyst remote",
+      "site": "linkedin",
+      "category": "data-analyst"
+    },
+    {
       "term": "remote data entry",
-      "site": "indeed"
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "data entry remote",
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "work from home data entry",
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "data entry work from home",
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "online data entry",
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "data entry clerk remote",
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "virtual data entry",
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "data entry specialist remote",
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "entry level data entry remote",
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "part time data entry remote",
+      "site": "indeed",
+      "category": "data-entry"
+    },
+    {
+      "term": "remote data entry jobs",
+      "site": "linkedin",
+      "category": "data-entry"
+    },
+    {
+      "term": "data entry remote",
+      "site": "linkedin",
+      "category": "data-entry"
+    },
+    {
+      "term": "work from home data entry",
+      "site": "linkedin",
+      "category": "data-entry"
+    },
+    {
+      "term": "online data entry jobs",
+      "site": "linkedin",
+      "category": "data-entry"
+    },
+    {
+      "term": "data entry operator remote",
+      "site": "linkedin",
+      "category": "data-entry"
+    },
+    {
+      "term": "customer service remote",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "customer service work from home",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "customer service representative remote",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "remote customer service",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "customer support remote",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "customer service agent remote",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "live chat support remote",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "chat support remote",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "phone customer service remote",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "entry level customer service remote",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "part time customer service remote",
+      "site": "indeed",
+      "category": "customer-service"
+    },
+    {
+      "term": "customer service work from home",
+      "site": "linkedin",
+      "category": "customer-service"
+    },
+    {
+      "term": "remote customer service representative",
+      "site": "linkedin",
+      "category": "customer-service"
+    },
+    {
+      "term": "customer support work from home",
+      "site": "linkedin",
+      "category": "customer-service"
+    },
+    {
+      "term": "help desk remote",
+      "site": "linkedin",
+      "category": "customer-service"
+    },
+    {
+      "term": "technical support remote",
+      "site": "linkedin",
+      "category": "customer-service"
+    },
+    {
+      "term": "customer success remote",
+      "site": "linkedin",
+      "category": "customer-service"
+    },
+    {
+      "term": "online tutor remote",
+      "site": "indeed",
+      "category": "tutoring"
+    },
+    {
+      "term": "online tutoring jobs",
+      "site": "indeed",
+      "category": "tutoring"
+    },
+    {
+      "term": "ESL teaching online",
+      "site": "indeed",
+      "category": "tutoring"
+    },
+    {
+      "term": "teach English online",
+      "site": "indeed",
+      "category": "tutoring"
+    },
+    {
+      "term": "online teacher remote",
+      "site": "indeed",
+      "category": "tutoring"
+    },
+    {
+      "term": "remote tutor",
+      "site": "indeed",
+      "category": "tutoring"
+    },
+    {
+      "term": "virtual tutor",
+      "site": "indeed",
+      "category": "tutoring"
+    },
+    {
+      "term": "online ESL tutor",
+      "site": "indeed",
+      "category": "tutoring"
+    },
+    {
+      "term": "tutoring jobs remote",
+      "site": "indeed",
+      "category": "tutoring"
+    },
+    {
+      "term": "online tutor remote",
+      "site": "linkedin",
+      "category": "tutoring"
+    },
+    {
+      "term": "online teaching jobs",
+      "site": "linkedin",
+      "category": "tutoring"
+    },
+    {
+      "term": "remote teaching jobs",
+      "site": "linkedin",
+      "category": "tutoring"
+    },
+    {
+      "term": "test prep tutor online",
+      "site": "linkedin",
+      "category": "tutoring"
+    },
+    {
+      "term": "online instructor",
+      "site": "linkedin",
+      "category": "tutoring"
     },
     {
       "term": "remote administrative assistant",
-      "site": "indeed"
+      "site": "indeed",
+      "category": "admin"
     },
     {
-      "term": "virtual assistant",
-      "site": "indeed"
+      "term": "administrative assistant remote",
+      "site": "indeed",
+      "category": "admin"
     },
     {
-      "term": "remote data entry",
-      "site": "linkedin"
+      "term": "virtual administrative assistant",
+      "site": "indeed",
+      "category": "admin"
+    },
+    {
+      "term": "remote executive assistant",
+      "site": "indeed",
+      "category": "admin"
+    },
+    {
+      "term": "executive assistant remote",
+      "site": "indeed",
+      "category": "admin"
+    },
+    {
+      "term": "admin assistant work from home",
+      "site": "indeed",
+      "category": "admin"
+    },
+    {
+      "term": "administrative assistant work from home",
+      "site": "indeed",
+      "category": "admin"
+    },
+    {
+      "term": "virtual assistant remote",
+      "site": "indeed",
+      "category": "admin"
+    },
+    {
+      "term": "remote admin",
+      "site": "indeed",
+      "category": "admin"
+    },
+    {
+      "term": "office assistant remote",
+      "site": "indeed",
+      "category": "admin"
+    },
+    {
+      "term": "part time administrative assistant remote",
+      "site": "indeed",
+      "category": "admin"
+    },
+    {
+      "term": "entry level administrative assistant remote",
+      "site": "indeed",
+      "category": "admin"
     },
     {
       "term": "remote administrative assistant",
-      "site": "linkedin"
+      "site": "linkedin",
+      "category": "admin"
     },
     {
-      "term": "virtual assistant",
-      "site": "linkedin"
+      "term": "administrative assistant remote",
+      "site": "linkedin",
+      "category": "admin"
+    },
+    {
+      "term": "remote executive assistant",
+      "site": "linkedin",
+      "category": "admin"
+    },
+    {
+      "term": "executive assistant remote",
+      "site": "linkedin",
+      "category": "admin"
+    },
+    {
+      "term": "administrative support remote",
+      "site": "linkedin",
+      "category": "admin"
+    },
+    {
+      "term": "medical administrative assistant remote",
+      "site": "linkedin",
+      "category": "admin"
     }
-  ]
-} 
+  ],
+  "notes": "Updated January 19, 2026 - Optimized for 6 new SEO pages targeting 67,450 monthly searches"
+}

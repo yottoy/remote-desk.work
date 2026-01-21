@@ -230,18 +230,22 @@ async function overwriteAllJobs(jobs) {
     const db = client.db(DB_NAME);
     const collection = db.collection(COLLECTION_NAME);
     
-    // Create a backup collection
-    const backupCollection = `${COLLECTION_NAME}_backup_${new Date().toISOString().replace(/[:.]/g, '_')}`;
-    logger.info(`Creating backup in collection: ${backupCollection}`);
+    // BACKUP DISABLED: Backups were causing database quota issues by creating
+    // 50+ backup collections that consumed over 500 MB of storage.
+    // Since this script uses --overwrite mode and the scraper runs every 12 hours,
+    // we don't need backups. If manual backup is needed, use MongoDB export.
+    let backupCount = 0;
+    logger.info('Backup disabled to prevent database quota issues');
     
-    // Copy all documents to backup collection
-    const copyResult = await db.collection(COLLECTION_NAME).aggregate([
-      { $match: {} },
-      { $out: backupCollection }
-    ]).toArray();
-    
-    const backupCount = await db.collection(backupCollection).countDocuments();
-    logger.info(`Backed up ${backupCount} jobs to ${backupCollection}`);
+    // Uncomment below only if you need temporary backup for debugging:
+    // const backupCollection = `${COLLECTION_NAME}_backup_${new Date().toISOString().replace(/[:.]/g, '_')}`;
+    // logger.info(`Creating backup in collection: ${backupCollection}`);
+    // const copyResult = await db.collection(COLLECTION_NAME).aggregate([
+    //   { $match: {} },
+    //   { $out: backupCollection }
+    // ]).toArray();
+    // backupCount = await db.collection(backupCollection).countDocuments();
+    // logger.info(`Backed up ${backupCount} jobs to ${backupCollection}`);
     
     // Check for existing indexes that could cause problems
     logger.info('Checking for existing unique indexes...');

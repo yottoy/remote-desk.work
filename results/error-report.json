@@ -1,0 +1,5 @@
+{
+  "timestamp": "2026-01-01T23:08:51.074Z",
+  "error": "Command exited with code 2",
+  "stack": "Error: Command exited with code 2\n    at ChildProcess.<anonymous> (/Users/yotamtroim/Library/Mobile Documents/com~apple~CloudDocs/Projects/remote-desk.work/run-all-scrapers.js:31:16)\n    at ChildProcess.emit (node:events:519:28)\n    at maybeClose (node:internal/child_process:1105:16)\n    at ChildProcess._handle.onexit (node:internal/child_process:305:5)"
+}
