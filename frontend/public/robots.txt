@@ -1,15 +1,26 @@
-# robots.txt for ClickClickJob.com
+# Robots.txt for ClickClickJob.com
+# Updated: 2026-01-31
+
 User-agent: *
 Allow: /
-Allow: /_next/static/
-Allow: /_next/image
-
-# Disallow admin and test pages
-Disallow: /admin/
-Disallow: /test/
-Disallow: /data-test/
 Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /test*
+Disallow: /*.json$
 
-# Sitemaps
+# Don't index template/dynamic route files directly
+Disallow: /jobs/[id]
+Disallow: /categories/[slug]
+Disallow: /[keyword]
+
+# Prevent indexing of non-existent pages
+Disallow: /job-alerts
+
+# Allow all job listing pages
+Allow: /jobs/
+Allow: /categories/
+
+# Sitemap location
 Sitemap: https://www.clickclickjob.com/sitemap.xml
-Sitemap: https://www.clickclickjob.com/sitemap-jobs.xml 
+Sitemap: https://www.clickclickjob.com/sitemap-jobs.xml

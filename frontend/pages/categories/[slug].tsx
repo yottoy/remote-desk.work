@@ -597,10 +597,10 @@ function filterMockJobs(jobs: any[]): any[] {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // Pre-generate all valid category pages at build time
-  // Force rebuild: 2026-01-02 20:15 UTC
+  // Force rebuild: 2026-01-31 - Added blocking for invalid slugs
   return {
     paths: validCategorySlugs.map(slug => ({ params: { slug } })),
-    fallback: 'blocking' // Generate page server-side on first request if not pre-generated
+    fallback: false // Return 404 for any slug not in validCategorySlugs
   };
 };
 
