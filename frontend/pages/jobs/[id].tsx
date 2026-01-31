@@ -715,6 +715,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // If job still not found, return 404 (job never existed)
     if (!job) {
       console.log(`Job not found for ID: ${id}, returning 404`);
+      
+      // Set 404 status and appropriate headers
+      res.statusCode = 404;
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+      
       return {
         notFound: true,
       };
