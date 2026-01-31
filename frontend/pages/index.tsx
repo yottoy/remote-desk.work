@@ -525,6 +525,89 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
                 Admin positions for TX residents
               </p>
             </Link>
+
+            <Link 
+              href="/remote-data-entry-jobs-no-experience"
+              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-blue-600">
+                No Experience Data Entry
+              </h3>
+              <p className="text-sm text-gray-600">
+                Entry-level positions, no exp required
+              </p>
+            </Link>
+
+            <Link 
+              href="/work-from-anywhere-data-entry-positions"
+              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-base font-semibold text-gray-900 mb-1.5 group-hover:text-blue-600">
+                Work From Anywhere
+              </h3>
+              <p className="text-sm text-gray-600">
+                Location-independent data entry
+              </p>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Additional Job Searches Section - NEW */}
+      <section className="py-12 bg-gray-50 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            More Remote Job Opportunities
+          </h2>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Link 
+              href="/work-from-home-administrative-jobs"
+              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-600">
+                Work From Home Admin
+              </h3>
+              <p className="text-xs text-gray-600">
+                Administrative support positions
+              </p>
+            </Link>
+
+            <Link 
+              href="/remote-medical-administrative-jobs"
+              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-600">
+                Medical Admin
+              </h3>
+              <p className="text-xs text-gray-600">
+                Healthcare administration
+              </p>
+            </Link>
+
+            <Link 
+              href="/remote-school-administrative-jobs"
+              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-600">
+                School Admin
+              </h3>
+              <p className="text-xs text-gray-600">
+                Education administration
+              </p>
+            </Link>
+
+            <Link 
+              href="/remote-proofreading-jobs"
+              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all group"
+            >
+              <h3 className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-600">
+                Proofreading
+              </h3>
+              <p className="text-xs text-gray-600">
+                Editing & review positions
+              </p>
+            </Link>
           </div>
         </div>
       </section>

@@ -15,6 +15,7 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   
   // 1. Redirect non-www to www (except localhost and Vercel preview URLs)
+  // Use 308 (Permanent Redirect) to preserve method and body
   if (
     !hostname.startsWith('www.') &&
     !hostname.startsWith('localhost') &&
@@ -23,13 +24,14 @@ export function middleware(request: NextRequest) {
   ) {
     console.log(`Redirecting non-www to www: ${hostname}`);
     url.host = `www.${hostname}`;
-    return NextResponse.redirect(url, 301); // Permanent redirect
+    // Use 308 instead of 301 for better SEO (preserves POST/GET)
+    return NextResponse.redirect(url, 308);
   }
   
   // 2. Remove trailing slashes (except root)
   if (url.pathname !== '/' && url.pathname.endsWith('/')) {
     url.pathname = url.pathname.slice(0, -1);
-    return NextResponse.redirect(url, 301);
+    return NextResponse.redirect(url, 308);
   }
   
   // 3. Continue with request and add security headers
