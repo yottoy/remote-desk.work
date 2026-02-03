@@ -100,6 +100,14 @@ function generateDigestHtml(jobs: Job[]): string {
     
     <!-- Footer -->
     <div style="background-color: #f9fafb; padding: 32px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+      
+      <!-- See All Jobs Button -->
+      <div style="margin-bottom: 32px;">
+        <a href="https://www.clickclickjob.com/jobs" style="display: inline-block; padding: 14px 32px; background-color: #2563eb; color: #ffffff; font-weight: 600; border-radius: 8px; text-decoration: none; font-size: 16px; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);" target="_blank">
+          🔍 See All Jobs
+        </a>
+      </div>
+      
       <div style="margin-bottom: 24px;">
         <p style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600; color: #1f2937;">
           Stay Connected
