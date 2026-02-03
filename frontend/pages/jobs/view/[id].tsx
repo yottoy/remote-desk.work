@@ -31,6 +31,8 @@ import { connectToDatabase } from '../../../utils/mongodb';
 import { formatJobDate, formatJobDescription } from '../../../utils/jobUtils';
 import SchemaHead from '../../../components/seo/SchemaHead';
 import { generateJobPostingSchema, generateBreadcrumbSchema, JobData, BreadcrumbItem } from '../../../utils/schemaGenerator';
+import { ObjectId } from 'mongodb';
+import { wasJobDeleted, getDeletedJobInfo } from '../../../utils/deletedJobsTracker';
 
 // Utility function to create SEO-friendly page titles
 const createSEOTitle = (jobTitle: string, company: string): string => {
@@ -657,7 +659,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     // Check if this job was previously deleted
     // Return 410 Gone for deleted jobs (better for SEO than redirect)
-    const { wasJobDeleted, getDeletedJobInfo } = require('../../utils/deletedJobsTracker');
     const wasDeleted = await wasJobDeleted(id);
     
     if (wasDeleted) {
@@ -690,7 +691,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     // Find the job by ID or uniqueIdentifier
     // Try to convert to ObjectId first, then fallback to string search
-    const { ObjectId } = require('mongodb');
     let job = null;
     
     // Try ObjectId format first
