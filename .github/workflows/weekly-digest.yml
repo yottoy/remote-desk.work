@@ -1,0 +1,48 @@
+name: Weekly Job Digest
+
+on:
+  schedule:
+    # Runs every Monday at 2 PM UTC (6 AM PST / 9 AM EST)
+    - cron: '0 14 * * 1'
+  
+  # Allow manual triggering from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          npm install mongodb @sendgrid/mail dotenv
+      
+      - name: Send weekly digest
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ secrets.MONGODB_DB }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+          SENDGRID_FROM_EMAIL: ${{ secrets.SENDGRID_FROM_EMAIL }}
+          SENDGRID_FROM_NAME: ${{ secrets.SENDGRID_FROM_NAME }}
+        run: |
+          node scripts/send-to-all-subscribers-now.js
+      
+      - name: Report success
+        if: success()
+        run: |
+          echo "✅ Weekly digest sent successfully!"
+          echo "Time: $(date)"
+      
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "❌ Weekly digest failed to send"
+          echo "Check logs above for details"
