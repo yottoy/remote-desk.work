@@ -6,31 +6,31 @@ import { useRouter } from 'next/router';
 import { differenceInDays, format } from 'date-fns';
 
 // Import serialization utilities
-import { serializeObject } from '../../utils/serialization';
+import { serializeObject } from '../../../utils/serialization';
 
 // Import engagement components
-import StatusBadges from '../../components/engagement/StatusBadges';
-import ReadingProgressIndicator from '../../components/engagement/ReadingProgressIndicator';
-import TrustIndicators, { JobSafetyTip, VerificationProcessExplanation } from '../../components/engagement/TrustIndicators';
-import { SimilarJobs, PeopleAlsoViewed, RelatedCategories, JobsYouMightLike, useRecentlyViewedJobs } from '../../components/engagement/DiscoveryEnhancement';
-import { ApplicationInstructions, CopyToClipboard } from '../../components/engagement/UserHelpers';
+import StatusBadges from '../../../components/engagement/StatusBadges';
+import ReadingProgressIndicator from '../../../components/engagement/ReadingProgressIndicator';
+import TrustIndicators, { JobSafetyTip, VerificationProcessExplanation } from '../../../components/engagement/TrustIndicators';
+import { SimilarJobs, PeopleAlsoViewed, RelatedCategories, JobsYouMightLike, useRecentlyViewedJobs } from '../../../components/engagement/DiscoveryEnhancement';
+import { ApplicationInstructions, CopyToClipboard } from '../../../components/engagement/UserHelpers';
 
 // Import job types
-import { EnhancedJobListing } from '../../types/job';
-import Metadata from '../../components/seo/Metadata';
-import JobSchema from '../../components/seo/JobSchema';
-import OrganizationSchema from '../../components/seo/OrganizationSchema';
-import BreadcrumbSchema from '../../components/seo/BreadcrumbSchema';
-import FAQSchema from '../../components/seo/FAQSchema';
-import InternalLinking from '../../components/seo/InternalLinking';
-import Layout from '../../components/layout/Layout';
-// import ShareButton from '../../components/common/ShareButton';
-import ErrorBoundary from '../../components/common/ErrorBoundary';
-import JobCard from '../../components/common/JobCard';
-import { connectToDatabase } from '../../utils/mongodb';
-import { formatJobDate, formatJobDescription } from '../../utils/jobUtils';
-import SchemaHead from '../../components/seo/SchemaHead';
-import { generateJobPostingSchema, generateBreadcrumbSchema, JobData, BreadcrumbItem } from '../../utils/schemaGenerator';
+import { EnhancedJobListing } from '../../../types/job';
+import Metadata from '../../../components/seo/Metadata';
+import JobSchema from '../../../components/seo/JobSchema';
+import OrganizationSchema from '../../../components/seo/OrganizationSchema';
+import BreadcrumbSchema from '../../../components/seo/BreadcrumbSchema';
+import FAQSchema from '../../../components/seo/FAQSchema';
+import InternalLinking from '../../../components/seo/InternalLinking';
+import Layout from '../../../components/layout/Layout';
+// import ShareButton from '../../../components/common/ShareButton';
+import ErrorBoundary from '../../../components/common/ErrorBoundary';
+import JobCard from '../../../components/common/JobCard';
+import { connectToDatabase } from '../../../utils/mongodb';
+import { formatJobDate, formatJobDescription } from '../../../utils/jobUtils';
+import SchemaHead from '../../../components/seo/SchemaHead';
+import { generateJobPostingSchema, generateBreadcrumbSchema, JobData, BreadcrumbItem } from '../../../utils/schemaGenerator';
 
 // Utility function to create SEO-friendly page titles
 const createSEOTitle = (jobTitle: string, company: string): string => {
@@ -257,7 +257,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
   const breadcrumbs: BreadcrumbItem[] = [
     { name: 'Home', url: baseUrl },
     { name: 'Jobs', url: `${baseUrl}/jobs` },
-    { name: job.title, url: `${baseUrl}/jobs/${job._id}` }
+    { name: job.title, url: `${baseUrl}/jobs/view/${job._id}` }
   ];
 
   // Generate schema markup
@@ -275,12 +275,12 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
         schemas={schemas}
         title={pageTitle}
         description={pageDescription}
-        canonical={`${baseUrl}/jobs/${job._id}`}
+        canonical={`${baseUrl}/jobs/view/${job._id}`}
         openGraph={{
           title: pageTitle,
           description: pageDescription,
           type: 'article',
-          url: `${baseUrl}/jobs/${job._id}`,
+          url: `${baseUrl}/jobs/view/${job._id}`,
           image: `${baseUrl}/images/job-og.jpg`
         }}
       />
@@ -553,7 +553,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                         {relatedJobs.slice(0, 12).map((relatedJob) => (
                           <div key={relatedJob._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
                             <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
-                              <Link href={`/jobs/${relatedJob._id}`} className="hover:text-blue-600">
+                              <Link href={`/jobs/view/${relatedJob._id}`} className="hover:text-blue-600">
                                 {relatedJob.title}
                               </Link>
                             </h4>
@@ -586,7 +586,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                         {moreFromCompany.slice(0, 8).map((companyJob) => (
                           <div key={companyJob._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
                             <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
-                              <Link href={`/jobs/${companyJob._id}`} className="hover:text-blue-600">
+                              <Link href={`/jobs/view/${companyJob._id}`} className="hover:text-blue-600">
                                 {companyJob.title}
                               </Link>
                             </h4>
