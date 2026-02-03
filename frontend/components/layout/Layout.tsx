@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import GoogleAnalytics from '../common/GoogleAnalytics';
 import EmailCapture from '../common/EmailCapture';
+import AdBanner from '../ads/AdBanner';
 
 type LayoutProps = {
   children: ReactNode;
@@ -327,10 +328,26 @@ const Layout: React.FC<LayoutProps> = ({
           </nav>
         )}
         
+        {/* Top Ad Banner */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <AdBanner
+            adSlotId="1234567890"
+            adFormat="horizontal"
+          />
+        </div>
+
         <main className="flex-grow">
           {children}
         </main>
-        
+
+        {/* Bottom Ad Banner */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <AdBanner
+            adSlotId="0987654321"
+            adFormat="rectangle"
+          />
+        </div>
+
         {/* Email Capture Section */}
         <EmailCapture 
           source={`page_${router.pathname.replace('/', '').replace('[', '').replace(']', '') || 'home'}`}
