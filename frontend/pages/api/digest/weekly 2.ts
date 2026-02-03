@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { MongoClient } from 'mongodb';
 import type { Job } from '../../../types/job';
-import { sendDigest } from '../../../utils/mailer';
+import { sendWeeklyDigestDirect } from '../../../utils/emailService';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Security: Check for CRON secret to prevent unauthorized access
@@ -38,6 +38,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = client.db(MONGODB_DB);
     const jobsCollection = db.collection<Job>('jobs');
 
+    // Get active subscribers from MailerLite
+    console.log('Fetching active subscribers from MailerLite...');
+    const MAILERLITE_API_KEY = process.env.MAILERLITE_API_KEY;
+    const MAILERLITE_GROUP_ID = process.env.MAILERLITE_GROUP_ID;
+    
+    if (!MAILERLITE_API_KEY || !MAILERLITE_GROUP_ID) {
+      await client.close();
+      return res.status(500).json({ error: 'MailerLite not configured' });
+    }
+
+    const subscribersResponse = await fetch(
+      `https://connect.mailerlite.com/api/groups/${MAILERLITE_GROUP_ID}/subscribers`,
+      {
+        headers: {
+          'Authorization': `Bearer ${MAILERLITE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    if (!subscribersResponse.ok) {
+      await client.close();
+      console.error('Failed to fetch subscribers from MailerLite');
+      return res.status(500).json({ error: 'Failed to fetch subscribers' });
+    }
+
+    const subscribersData = await subscribersResponse.json();
+    const activeSubscribers = subscribersData.data?.filter((s: any) => s.status === 'active') || [];
+    const subscriberEmails = activeSubscribers.map((s: any) => s.email).filter(Boolean);
+    
+    console.log(`Found ${subscriberEmails.length} active subscribers`);
+
+    if (subscriberEmails.length === 0) {
+      await client.close();
+      return res.status(200).json({ 
+        message: 'No active subscribers',
+        jobsSent: 0 
+      });
+    }
+
     // Get recent jobs (last 7 days)
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -71,9 +112,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .toArray();
     }
 
-    await client.close();
-
     if (jobsToSend.length === 0) {
+      await client.close();
       console.log('No jobs found to send');
       return res.status(200).json({ 
         message: 'No jobs available to send',
@@ -81,14 +121,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Send the digest using our mailer utility
-    console.log(`Sending digest with ${jobsToSend.length} jobs...`);
-    await sendDigest(jobsToSend);
+    // Close DB before sending emails
+    await client.close();
+
+    // Send the digest using direct SMTP email
+    console.log(`Sending digest with ${jobsToSend.length} jobs to ${subscriberEmails.length} subscribers...`);
+    await sendWeeklyDigestDirect(jobsToSend, subscriberEmails);
 
     console.log('Weekly digest sent successfully!');
     return res.status(200).json({ 
-      message: `Weekly digest sent successfully with ${jobsToSend.length} jobs`,
+      message: `Weekly digest sent successfully with ${jobsToSend.length} jobs to ${subscriberEmails.length} subscribers`,
       jobsSent: jobsToSend.length,
+      subscriberCount: subscriberEmails.length,
       timestamp: new Date().toISOString()
     });
 

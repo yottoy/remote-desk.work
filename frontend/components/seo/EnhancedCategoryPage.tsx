@@ -83,7 +83,7 @@ const EnhancedCategoryPage: React.FC<EnhancedCategoryPageProps> = ({
         },
         "employmentType": "FULL_TIME",
         "workEnvironment": "Remote work",
-        "url": `https://www.clickclickjob.com/jobs/${job._id}`
+        "url": `https://www.clickclickjob.com/jobs/view/${job._id}`
       }))
     }
   };

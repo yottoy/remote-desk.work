@@ -101,13 +101,13 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
     }
     
     // Otherwise fallback to the job details page
-    return `/jobs/${job._id}`;
+    return `/jobs/view/${job._id}`;
   };
 
   // For job detail links, ensure we have a valid ID
   const getJobDetailLink = () => {
     if (job._id && typeof job._id === 'string' && job._id.length > 0) {
-      return `/jobs/${job._id}`;
+      return `/jobs/view/${job._id}`;
     }
     // If no valid ID, fallback to jobs listing
     return '/jobs';

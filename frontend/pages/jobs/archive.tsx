@@ -75,7 +75,7 @@ const JobArchivePage: React.FC<JobArchiveProps> = ({
               <div key={job._id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
                 <div className="mb-3">
                   <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
-                    <Link href={`/jobs/${job._id}`} className="hover:text-blue-600">
+                    <Link href={`/jobs/view/${job._id}`} className="hover:text-blue-600">
                       {job.title}
                     </Link>
                   </h3>

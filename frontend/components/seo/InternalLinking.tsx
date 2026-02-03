@@ -83,7 +83,7 @@ const InternalLinking: React.FC<InternalLinkingProps> = ({
             {filteredRelatedJobs.map(job => (
               <Link
                 key={job._id}
-                href={`/jobs/${job._id}`}
+                href={`/jobs/view/${job._id}`}
                 className="block p-3 bg-white rounded border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all duration-200"
               >
                 <div className="text-sm font-medium text-gray-900 line-clamp-2">

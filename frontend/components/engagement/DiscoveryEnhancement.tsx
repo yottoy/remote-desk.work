@@ -10,7 +10,7 @@ interface JobCardMiniProps {
 // Simplified job card for recommendations and "also viewed" sections
 const JobCardMini: React.FC<JobCardMiniProps> = ({ job, className = '' }) => {
   return (
-    <Link href={`/jobs/${job._id}`} className={`block p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors ${className}`}>
+    <Link href={`/jobs/view/${job._id}`} className={`block p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors ${className}`}>
       <h3 className="font-medium truncate">{job.title}</h3>
       <p className="text-sm text-gray-600 truncate">{job.company}</p>
       <div className="mt-2 flex justify-between items-center">

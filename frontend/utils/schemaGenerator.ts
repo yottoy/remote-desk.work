@@ -194,7 +194,7 @@ export function generateJobPostingSchema(job: JobData): object {
     "hiringOrganization": {
       "@type": "Organization",
       "name": job.company,
-      "sameAs": job.url || `${baseUrl}/jobs/${job._id}`,
+      "sameAs": job.url || `${baseUrl}/jobs/view/${job._id}`,
     },
     
     // For remote jobs: use TELECOMMUTE instead of physical location
@@ -220,7 +220,7 @@ export function generateJobPostingSchema(job: JobData): object {
     "directApply": true,
     "applicationContact": {
       "@type": "ContactPoint",
-      "url": job.url || `${baseUrl}/jobs/${job._id}`
+      "url": job.url || `${baseUrl}/jobs/view/${job._id}`
     }
   };
   

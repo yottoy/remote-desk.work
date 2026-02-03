@@ -301,7 +301,7 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
                 {featuredJobs.slice(6, 30).map((job) => (
                   <div key={job._id} className="bg-white rounded-md p-3 border border-gray-200 hover:border-blue-300 transition-colors">
                     <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
-                      <Link href={`/jobs/${job._id}`} className="hover:text-blue-600">
+                      <Link href={`/jobs/view/${job._id}`} className="hover:text-blue-600">
                         {job.title}
                       </Link>
                     </h4>
@@ -331,7 +331,7 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
                 {featuredJobs.slice(30, 50).map((job) => (
                   <div key={job._id} className="bg-white rounded-md p-2 border border-gray-200 hover:border-blue-300 transition-colors">
                     <h4 className="text-xs font-medium text-gray-900 line-clamp-2">
-                      <Link href={`/jobs/${job._id}`} className="hover:text-blue-600">
+                      <Link href={`/jobs/view/${job._id}`} className="hover:text-blue-600">
                         {job.title}
                       </Link>
                     </h4>
