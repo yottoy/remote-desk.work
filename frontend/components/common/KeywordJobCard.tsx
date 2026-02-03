@@ -84,7 +84,7 @@ const KeywordJobCard: React.FC<KeywordJobCardProps> = ({ job, keyword }) => {
           <div className="md:w-3/4">
             <div className="flex items-start justify-between">
               <h2 className="text-lg font-semibold text-gray-900 hover:text-blue-700">
-                <Link href={`/jobs/${job._id}/`} className="hover:text-blue-600">
+                <Link href={`/jobs/view/${job._id}`} className="hover:text-blue-600">
                   <RegionalJobTitle baseTitle={job.title} showVariation={true} />
                 </Link>
               </h2>
@@ -147,7 +147,7 @@ const KeywordJobCard: React.FC<KeywordJobCardProps> = ({ job, keyword }) => {
             </button>
             
             <Link 
-              href={`/jobs/${job._id}/`}
+              href={`/jobs/view/${job._id}`}
               className="mt-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
             >
               View Details

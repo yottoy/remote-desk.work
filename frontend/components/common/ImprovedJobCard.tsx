@@ -87,7 +87,7 @@ const ImprovedJobCard: React.FC<JobCardProps> = ({ job, variant = 'default', key
     if (keyword) {
       return job.applyUrl || `#job-${job._id}`;
     }
-    return `/jobs/${job._id}/`;
+    return `/jobs/view/${job._id}`;
   };
   
   // For compact cards (e.g. in a grid)

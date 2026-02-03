@@ -87,7 +87,7 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, className = '', varia
         <div className="flex justify-between items-start">
           <div className="w-4/5">
             <h3 className="text-lg font-medium text-gray-900 line-clamp-1">
-              <Link href={`/jobs/${job._id}/`} className="hover:text-blue-600">
+              <Link href={`/jobs/view/${job._id}`} className="hover:text-blue-600">
                 {job.title}
               </Link>
             </h3>
@@ -123,7 +123,7 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, className = '', varia
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="mb-2 sm:mb-0 sm:w-4/5">
               <h3 className="text-xl font-medium text-gray-900 line-clamp-2">
-                <Link href={`/jobs/${job._id}/`} className="hover:text-blue-600">
+                <Link href={`/jobs/view/${job._id}`} className="hover:text-blue-600">
                   {job.title}
                 </Link>
               </h3>
@@ -163,7 +163,7 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, className = '', varia
           )}
           <div className="mt-4">
             <Link
-              href={`/jobs/${job._id}/`}
+              href={`/jobs/view/${job._id}`}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Apply Now
@@ -180,7 +180,7 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, className = '', varia
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
         <div className="mb-2 sm:mb-0 sm:w-4/5">
           <h3 className="text-lg font-medium text-gray-900 line-clamp-2">
-            <Link href={`/jobs/${job._id}/`} className="hover:text-blue-600">
+            <Link href={`/jobs/view/${job._id}`} className="hover:text-blue-600">
               {job.title}
             </Link>
           </h3>
@@ -212,7 +212,7 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, className = '', varia
       )}
       <div className="mt-4">
         <Link
-          href={`/jobs/${job._id}/`}
+          href={`/jobs/view/${job._id}`}
           className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           View Job
