@@ -218,7 +218,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   return {
     paths,
-    fallback: false
+    fallback: 'blocking' // Allow runtime generation if build fails
   };
 };
 
