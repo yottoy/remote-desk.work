@@ -66,17 +66,17 @@ const DataProcessingJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, er
 
   return (
     <Layout
-      title="Remote Data Processing Jobs - Work from Home | ClickClickJob"
-      description="Find legitimate data processing jobs from home. Remote data processing positions updated regularly. No scams. Entry-level to experienced roles available."
+      title="Data Processing Jobs from Home - Remote Positions | ClickClickJob"
+      description="Find legitimate data processing jobs from home. Work from home data processing positions updated regularly. No scams, entry-level to experienced roles available."
     >
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 text-center">
-            Remote Data Processing Jobs - Work from Home
+            Data Processing Jobs from Home
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 text-center">
-            Find legitimate data processing positions. No scams, regularly updated listings.
+            Find legitimate work from home data processing positions. No scams, regularly updated listings.
           </p>
           
           <div className="max-w-3xl mx-auto">

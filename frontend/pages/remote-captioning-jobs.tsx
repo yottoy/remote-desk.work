@@ -69,17 +69,17 @@ const RemoteCaptioningJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
 
   return (
     <Layout
-      title="Remote Captioning Jobs - Work from Home | ClickClickJob"
-      description="Professional captioning and transcription opportunities. Flexible hours, competitive pay. Real-time and post-production captioning jobs available."
+      title="Captioning Jobs from Home - Remote & Closed Captioning | ClickClickJob"
+      description="Find captioning jobs from home including closed captioning, real-time captioning, and transcription. Remote captioning positions with flexible hours and competitive pay."
     >
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 text-center">
-            Remote Captioning Jobs - Work from Home
+            Captioning Jobs from Home - Remote & Closed Captioning
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 text-center">
-            Professional captioning and transcription opportunities. Flexible hours, competitive pay.
+            Find captioning jobs from home including closed captioning and real-time captioning. Flexible hours, competitive pay.
           </p>
           
           <div className="max-w-3xl mx-auto">

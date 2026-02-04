@@ -149,7 +149,7 @@ const RemoteDataEntryJobsPage: React.FC<KeywordPageProps> = ({
               </div>
             </div>
             <p className="text-base text-gray-600 mt-4">
-              <em>Updated: January 2026</em> | {jobs.length}+ active positions
+              <em>Updated: February 2026</em> | {jobs.length}+ active positions
             </p>
           </div>
 

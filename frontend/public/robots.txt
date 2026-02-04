@@ -9,11 +9,6 @@ Disallow: /_next/
 Disallow: /test*
 Disallow: /*.json$
 
-# Don't index template/dynamic route files directly
-Disallow: /jobs/[id]
-Disallow: /categories/[slug]
-Disallow: /[keyword]
-
 # Prevent indexing of non-existent pages
 Disallow: /job-alerts
 

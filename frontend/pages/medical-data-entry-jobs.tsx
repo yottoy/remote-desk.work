@@ -115,7 +115,7 @@ const MedicalDataEntryJobsPage: React.FC<KeywordPageProps> = ({ title, h1, descr
               we have opportunities for all skill levels.
             </p>
             <p className="text-lg text-gray-600 mt-4">
-              <em>Updated: January 2026</em> | All listings verified for legitimacy | Entry-level positions available
+              <em>Updated: February 2026</em> | All listings verified for legitimacy | Entry-level positions available
             </p>
           </div>
 

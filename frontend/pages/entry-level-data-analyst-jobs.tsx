@@ -106,7 +106,7 @@ const EntryLevelDataAnalystJobsPage: React.FC<KeywordPageProps> = ({ title, h1, 
               data analyst remote</strong> opportunities offer a path to start your analytics career from home.
             </p>
             <p className="text-lg text-gray-600 mt-4">
-              <em>Updated: January 2026</em> | Verified entry-level positions | Training provided | No extensive experience required
+              <em>Updated: February 2026</em> | Verified entry-level positions | Training provided | No extensive experience required
             </p>
           </div>
 

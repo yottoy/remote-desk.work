@@ -145,7 +145,7 @@ const OnlineTutoringJobsPage: React.FC<KeywordPageProps> = ({
               </div>
             </div>
             <p className="text-base text-gray-600 mt-4">
-              <em>Updated: January 2026</em> | Perfect for college students
+              <em>Updated: February 2026</em> | Perfect for college students
             </p>
           </div>
 
