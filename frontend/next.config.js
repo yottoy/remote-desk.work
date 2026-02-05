@@ -93,6 +93,17 @@ const nextConfig = {
     ];
   },
   
+  // Redirect old /jobs/:id URLs to /jobs/view/:id
+  async redirects() {
+    return [
+      {
+        source: '/jobs/:id([a-f0-9]{24})',
+        destination: '/jobs/view/:id',
+        permanent: true,
+      },
+    ];
+  },
+
   // Simplified rewrites to avoid routing conflicts
   async rewrites() {
     return [

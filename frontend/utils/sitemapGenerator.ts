@@ -109,10 +109,18 @@ export function generateCategoryPageEntries(baseUrl: string): SitemapEntry[] {
   const categories = [
     'data-entry',
     'administrative',
+    'administrative-assistant',
     'customer-service',
     'transcription',
     'virtual-assistant',
-    'data-processing'
+    'data-processing',
+    'captioning',
+    'customer-support',
+    'bookkeeping',
+    'content-writing',
+    'social-media',
+    'project-management',
+    'quality-assurance'
   ];
   
   const today = new Date().toISOString().split('T')[0];
@@ -150,7 +158,7 @@ export function generateJobPageEntries(baseUrl: string, jobIds: string[]): Sitem
   const today = new Date().toISOString().split('T')[0];
   
   return jobIds.map(jobId => ({
-    url: `${baseUrl}/jobs/${jobId}`,
+    url: `${baseUrl}/jobs/view/${jobId}`,
     lastmod: today,
     changefreq: 'weekly' as const,
     priority: 0.6
