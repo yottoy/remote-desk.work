@@ -197,9 +197,18 @@ export function generateJobPostingSchema(job: JobData): object {
       "sameAs": job.url || `${baseUrl}/jobs/view/${job._id}`,
     },
     
+    // REQUIRED: jobLocation (Google requires this even for remote jobs)
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "US"
+      }
+    },
+
     // For remote jobs: use TELECOMMUTE instead of physical location
     "jobLocationType": "TELECOMMUTE",
-    
+
     // Applicant location requirements (US-based jobs)
     "applicantLocationRequirements": {
       "@type": "Country",
@@ -224,7 +233,7 @@ export function generateJobPostingSchema(job: JobData): object {
     }
   };
   
-  // Add optional physical location if specified (for hybrid remote)
+  // Override jobLocation with physical location if specified (for hybrid remote)
   if (job.location && job.location !== 'Remote' && job.location !== 'Worldwide' && job.location !== 'US') {
     schema.jobLocation = {
       "@type": "Place",
@@ -287,7 +296,7 @@ export function generateJobPostingSchema(job: JobData): object {
   // RECOMMENDED: Education requirements
   schema.educationRequirements = {
     "@type": "EducationalOccupationalCredential",
-    "credentialCategory": "high school diploma or equivalent"
+    "credentialCategory": "high school"
   };
   
   // Additional helpful properties
@@ -398,9 +407,14 @@ export function generateOrganizationSchema(): object {
     "alternateName": [
       "Click Click Job",
       "Click Click Jobs",
+      "ClickClickJobs",
       "ClickJob",
       "Click Jobs",
-      "ClickClickJobs"
+      "Click Job",
+      "ClikJob",
+      "Clik Job",
+      "ClickClickJob.com",
+      "clickclickjob"
     ],
     "url": baseUrl,
     "logo": {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GetServerSideProps } from 'next';
+import Head from 'next/head';
 import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import ImprovedJobCard from '../components/common/ImprovedJobCard';
@@ -39,7 +40,7 @@ const PartTimeRemoteAdminJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCoun
     partTimeJobs = jobs.slice(0, 12);
   }
 
-  const filteredJobs = activeFilter 
+  const filteredJobs = activeFilter
     ? partTimeJobs.filter(job => {
         const title = job.title?.toLowerCase() || '';
         const description = job.description?.toLowerCase() || '';
@@ -53,11 +54,99 @@ const PartTimeRemoteAdminJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCoun
       })
     : partTimeJobs;
 
+  // FAQ items derived from page content
+  const faqItems = [
+    {
+      question: 'What are part-time remote administrative jobs?',
+      answer: 'Part-time remote administrative jobs are positions that require 10-30 hours per week and can be performed from home. Common roles include virtual assistants, data entry specialists, customer service representatives, administrative support coordinators, and executive assistants.'
+    },
+    {
+      question: 'How much do part-time remote admin jobs pay?',
+      answer: 'Hourly rates for part-time remote admin work range from $15-35 per hour depending on experience and specialization. Entry-level positions start around $15-20/hour, while experienced administrative professionals can earn $25-35/hour or more.'
+    },
+    {
+      question: 'Who hires part-time remote administrative staff?',
+      answer: 'Startups, small to medium-sized businesses, and solopreneurs frequently hire part-time remote administrative staff. These employers value flexibility and often prefer hiring skilled professionals on a part-time basis rather than committing to full-time salaries.'
+    },
+    {
+      question: 'Are part-time remote admin jobs entry-level friendly?',
+      answer: 'Yes, many part-time remote admin roles are entry-level friendly. Positions like data entry specialist require minimal experience, while virtual assistant and customer service representative roles are ideal for those with strong organizational and communication skills.'
+    },
+    {
+      question: 'What hours do part-time remote admin jobs typically require?',
+      answer: 'Most part-time remote admin roles fall into two categories: 10-20 hours per week (perfect for supplemental income) or 20-30 hours per week (nearly full-time hours with more flexibility). Many positions also offer evening and weekend shifts.'
+    }
+  ];
+
+  // JSON-LD Structured Data
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': faqItems.map(faq => ({
+      '@type': 'Question',
+      'name': faq.question,
+      'acceptedAnswer': { '@type': 'Answer', 'text': faq.answer }
+    }))
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://www.clickclickjob.com' },
+      { '@type': 'ListItem', 'position': 2, 'name': 'Part-Time Remote Administrative Jobs', 'item': 'https://www.clickclickjob.com/part-time-remote-admin-jobs' }
+    ]
+  };
+
+  const jobSchemas = filteredJobs.slice(0, 10).map(job => {
+    const datePosted = job.postedDate ? new Date(job.postedDate).toISOString() : new Date().toISOString();
+    const validThroughDate = new Date(datePosted);
+    validThroughDate.setDate(validThroughDate.getDate() + 30);
+    const desc = (job as any).descriptionText || job.description || `${job.title} position at ${job.company}.`;
+    return {
+      '@context': 'https://schema.org/',
+      '@type': 'JobPosting',
+      'title': job.title,
+      'description': desc.length < 200 ? desc + ` This remote ${job.title} role offers the flexibility to work from home.` : desc,
+      'datePosted': datePosted,
+      'validThrough': validThroughDate.toISOString(),
+      'hiringOrganization': { '@type': 'Organization', 'name': job.company },
+      'jobLocation': {
+        '@type': 'Place',
+        'address': {
+          '@type': 'PostalAddress',
+          'addressCountry': 'US'
+        }
+      },
+      'jobLocationType': 'TELECOMMUTE',
+      'applicantLocationRequirements': { '@type': 'Country', 'name': 'US' },
+      'employmentType': 'PART_TIME'
+    };
+  });
+
   return (
     <Layout
       title="Part-Time Remote Administrative Jobs | Flexible Hours | ClickClickJob"
       description="Find part-time remote administrative jobs. Flexible hours, work from anywhere. Browse vetted part-time admin positions updated daily. Entry-level welcome."
     >
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
+        {jobSchemas.map((schema, index) => (
+          <script
+            key={`job-schema-${index}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          />
+        ))}
+      </Head>
+
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

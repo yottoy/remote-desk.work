@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GetServerSideProps } from 'next';
+import Head from 'next/head';
 import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import ImprovedJobCard from '../components/common/ImprovedJobCard';
@@ -73,12 +74,12 @@ const RemoteAdminJobsTexasPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
     texasAdminJobs = jobs.slice(0, 12);
   }
 
-  const filteredJobs = activeFilter 
+  const filteredJobs = activeFilter
     ? texasAdminJobs.filter(job => {
         const title = job.title?.toLowerCase() || '';
         const description = job.description?.toLowerCase() || '';
         const employmentType = (job as any).employmentType?.toLowerCase() || '';
-        
+
         if (activeFilter === 'executive') {
           return title.includes('executive') || description.includes('executive');
         }
@@ -98,11 +99,104 @@ const RemoteAdminJobsTexasPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
       })
     : texasAdminJobs;
 
+  // FAQ items derived from page content
+  const faqItems = [
+    {
+      question: 'Why is Texas a great state for remote administrative work?',
+      answer: 'Texas offers unique advantages for remote workers including no state income tax, affordable cost of living outside major cities, a business-friendly environment, and a Central Time Zone that makes it easy to work with both coasts. Many companies are establishing remote teams in Texas to tap into the state\'s large, skilled workforce.'
+    },
+    {
+      question: 'What types of remote administrative jobs are available in Texas?',
+      answer: 'Common remote admin roles in Texas include virtual executive assistants, data entry specialists, remote office managers, customer service representatives, administrative coordinators, and medical office assistants. These positions span industries like energy, healthcare, technology, finance, and real estate.'
+    },
+    {
+      question: 'How much do remote administrative jobs in Texas pay?',
+      answer: 'Salaries vary by role: Entry-level data entry pays $28,000-$38,000/year, administrative assistants earn $35,000-$50,000/year, executive assistants make $45,000-$70,000/year, and remote office managers earn $50,000-$75,000/year. Salaries can be higher in specialized industries like oil & gas, healthcare, or tech.'
+    },
+    {
+      question: 'Do I need to be a Texas resident to apply for these jobs?',
+      answer: 'Many remote administrative positions require you to be a Texas resident for tax and legal purposes. Most roles operate on Central Time (CT), and some industries like healthcare and finance may require state-specific background checks or clearances.'
+    },
+    {
+      question: 'Which Texas cities have the most remote admin job opportunities?',
+      answer: 'Major metro areas like Houston (energy, healthcare, aerospace), Dallas-Fort Worth (tech, finance, logistics), Austin (tech startups, government), and San Antonio (healthcare, military support) have the most opportunities. Growing markets include El Paso, Corpus Christi, Lubbock, and The Woodlands.'
+    },
+    {
+      question: 'What tips can help me land a remote admin job in Texas?',
+      answer: 'Key tips include highlighting your familiarity with Texas business culture and time zones, joining Texas remote work groups and professional associations, emphasizing reliability and strong work ethic, mastering Microsoft Office and Google Workspace, having a dedicated home office setup, and demonstrating strong written and verbal communication skills.'
+    }
+  ];
+
+  // JSON-LD Structured Data
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': faqItems.map(faq => ({
+      '@type': 'Question',
+      'name': faq.question,
+      'acceptedAnswer': { '@type': 'Answer', 'text': faq.answer }
+    }))
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://www.clickclickjob.com' },
+      { '@type': 'ListItem', 'position': 2, 'name': 'Remote Administrative Jobs in Texas', 'item': 'https://www.clickclickjob.com/remote-admin-jobs-texas' }
+    ]
+  };
+
+  const jobSchemas = filteredJobs.slice(0, 10).map(job => {
+    const datePosted = job.postedDate ? new Date(job.postedDate).toISOString() : new Date().toISOString();
+    const validThroughDate = new Date(datePosted);
+    validThroughDate.setDate(validThroughDate.getDate() + 30);
+    const desc = (job as any).descriptionText || job.description || `${job.title} position at ${job.company}.`;
+    return {
+      '@context': 'https://schema.org/',
+      '@type': 'JobPosting',
+      'title': job.title,
+      'description': desc.length < 200 ? desc + ` This remote ${job.title} role offers the flexibility to work from home.` : desc,
+      'datePosted': datePosted,
+      'validThrough': validThroughDate.toISOString(),
+      'hiringOrganization': { '@type': 'Organization', 'name': job.company },
+      'jobLocation': {
+        '@type': 'Place',
+        'address': {
+          '@type': 'PostalAddress',
+          'addressRegion': 'TX',
+          'addressCountry': 'US'
+        }
+      },
+      'jobLocationType': 'TELECOMMUTE',
+      'applicantLocationRequirements': { '@type': 'Country', 'name': 'US' },
+      'employmentType': 'FULL_TIME'
+    };
+  });
+
   return (
     <Layout
       title="Remote Administrative Jobs in Texas (Work from Home) | ClickClickJob"
       description="Find remote administrative jobs based in Texas. Virtual assistant, data entry, and office support positions for Texas residents. Work from home anywhere in TX."
     >
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
+        {jobSchemas.map((schema, index) => (
+          <script
+            key={`job-schema-${index}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          />
+        ))}
+      </Head>
+
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
