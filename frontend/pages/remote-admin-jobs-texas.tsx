@@ -147,32 +147,49 @@ const RemoteAdminJobsTexasPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
     ]
   };
 
-  const jobSchemas = filteredJobs.slice(0, 10).map(job => {
-    const datePosted = job.postedDate ? new Date(job.postedDate).toISOString() : new Date().toISOString();
-    const validThroughDate = new Date(datePosted);
-    validThroughDate.setDate(validThroughDate.getDate() + 30);
-    const desc = (job as any).descriptionText || job.description || `${job.title} position at ${job.company}.`;
-    return {
-      '@context': 'https://schema.org/',
-      '@type': 'JobPosting',
-      'title': job.title,
-      'description': desc.length < 200 ? desc + ` This remote ${job.title} role offers the flexibility to work from home.` : desc,
-      'datePosted': datePosted,
-      'validThrough': validThroughDate.toISOString(),
-      'hiringOrganization': { '@type': 'Organization', 'name': job.company },
-      'jobLocation': {
-        '@type': 'Place',
-        'address': {
-          '@type': 'PostalAddress',
-          'addressRegion': 'TX',
-          'addressCountry': 'US'
+  const remoteLocationTerms = ['remote', 'worldwide', 'us', 'usa', 'united states', 'work from home', 'wfh', 'anywhere', 'telecommute'];
+  const jobSchemas = filteredJobs
+    .filter(job => {
+      const loc = job.location?.toLowerCase().trim() || '';
+      return !loc || remoteLocationTerms.includes(loc);
+    })
+    .slice(0, 10)
+    .map(job => {
+      const datePosted = job.postedDate ? new Date(job.postedDate).toISOString() : new Date().toISOString();
+      const validThroughDate = new Date(datePosted);
+      validThroughDate.setDate(validThroughDate.getDate() + 30);
+      const desc = (job as any).descriptionText || job.description || `${job.title} position at ${job.company}.`;
+      return {
+        '@context': 'https://schema.org/',
+        '@type': 'JobPosting',
+        'title': job.title || 'Remote Position',
+        'description': desc.length < 200 ? desc + ` This remote ${job.title} role offers the flexibility to work from home.` : desc,
+        'datePosted': datePosted,
+        'validThrough': validThroughDate.toISOString(),
+        'hiringOrganization': { '@type': 'Organization', 'name': job.company || 'Confidential Employer' },
+        'jobLocation': {
+          '@type': 'Place',
+          'address': {
+            '@type': 'PostalAddress',
+            'addressRegion': 'TX',
+            'addressCountry': 'US'
+          }
+        },
+        'jobLocationType': 'TELECOMMUTE',
+        'applicantLocationRequirements': { '@type': 'Country', 'name': 'US' },
+        'employmentType': 'FULL_TIME',
+        'baseSalary': {
+          '@type': 'MonetaryAmount',
+          'currency': 'USD',
+          'value': {
+            '@type': 'QuantitativeValue',
+            'minValue': 35000,
+            'maxValue': 65000,
+            'unitText': 'YEAR'
+          }
         }
-      },
-      'jobLocationType': 'TELECOMMUTE',
-      'applicantLocationRequirements': { '@type': 'Country', 'name': 'US' },
-      'employmentType': 'FULL_TIME'
-    };
-  });
+      };
+    });
 
   return (
     <Layout

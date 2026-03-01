@@ -93,12 +93,36 @@ const nextConfig = {
     ];
   },
   
-  // Redirect old /jobs/:id URLs to /jobs/view/:id
+  // Redirect old/legacy URLs
   async redirects() {
     return [
+      // Redirect old /jobs/:id URLs to /jobs/view/:id
       {
         source: '/jobs/:id([a-f0-9]{24})',
         destination: '/jobs/view/:id',
+        permanent: true,
+      },
+      // Redirect /job-alerts to /newsletter
+      {
+        source: '/job-alerts',
+        destination: '/newsletter',
+        permanent: true,
+      },
+      // Redirect literal bracket route leaked to GSC
+      {
+        source: '/categories/%5Bslug%5D',
+        destination: '/categories',
+        permanent: true,
+      },
+      // Redirect literal bracket job template routes leaked to GSC
+      {
+        source: '/jobs/%5Bcategory%5D/%5Bstate%5D',
+        destination: '/jobs',
+        permanent: true,
+      },
+      {
+        source: '/jobs/%5Bcategory%5D/%5Bstate%5D/%5Bmodifier%5D',
+        destination: '/jobs',
         permanent: true,
       },
     ];

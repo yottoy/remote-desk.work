@@ -127,6 +127,16 @@ function formatDateISO(date: string | Date): string {
 }
 
 /**
+ * Determines if a job location indicates remote work
+ */
+function isRemoteLocation(location?: string): boolean {
+  if (!location || location.trim() === '') return true;
+  const loc = location.toLowerCase().trim();
+  const remoteTerms = ['remote', 'worldwide', 'us', 'usa', 'united states', 'work from home', 'wfh', 'anywhere', 'telecommute', 'virtual', 'online'];
+  return remoteTerms.some(term => loc === term);
+}
+
+/**
  * Maps common job type strings to schema.org employmentType values
  */
 function normalizeEmploymentType(jobType?: string): string[] {
@@ -164,39 +174,43 @@ function normalizeEmploymentType(jobType?: string): string[] {
  */
 export function generateJobPostingSchema(job: JobData): object {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
-  
-  // REQUIRED: datePosted in ISO 8601 format
-  const datePosted = formatDateISO(job.postedDate);
-  
-  // REQUIRED: validThrough - set to 30 days from posting (or 60 for longer-term roles)
+
+  // REQUIRED: Guard against empty/missing values that cause GSC validation failures
+  const companyName = job.company && job.company.trim() ? job.company.trim() : 'Confidential Employer';
+  const jobTitle = job.title && job.title.trim() ? job.title.trim() : 'Remote Position';
+
+  // REQUIRED: datePosted in ISO 8601 format — never empty
+  const datePosted = formatDateISO(job.postedDate || new Date().toISOString());
+
+  // REQUIRED: validThrough - set to 30 days from posting
   const postedDate = new Date(datePosted);
   const validThroughDate = new Date(postedDate);
   validThroughDate.setDate(validThroughDate.getDate() + 30);
   const validThrough = validThroughDate.toISOString();
-  
+
   // REQUIRED: description (minimum 200 characters)
   const description = ensureValidDescription(job.description, job);
-  
+
   // REQUIRED: employmentType as array
   const employmentType = normalizeEmploymentType(job.employmentType);
-  
+
   // Build base schema with all required fields
   const schema: any = {
     "@context": "https://schema.org/",
     "@type": "JobPosting",
-    
-    // REQUIRED FIELDS
-    "title": job.title,
+
+    // REQUIRED FIELDS — all guaranteed non-empty
+    "title": jobTitle,
     "description": description,
     "datePosted": datePosted,
     "validThrough": validThrough,
-    
+
     "hiringOrganization": {
       "@type": "Organization",
-      "name": job.company,
+      "name": companyName,
       "sameAs": job.url || `${baseUrl}/jobs/view/${job._id}`,
     },
-    
+
     // REQUIRED: jobLocation (Google requires this even for remote jobs)
     "jobLocation": {
       "@type": "Place",
@@ -206,25 +220,16 @@ export function generateJobPostingSchema(job: JobData): object {
       }
     },
 
-    // For remote jobs: use TELECOMMUTE instead of physical location
-    "jobLocationType": "TELECOMMUTE",
-
-    // Applicant location requirements (US-based jobs)
-    "applicantLocationRequirements": {
-      "@type": "Country",
-      "name": "US"
-    },
-    
     // STRONGLY RECOMMENDED: employmentType
     "employmentType": employmentType,
-    
+
     // RECOMMENDED: identifier (helps prevent duplicates)
     "identifier": {
       "@type": "PropertyValue",
       "name": "Job ID",
       "value": job._id
     },
-    
+
     // Application method
     "directApply": true,
     "applicationContact": {
@@ -232,9 +237,13 @@ export function generateJobPostingSchema(job: JobData): object {
       "url": job.url || `${baseUrl}/jobs/view/${job._id}`
     }
   };
-  
-  // Override jobLocation with physical location if specified (for hybrid remote)
-  if (job.location && job.location !== 'Remote' && job.location !== 'Worldwide' && job.location !== 'US') {
+
+  // Set TELECOMMUTE only for actually remote jobs; use physical location for in-person jobs
+  const isRemote = isRemoteLocation(job.location);
+  if (isRemote) {
+    schema.jobLocationType = "TELECOMMUTE";
+    schema.applicantLocationRequirements = { "@type": "Country", "name": "US" };
+  } else if (job.location && job.location.trim()) {
     schema.jobLocation = {
       "@type": "Place",
       "address": {
@@ -244,7 +253,7 @@ export function generateJobPostingSchema(job: JobData): object {
       }
     };
   }
-  
+
   // STRONGLY RECOMMENDED: baseSalary (increases CTR by 30%+)
   if (job.salary) {
     const salaryInfo = parseSalary(job.salary);
@@ -261,14 +270,14 @@ export function generateJobPostingSchema(job: JobData): object {
       };
     }
   }
-  
+
   // RECOMMENDED: Benefits
   if (job.benefits && job.benefits.length > 0) {
     schema.jobBenefits = job.benefits.join(', ');
   } else {
     schema.jobBenefits = "Remote work, flexible schedule, work-life balance";
   }
-  
+
   // RECOMMENDED: Qualifications and responsibilities
   const expLevel = job.experienceLevel?.toLowerCase() || '';
   if (expLevel.includes('entry') || expLevel.includes('junior')) {
@@ -290,20 +299,22 @@ export function generateJobPostingSchema(job: JobData): object {
       "monthsOfExperience": 12
     };
   }
-  
-  schema.responsibilities = `Responsibilities include: accurate ${job.title} tasks, maintaining organized records, meeting deadlines, and contributing to team objectives in a remote work environment.`;
-  
+
+  schema.responsibilities = `Responsibilities include: accurate ${jobTitle} tasks, maintaining organized records, meeting deadlines, and contributing to team objectives${isRemote ? ' in a remote work environment' : ''}.`;
+
   // RECOMMENDED: Education requirements
+  // Google accepts: "high school", "associate degree", "bachelor degree",
+  // "professional certificate", "postgraduate degree"
   schema.educationRequirements = {
     "@type": "EducationalOccupationalCredential",
     "credentialCategory": "high school"
   };
-  
+
   // Additional helpful properties
   schema.industry = "Administrative and Support Services";
   schema.occupationalCategory = "43-9061.00"; // O*NET-SOC code for Data Entry
   schema.workHours = employmentType.includes('PART_TIME') ? "20-30 hours per week" : "40 hours per week";
-  
+
   return schema;
 }
 
