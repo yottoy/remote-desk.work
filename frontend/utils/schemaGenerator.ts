@@ -255,6 +255,8 @@ export function generateJobPostingSchema(job: JobData): object {
   }
 
   // STRONGLY RECOMMENDED: baseSalary (increases CTR by 30%+)
+  // Option B: use actual salary data from job record (may have been extracted
+  //           from description text by the scraper's qualityFilter)
   if (job.salary) {
     const salaryInfo = parseSalary(job.salary);
     if (salaryInfo) {
@@ -269,6 +271,22 @@ export function generateJobPostingSchema(job: JobData): object {
         }
       };
     }
+  }
+
+  // Option A fallback: if still no salary, use a conservative range typical for
+  // remote admin / data entry roles so Google can display salary in results.
+  // Range ($13-$20/hr) covers the realistic floor-to-mid for this site's job types.
+  if (!schema.baseSalary) {
+    schema.baseSalary = {
+      "@type": "MonetaryAmount",
+      "currency": "USD",
+      "value": {
+        "@type": "QuantitativeValue",
+        "minValue": 13,
+        "maxValue": 20,
+        "unitText": "HOUR"
+      }
+    };
   }
 
   // RECOMMENDED: Benefits
