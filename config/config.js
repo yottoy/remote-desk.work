@@ -276,6 +276,72 @@ module.exports = {
       'investment required',
       '$1000/day'
     ],
+    // Title-based hard blocklist — any job whose title matches these terms is
+    // immediately rejected regardless of credibility score or description content.
+    // These represent job categories that are entirely outside our site's focus
+    // (data entry, admin, customer service, captioning, transcription).
+    titleBlocklist: [
+      // Software / Engineering
+      'software engineer',
+      'software developer',
+      'frontend engineer',
+      'backend engineer',
+      'full stack engineer',
+      'fullstack engineer',
+      'full stack developer',
+      'fullstack developer',
+      'web developer',
+      'mobile developer',
+      'ios developer',
+      'android developer',
+      'devops engineer',
+      'site reliability engineer',
+      'platform engineer',
+      'infrastructure engineer',
+      'cloud engineer',
+      'security engineer',
+      'qa engineer',
+      'test engineer',
+      // Product / Management
+      'product manager',
+      'product management',
+      'product owner',
+      'program manager',
+      'project manager',
+      'engineering manager',
+      'engineering director',
+      // Data Science / ML / AI
+      'data scientist',
+      'machine learning',
+      'ml engineer',
+      'ai engineer',
+      'deep learning',
+      'data engineer',
+      // Design
+      'ux designer',
+      'ui designer',
+      'graphic designer',
+      'product designer',
+      'visual designer',
+      // Finance / Legal
+      'accountant',
+      'financial analyst',
+      'attorney',
+      'lawyer',
+      'paralegal',
+      // Healthcare clinical
+      'registered nurse',
+      'nurse practitioner',
+      'physician',
+      'pharmacist',
+      // Sales / Marketing leadership
+      'marketing manager',
+      'marketing director',
+      'sales manager',
+      'sales director',
+      'account executive',
+      'business development'
+    ],
     relevanceKeywords: {
       high: [
         // PRIORITY 1: High-value keywords (561+ impressions)
@@ -344,4 +410,4 @@ module.exports = {
     headless: false,
     slowMo: 150
   }
-}; 
+};
