@@ -224,6 +224,18 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const categorySlug = params?.category as string;
+
+  // Redirect MongoDB ObjectID-style slugs to /jobs/view/{id}
+  // These are old URLs from a previous routing structure
+  if (/^[a-f0-9]{24}$/.test(categorySlug)) {
+    return {
+      redirect: {
+        destination: `/jobs/view/${categorySlug}`,
+        permanent: true,
+      },
+    };
+  }
+
   const category = CATEGORIES[categorySlug];
 
   if (!category) {

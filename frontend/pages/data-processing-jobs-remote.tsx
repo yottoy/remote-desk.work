@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import ImprovedJobCard from '../components/common/ImprovedJobCard';
 import SearchBar from '../components/common/SearchBar';
+import SchemaHead from '../components/seo/SchemaHead';
+import { generateFAQSchema, generateBreadcrumbSchema, generateJobPostingSchema } from '../utils/schemaGenerator';
 import { EmailCaptureForm } from '../components/email-capture/EmailCaptureForm';
 import type { Job } from '../types/job';
 
@@ -15,6 +17,32 @@ interface PageProps {
 
 const DataProcessingJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, error }) => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
+  const pageUrl = `${baseUrl}/data-processing-jobs-remote`;
+
+  // FAQ items based on page content
+  const faqItems = [
+    {
+      question: 'What is data processing work?',
+      answer: 'Data processing work involves collecting, organizing, and managing information in digital systems. This includes data entry, verification, database management, and quality control. Data processing specialists ensure accuracy and consistency across organizational databases.'
+    },
+    {
+      question: 'How much do data processing jobs pay?',
+      answer: 'Typical hourly rates range from $12-25/hour. Entry-level roles start at $12-16/hour, while experienced professionals earn $20-25/hour or more. Specialized positions in healthcare, legal, or financial sectors often pay premium rates. Performance bonuses for high accuracy are common.'
+    },
+    {
+      question: 'What equipment do I need for remote data processing?',
+      answer: 'You need a desktop or laptop with Windows 10/11 or Mac OS with minimum 8GB RAM, internet speed of at least 25 Mbps download and 10 Mbps upload (wired preferred), Microsoft Office or Google Workspace, and a quiet distraction-free workspace with ergonomic setup.'
+    },
+    {
+      question: 'What types of data processing jobs are available?',
+      answer: 'Common types include Data Entry Clerk ($12-20/hour), Data Verification Specialist ($15-22/hour), Database Administrator ($20-35/hour), Data Quality Analyst ($18-28/hour), Claims Processing Specialist ($16-25/hour), and Medical Records Processor ($17-26/hour).'
+    },
+    {
+      question: 'How can I spot legitimate data processing jobs?',
+      answer: 'Legitimate employers have clear job descriptions with specific duties, professional interview processes, verifiable company websites, realistic pay rates, standard onboarding with W-4 forms, and provide training at no cost. Avoid jobs requesting upfront payment, promising unrealistic earnings, or pressuring immediate starts without interviews.'
+    }
+  ];
 
   const filterChips = [
     { label: 'Entry-Level', value: 'entry-level' },
@@ -47,7 +75,7 @@ const DataProcessingJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, er
     dataProcessingJobs = jobs.slice(0, 12);
   }
 
-  const filteredJobs = activeFilter 
+  const filteredJobs = activeFilter
     ? dataProcessingJobs.filter(job => {
         const title = job.title?.toLowerCase() || '';
         const description = job.description?.toLowerCase() || '';
@@ -64,11 +92,46 @@ const DataProcessingJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, er
       })
     : dataProcessingJobs;
 
+  // Generate structured data schemas
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: baseUrl },
+    { name: 'Data Processing Jobs Remote', url: pageUrl }
+  ]);
+
+  const faqSchema = generateFAQSchema(faqItems);
+
+  const jobSchemas = dataProcessingJobs.slice(0, 10).map(job => generateJobPostingSchema({
+    _id: job._id,
+    title: job.title,
+    company: job.company,
+    location: (job as any).location || 'Remote',
+    description: job.description || `${job.title} position at ${job.company}.`,
+    salary: (job as any).salary,
+    postedDate: job.postedDate ? new Date(job.postedDate).toISOString() : new Date().toISOString(),
+    employmentType: (job as any).employmentType || (job as any).jobType,
+    experienceLevel: (job as any).experienceLevel,
+  }));
+
+  const allSchemas = [breadcrumbSchema, faqSchema, ...jobSchemas];
+
+  const pageTitle = "Data Processing Jobs from Home - Remote Positions | ClickClickJob";
+  const pageDescription = "Find legitimate data processing jobs from home. Work from home data processing positions updated regularly. No scams, entry-level to experienced roles available.";
+
   return (
-    <Layout
-      title="Data Processing Jobs from Home - Remote Positions | ClickClickJob"
-      description="Find legitimate data processing jobs from home. Work from home data processing positions updated regularly. No scams, entry-level to experienced roles available."
-    >
+    <>
+    <SchemaHead
+      schemas={allSchemas}
+      title={pageTitle}
+      description={pageDescription}
+      canonical={pageUrl}
+      openGraph={{
+        title: pageTitle,
+        description: pageDescription,
+        url: pageUrl,
+        type: 'website'
+      }}
+    />
+    <Layout>
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -397,6 +460,132 @@ const DataProcessingJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, er
         </div>
       </section>
 
+      {/* Getting Started Section */}
+      <section className="py-12 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Getting Started in Remote Data Processing</h2>
+          <p className="text-lg text-gray-700 mb-8">
+            Whether you are new to the workforce or transitioning from another field, remote data processing offers a clear path from entry-level positions to well-paying specialist roles. Follow these steps to build a sustainable career.
+          </p>
+
+          <div className="space-y-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+                1
+              </div>
+              <div className="ml-4">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Assess Your Current Skills</h3>
+                <p className="text-gray-700">
+                  Start by evaluating your typing speed, attention to detail, and familiarity with spreadsheet software. Most entry-level data processing roles require a minimum typing speed of 40 words per minute and basic proficiency in Microsoft Excel or Google Sheets. Free online typing tests and skills assessments can help you identify areas to improve before applying.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+                2
+              </div>
+              <div className="ml-4">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Learn Required Software and Tools</h3>
+                <p className="text-gray-700">
+                  Familiarize yourself with the tools commonly used in data processing roles. This includes spreadsheet applications (Excel, Google Sheets), database software (Microsoft Access, basic SQL), and data management platforms. Many employers also use CRM systems like Salesforce or industry-specific tools. Free tutorials and community college courses can build these skills without significant cost.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+                3
+              </div>
+              <div className="ml-4">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Start with Entry-Level Positions</h3>
+                <p className="text-gray-700">
+                  Apply for data entry clerk and junior data processing roles that offer on-the-job training. These positions typically pay $12-16/hour and provide valuable experience with real-world data systems. Focus on building a track record of accuracy and reliability. Many employers promote from within once you demonstrate consistent performance over several months.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+                4
+              </div>
+              <div className="ml-4">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Build a Specialization</h3>
+                <p className="text-gray-700">
+                  After gaining foundational experience, consider specializing in a high-demand area. Healthcare data processing requires knowledge of medical terminology and HIPAA compliance. Financial data processing involves familiarity with accounting concepts and regulatory standards. Legal data processing focuses on case management systems and document review. Specializing allows you to command higher pay rates and access a more targeted job market.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+                5
+              </div>
+              <div className="ml-4">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Advance to Higher-Paying Roles</h3>
+                <p className="text-gray-700">
+                  With 1-2 years of experience and a specialization, you can move into roles like Data Quality Analyst ($18-28/hour), Claims Processing Specialist ($16-25/hour), or Database Administrator ($20-35/hour). Consider certifications such as Microsoft Office Specialist (MOS) or Certified Data Management Professional (CDMP) to strengthen your resume and negotiate higher compensation.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Industries Section */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Industries Hiring Remote Data Processors</h2>
+          <p className="text-lg text-gray-700 mb-8">
+            Data processing roles exist across nearly every industry. Each sector has its own requirements, terminology, and growth opportunities. Here are the industries with the highest demand for remote data processing professionals.
+          </p>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Healthcare</h3>
+              <p className="text-gray-700">
+                Process patient records, medical billing codes, insurance claims, and lab results. Roles often require familiarity with HIPAA regulations and electronic health record (EHR) systems. Healthcare data processors typically earn $17-26/hour due to the specialized compliance knowledge required.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Finance and Banking</h3>
+              <p className="text-gray-700">
+                Handle transaction records, loan applications, account updates, and regulatory filings. Financial data processing demands high accuracy and knowledge of compliance standards. Positions in this sector often pay $18-28/hour and may require background checks.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">E-commerce</h3>
+              <p className="text-gray-700">
+                Manage product listings, inventory databases, order records, and customer information. E-commerce data processors work with platforms like Shopify, Amazon Seller Central, and warehouse management systems. These roles are often entry-level friendly with pay starting at $13-18/hour.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Insurance</h3>
+              <p className="text-gray-700">
+                Process policy applications, claims documentation, underwriting data, and policyholder records. Insurance data processing roles require attention to regulatory detail and often involve working with proprietary claims management software. Pay ranges from $16-25/hour.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Government</h3>
+              <p className="text-gray-700">
+                Enter and maintain records for public agencies, including census data, permit applications, tax filings, and benefit program information. Government data processing positions often come with stable hours and benefits. Contractors and direct-hire roles are both common, with pay ranging from $15-24/hour.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Real Estate</h3>
+              <p className="text-gray-700">
+                Manage property listings, transaction records, title documents, and client databases. Real estate data processors work with MLS systems and property management platforms. These roles suit detail-oriented professionals and typically pay $14-22/hour, with busier seasons offering overtime opportunities.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Newsletter Signup */}
       <section className="py-12 bg-white">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -440,6 +629,7 @@ const DataProcessingJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, er
         </div>
       </section>
     </Layout>
+    </>
   );
 };
 

@@ -17,6 +17,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   console.log('Requested keyword slug:', keywordSlug);
   console.log('Available keywords:', Object.keys(keywordPagesData));
   
+  // Redirect legacy URLs to their proper destinations
+  if (keywordSlug === 'job-alerts') {
+    return {
+      redirect: {
+        destination: '/newsletter',
+        permanent: true,
+      },
+    };
+  }
+
   // Exclude specific pages that have their own routes
   if (keywordSlug === 'market-insights' || keywordSlug === 'about' || keywordSlug === 'contact' || keywordSlug === 'newsletter') {
     console.log('Redirecting to static page:', keywordSlug);

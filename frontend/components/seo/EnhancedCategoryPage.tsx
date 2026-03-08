@@ -66,25 +66,70 @@ const EnhancedCategoryPage: React.FC<EnhancedCategoryPageProps> = ({
     "mainEntity": {
       "@type": "ItemList",
       "numberOfItems": totalJobs,
-      "itemListElement": jobs.slice(0, 10).map((job, index) => ({
-        "@type": "JobPosting",
-        "position": index + 1,
-        "name": job.title,
-        "hiringOrganization": {
-          "@type": "Organization",
-          "name": job.company
-        },
-        "jobLocation": {
-          "@type": "Place",
-          "address": {
-            "@type": "PostalAddress",
-            "addressCountry": "US"
+      "itemListElement": jobs.slice(0, 10).map((job, index) => {
+        const postedDate = (job as any).postedDate ? new Date((job as any).postedDate).toISOString() : new Date().toISOString();
+        const validThroughDate = new Date(postedDate);
+        validThroughDate.setDate(validThroughDate.getDate() + 30);
+        const desc = (job as any).descriptionText || (job as any).description || `${job.title} position at ${job.company}. This is a remote opportunity.`;
+
+        const entry: any = {
+          "@type": "ListItem",
+          "position": index + 1,
+          "item": {
+            "@type": "JobPosting",
+            "title": job.title,
+            "description": desc.length < 200 ? desc + ` This remote ${job.title} role offers the flexibility to work from home with competitive compensation.` : desc,
+            "datePosted": postedDate,
+            "validThrough": validThroughDate.toISOString(),
+            "hiringOrganization": {
+              "@type": "Organization",
+              "name": job.company
+            },
+            "jobLocation": {
+              "@type": "Place",
+              "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "US"
+              }
+            },
+            "jobLocationType": "TELECOMMUTE",
+            "applicantLocationRequirements": {
+              "@type": "Country",
+              "name": "US"
+            },
+            "employmentType": "FULL_TIME",
+            "url": `https://www.clickclickjob.com/jobs/view/${job._id}`
           }
-        },
-        "employmentType": "FULL_TIME",
-        "workEnvironment": "Remote work",
-        "url": `https://www.clickclickjob.com/jobs/view/${job._id}`
-      }))
+        };
+
+        const salary = (job as any).salary || (job as any).payRange;
+        if (salary) {
+          const cleanStr = salary.toLowerCase().replace(/[,$]/g, '');
+          const isHourly = /hour|hr|\/h\b/.test(cleanStr);
+          const numbers = cleanStr.match(/(\d+(?:\.\d+)?)\s*k?\b/g);
+          if (numbers && numbers.length > 0) {
+            const parsed = numbers.map((n: string) => {
+              const num = parseFloat(n.replace('k', ''));
+              if (n.includes('k')) return num * 1000;
+              if (isHourly && num < 200) return num;
+              if (!isHourly && num < 1000) return num * 1000;
+              return num;
+            });
+            entry.item.baseSalary = {
+              "@type": "MonetaryAmount",
+              "currency": "USD",
+              "value": {
+                "@type": "QuantitativeValue",
+                "minValue": Math.min(...parsed),
+                "maxValue": Math.max(...parsed),
+                "unitText": isHourly ? "HOUR" : "YEAR"
+              }
+            };
+          }
+        }
+
+        return entry;
+      })
     }
   };
 

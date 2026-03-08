@@ -76,6 +76,79 @@ export default function CategoryStatePage({
     }))
   };
 
+  // JobPosting schema for each job listing
+  const jobPostingSchemas = activeJobs.slice(0, 10).map(job => {
+    const datePosted = job.postedDate ? new Date(job.postedDate).toISOString() : new Date().toISOString();
+    const validThroughDate = new Date(datePosted);
+    validThroughDate.setDate(validThroughDate.getDate() + 30);
+
+    let baseSalary: any = undefined;
+    if (job.salary) {
+      const cleanStr = job.salary.toLowerCase().replace(/[,$]/g, '');
+      const isHourly = /hour|hr|\/h\b/.test(cleanStr);
+      const numbers = cleanStr.match(/(\d+(?:\.\d+)?)\s*k?\b/g);
+      if (numbers && numbers.length > 0) {
+        const parsed = numbers.map(n => {
+          const num = parseFloat(n.replace('k', ''));
+          if (n.includes('k')) return num * 1000;
+          if (isHourly && num < 200) return num;
+          if (!isHourly && num < 1000) return num * 1000;
+          return num;
+        });
+        baseSalary = {
+          "@type": "MonetaryAmount",
+          "currency": "USD",
+          "value": {
+            "@type": "QuantitativeValue",
+            "minValue": Math.min(...parsed),
+            "maxValue": Math.max(...parsed),
+            "unitText": isHourly ? "HOUR" : "YEAR"
+          }
+        };
+      }
+    }
+
+    let employmentType = "FULL_TIME";
+    if (job.jobType) {
+      const jt = job.jobType.toLowerCase();
+      if (jt.includes('part')) employmentType = "PART_TIME";
+      else if (jt.includes('contract') || jt.includes('freelance')) employmentType = "CONTRACTOR";
+      else if (jt.includes('temp')) employmentType = "TEMPORARY";
+      else if (jt.includes('intern')) employmentType = "INTERN";
+    }
+
+    const desc = job.descriptionText || job.description || `${job.title} position at ${job.company}. This is a remote opportunity with flexible work arrangements.`;
+
+    return {
+      "@context": "https://schema.org/",
+      "@type": "JobPosting",
+      "title": job.title,
+      "description": desc.length < 200 ? desc + ` This remote ${job.title} role offers the flexibility to work from home with competitive compensation.` : desc,
+      "datePosted": datePosted,
+      "validThrough": validThroughDate.toISOString(),
+      "hiringOrganization": {
+        "@type": "Organization",
+        "name": job.company
+      },
+      "jobLocation": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressRegion": state.abbreviation,
+          "addressLocality": state.name,
+          "addressCountry": "US"
+        }
+      },
+      "jobLocationType": "TELECOMMUTE",
+      "applicantLocationRequirements": {
+        "@type": "Country",
+        "name": "US"
+      },
+      "employmentType": employmentType,
+      ...(baseSalary ? { "baseSalary": baseSalary } : {})
+    };
+  });
+
   return (
     <>
       <Head>
@@ -86,7 +159,7 @@ export default function CategoryStatePage({
         <meta property="og:description" content={metadata.description} />
         <meta property="og:url" content={metadata.canonical} />
         <meta property="og:type" content="website" />
-        
+
         {/* Schema.org structured data */}
         <script
           type="application/ld+json"
@@ -96,6 +169,13 @@ export default function CategoryStatePage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
         />
+        {jobPostingSchemas.map((schema, index) => (
+          <script
+            key={index}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          />
+        ))}
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">

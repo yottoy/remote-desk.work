@@ -175,7 +175,14 @@ export function generateKeywordPageEntries(baseUrl: string): SitemapEntry[] {
     'online-administrative-jobs-no-scams',
     'work-from-anywhere-data-entry-positions',
     'virtual-assistant-jobs-part-time-remote',
-    // New SEO landing pages (December 2025)
+    // High-traffic keyword pages
+    'remote-data-entry-jobs',
+    'medical-data-entry-jobs',
+    'remote-administrative-assistant-jobs',
+    'entry-level-data-analyst-jobs',
+    'customer-service-work-from-home-jobs',
+    'online-tutoring-jobs-college-students',
+    // SEO landing pages
     'part-time-remote-admin-jobs',
     'data-processing-jobs-remote',
     'work-from-home-administrative-jobs',
@@ -185,7 +192,9 @@ export function generateKeywordPageEntries(baseUrl: string): SitemapEntry[] {
     'remote-proofreading-jobs',
     'usps-remote-jobs',
     'remote-admin-jobs-texas',
-    'remote-jobs-near-me'
+    'remote-jobs-near-me',
+    'healthcare-data-entry-jobs',
+    'closed-captioning-jobs-from-home'
   ];
   
   const today = new Date().toISOString().split('T')[0];

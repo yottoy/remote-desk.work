@@ -12,6 +12,7 @@ import { useRouter } from 'next/router';
 import type { Job } from '../types/job';
 import { isMockJob } from '../types/job';
 import { countRecentJobs } from '../utils/jobUtils';
+import { generateOrganizationSchema } from '../utils/schemaGenerator';
 
 // Job categories - prioritized based on Google Search Console data
 const jobCategories = [
@@ -192,11 +193,19 @@ const HomePage: React.FC<HomePageProps> = ({ featuredJobs, recentJobsCount, erro
     });
   };
 
+  const organizationSchema = generateOrganizationSchema();
+
   return (
     <Layout
-      title="Remote Data Entry, Customer Service & Admin Positions | ClickClickJob"
-      description="Work-from-home data entry, customer service, administrative, and tutoring jobs. Entry-level and no experience welcome. Updated daily, always free."
+      title="Remote Jobs From Home - Data Entry, Admin & Customer Service | ClickClickJob"
+      description="Find remote jobs you can do from home. Data entry, admin, captioning & customer service positions. No experience needed. Updated daily, 100% free."
     >
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+      </Head>
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

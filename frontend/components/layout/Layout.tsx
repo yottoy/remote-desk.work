@@ -338,21 +338,17 @@ const Layout: React.FC<LayoutProps> = ({
         
         <footer className="bg-white border-t border-gray-200">
           <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                  ClickClickJob.com
-                </h2>
-                <p className="mt-2 text-gray-600 text-sm">
-                  Find remote data entry and administrative jobs for professionals at all levels.
-                </p>
-              </div>
-              
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
               <div>
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
                   Job Categories
                 </h2>
                 <ul className="mt-4 space-y-2">
+                  <li>
+                    <Link href="/remote-data-entry-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Data Entry Jobs
+                    </Link>
+                  </li>
                   <li>
                     <Link href="/work-from-home-administrative-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
                       Administrative Jobs
@@ -364,13 +360,51 @@ const Layout: React.FC<LayoutProps> = ({
                     </Link>
                   </li>
                   <li>
+                    <Link href="/remote-captioning-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Captioning Jobs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/customer-service-work-from-home-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Customer Service Jobs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/remote-administrative-assistant-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Admin Assistant Jobs
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                  More Jobs
+                </h2>
+                <ul className="mt-4 space-y-2">
+                  <li>
                     <Link href="/part-time-remote-admin-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
                       Part-Time Admin Jobs
                     </Link>
                   </li>
                   <li>
+                    <Link href="/medical-data-entry-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Medical Data Entry
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/remote-medical-administrative-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
                       Medical Admin Jobs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/remote-proofreading-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Proofreading Jobs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/entry-level-data-analyst-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Entry-Level Analyst
                     </Link>
                   </li>
                   <li>
@@ -380,40 +414,45 @@ const Layout: React.FC<LayoutProps> = ({
                   </li>
                 </ul>
               </div>
-              
+
               <div>
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                  More Jobs
+                  Jobs by State
                 </h2>
                 <ul className="mt-4 space-y-2">
                   <li>
-                    <Link href="/remote-captioning-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      Captioning Jobs
+                    <Link href="/jobs/data-entry/texas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Data Entry in Texas
                     </Link>
                   </li>
                   <li>
-                    <Link href="/remote-proofreading-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      Proofreading Jobs
+                    <Link href="/jobs/data-entry/california" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Data Entry in California
                     </Link>
                   </li>
                   <li>
-                    <Link href="/remote-school-administrative-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      School Admin Jobs
+                    <Link href="/jobs/data-entry/florida" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Data Entry in Florida
                     </Link>
                   </li>
                   <li>
-                    <Link href="/usps-remote-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      USPS Remote Jobs
+                    <Link href="/jobs/administrative/texas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Admin Jobs in Texas
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/jobs/customer-service/florida" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                      Customer Service in FL
                     </Link>
                   </li>
                   <li>
                     <Link href="/remote-admin-jobs-texas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      Texas Remote Jobs
+                      Texas Remote Admin
                     </Link>
                   </li>
                 </ul>
               </div>
-              
+
               <div>
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
                   Resources
@@ -431,7 +470,7 @@ const Layout: React.FC<LayoutProps> = ({
                   </li>
                   <li>
                     <Link href="/categories" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
-                      Job Categories
+                      All Categories
                     </Link>
                   </li>
                   <li>
@@ -441,10 +480,10 @@ const Layout: React.FC<LayoutProps> = ({
                   </li>
                 </ul>
               </div>
-              
+
               <div>
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                  Company Info
+                  Company
                 </h2>
                 <ul className="mt-4 space-y-2">
                   <li>

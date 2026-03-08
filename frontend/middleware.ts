@@ -33,8 +33,10 @@ export function middleware(request: NextRequest) {
     url.pathname = url.pathname.slice(0, -1);
     return NextResponse.redirect(url, 308);
   }
-  
+
   // 3. Continue with request and add security headers
+  // Note: Legacy URL redirects (/jobs/{objectId}, /job-alerts, /categories/[slug])
+  // are handled in next.config.js redirects() which runs before page routing
   const response = NextResponse.next();
   
   // Security headers

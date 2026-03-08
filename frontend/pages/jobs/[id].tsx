@@ -6,33 +6,31 @@ import { useRouter } from 'next/router';
 import { differenceInDays, format } from 'date-fns';
 
 // Import serialization utilities
-import { serializeObject } from '../../../utils/serialization';
+import { serializeObject } from '../../utils/serialization';
 
 // Import engagement components
-import StatusBadges from '../../../components/engagement/StatusBadges';
-import ReadingProgressIndicator from '../../../components/engagement/ReadingProgressIndicator';
-import TrustIndicators, { JobSafetyTip, VerificationProcessExplanation } from '../../../components/engagement/TrustIndicators';
-import { SimilarJobs, PeopleAlsoViewed, RelatedCategories, JobsYouMightLike, useRecentlyViewedJobs } from '../../../components/engagement/DiscoveryEnhancement';
-import { ApplicationInstructions, CopyToClipboard } from '../../../components/engagement/UserHelpers';
+import StatusBadges from '../../components/engagement/StatusBadges';
+import ReadingProgressIndicator from '../../components/engagement/ReadingProgressIndicator';
+import TrustIndicators, { JobSafetyTip, VerificationProcessExplanation } from '../../components/engagement/TrustIndicators';
+import { SimilarJobs, PeopleAlsoViewed, RelatedCategories, JobsYouMightLike, useRecentlyViewedJobs } from '../../components/engagement/DiscoveryEnhancement';
+import { ApplicationInstructions, CopyToClipboard } from '../../components/engagement/UserHelpers';
 
 // Import job types
-import { EnhancedJobListing } from '../../../types/job';
-import Metadata from '../../../components/seo/Metadata';
-import JobSchema from '../../../components/seo/JobSchema';
-import OrganizationSchema from '../../../components/seo/OrganizationSchema';
-import BreadcrumbSchema from '../../../components/seo/BreadcrumbSchema';
-import FAQSchema from '../../../components/seo/FAQSchema';
-import InternalLinking from '../../../components/seo/InternalLinking';
-import Layout from '../../../components/layout/Layout';
-// import ShareButton from '../../../components/common/ShareButton';
-import ErrorBoundary from '../../../components/common/ErrorBoundary';
-import JobCard from '../../../components/common/JobCard';
-import { connectToDatabase } from '../../../utils/mongodb';
-import { formatJobDate, formatJobDescription } from '../../../utils/jobUtils';
-import SchemaHead from '../../../components/seo/SchemaHead';
-import { generateJobPostingSchema, generateBreadcrumbSchema, JobData, BreadcrumbItem } from '../../../utils/schemaGenerator';
-import { ObjectId } from 'mongodb';
-import { wasJobDeleted, getDeletedJobInfo } from '../../../utils/deletedJobsTracker';
+import { EnhancedJobListing } from '../../types/job';
+import Metadata from '../../components/seo/Metadata';
+import JobSchema from '../../components/seo/JobSchema';
+import OrganizationSchema from '../../components/seo/OrganizationSchema';
+import BreadcrumbSchema from '../../components/seo/BreadcrumbSchema';
+import FAQSchema from '../../components/seo/FAQSchema';
+import InternalLinking from '../../components/seo/InternalLinking';
+import Layout from '../../components/layout/Layout';
+// import ShareButton from '../../components/common/ShareButton';
+import ErrorBoundary from '../../components/common/ErrorBoundary';
+import JobCard from '../../components/common/JobCard';
+import { connectToDatabase } from '../../utils/mongodb';
+import { formatJobDate, formatJobDescription } from '../../utils/jobUtils';
+import SchemaHead from '../../components/seo/SchemaHead';
+import { generateJobPostingSchema, generateBreadcrumbSchema, JobData, BreadcrumbItem } from '../../utils/schemaGenerator';
 
 // Utility function to create SEO-friendly page titles
 const createSEOTitle = (jobTitle: string, company: string): string => {
@@ -84,19 +82,17 @@ interface JobDetailsPageProps {
     originalTitle: string;
     originalCompany: string;
   } | null;
-  isStale?: boolean;
 }
 
-const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
-  job,
-  similarJobs,
-  peopleAlsoViewed,
+const JobDetailsPage: React.FC<JobDetailsPageProps> = ({ 
+  job, 
+  similarJobs, 
+  peopleAlsoViewed, 
   relatedCategories,
   relatedJobs,
   moreFromCompany,
   error,
-  deletedInfo,
-  isStale
+  deletedInfo
 }) => {
   const router = useRouter();
   const descriptionRef = useRef<HTMLDivElement>(null);
@@ -105,7 +101,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
   const [currentUrl, setCurrentUrl] = useState('');
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
   
-  // Handle 410 Gone - job was deleted or expired
+  // Handle 410 Gone - job was deleted
   if (error === 'gone') {
     return (
       <Layout>
@@ -124,32 +120,6 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
           </p>
           <p className="text-gray-500 mb-8">
             This position may have been filled or the listing has expired.
-          </p>
-          <div className="space-x-4">
-            <Link href="/jobs" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-              Browse All Jobs
-            </Link>
-            <Link href="/" className="inline-block bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300">
-              Go to Homepage
-            </Link>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  // Handle server errors (DB connection failure, transient errors)
-  if (error === 'server_error') {
-    return (
-      <Layout>
-        <Head>
-          <title>Temporarily Unavailable | ClickClickJob.com</title>
-          <meta name="robots" content="noindex" />
-        </Head>
-        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-3xl font-bold mb-4">Temporarily Unavailable</h1>
-          <p className="text-gray-600 mb-8">
-            This page is temporarily unavailable. Please try again in a few minutes.
           </p>
           <div className="space-x-4">
             <Link href="/jobs" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
@@ -287,7 +257,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
   const breadcrumbs: BreadcrumbItem[] = [
     { name: 'Home', url: baseUrl },
     { name: 'Jobs', url: `${baseUrl}/jobs` },
-    { name: job.title, url: `${baseUrl}/jobs/view/${job._id}` }
+    { name: job.title, url: `${baseUrl}/jobs/${job._id}` }
   ];
 
   // Generate schema markup
@@ -305,20 +275,15 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
         schemas={schemas}
         title={pageTitle}
         description={pageDescription}
-        canonical={`${baseUrl}/jobs/view/${job._id}`}
+        canonical={`${baseUrl}/jobs/${job._id}`}
         openGraph={{
           title: pageTitle,
           description: pageDescription,
           type: 'article',
-          url: `${baseUrl}/jobs/view/${job._id}`,
+          url: `${baseUrl}/jobs/${job._id}`,
           image: `${baseUrl}/images/job-og.jpg`
         }}
       />
-      {isStale && (
-        <Head>
-          <meta name="robots" content="noindex" />
-        </Head>
-      )}
       
       <Layout
         title={pageTitle}
@@ -588,7 +553,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                         {relatedJobs.slice(0, 12).map((relatedJob) => (
                           <div key={relatedJob._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
                             <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
-                              <Link href={`/jobs/view/${relatedJob._id}`} className="hover:text-blue-600">
+                              <Link href={`/jobs/${relatedJob._id}`} className="hover:text-blue-600">
                                 {relatedJob.title}
                               </Link>
                             </h4>
@@ -621,7 +586,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                         {moreFromCompany.slice(0, 8).map((companyJob) => (
                           <div key={companyJob._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
                             <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
-                              <Link href={`/jobs/view/${companyJob._id}`} className="hover:text-blue-600">
+                              <Link href={`/jobs/${companyJob._id}`} className="hover:text-blue-600">
                                 {companyJob.title}
                               </Link>
                             </h4>
@@ -667,25 +632,20 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params || {};
   const { res } = context;
-  
+
   if (!id || typeof id !== 'string') {
-    return { 
-      redirect: {
-        destination: '/jobs',
-        permanent: false,
-      }
-    };
+    return { notFound: true };
   }
 
   try {
     const { db } = await connectToDatabase();
-    
+
     if (!db) {
       console.error('Failed to connect to database');
       // Return 503 instead of redirecting — redirects during Google validation
       // cause "Page with redirect" failures in GSC
       res.statusCode = 503;
-      res.setHeader('Retry-After', '300'); // Tell Google to retry in 5 minutes
+      res.setHeader('Retry-After', '300');
       return {
         props: {
           job: null,
@@ -698,9 +658,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
-    
+
     // Check if this job was previously deleted
     // Return 410 Gone for deleted jobs (better for SEO than redirect)
+    const { wasJobDeleted, getDeletedJobInfo } = require('../../utils/deletedJobsTracker');
     const wasDeleted = await wasJobDeleted(id);
     
     if (wasDeleted) {
@@ -733,6 +694,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     // Find the job by ID or uniqueIdentifier
     // Try to convert to ObjectId first, then fallback to string search
+    const { ObjectId } = require('mongodb');
     let job = null;
     
     // Try ObjectId format first
@@ -754,17 +716,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       });
     }
 
-    // If job still not found, return 410 Gone for valid ObjectIDs (expired jobs)
-    // or 404 for invalid/malformed IDs
+    // If job still not found, return 410 Gone for valid ObjectIds (expired/deleted)
+    // or 404 for invalid/malformed IDs — matches jobs/view/[id].tsx behavior
     if (!job) {
       const isValidObjectId = ObjectId.isValid(id) && /^[a-f0-9]{24}$/.test(id);
 
       if (isValidObjectId) {
-        // Valid ObjectID that doesn't exist = expired/deleted job → 410 Gone
-        // This tells Google to stop re-checking and remove from index
         console.log(`Job ${id} not found (valid ObjectId), returning 410 Gone`);
         res.statusCode = 410;
-        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+        res.setHeader('Cache-Control', 'public, max-age=86400');
         res.setHeader('X-Robots-Tag', 'noindex, nofollow');
 
         return {
@@ -781,15 +741,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         };
       }
 
-      // Invalid/malformed ID → standard 404
       console.log(`Job not found for invalid ID: ${id}, returning 404`);
-      res.statusCode = 404;
-      res.setHeader('Cache-Control', 'public, max-age=3600');
-      res.setHeader('X-Robots-Tag', 'noindex, nofollow');
-
-      return {
-        notFound: true,
-      };
+      return { notFound: true };
     }
 
     // Get related jobs (same category or similar title words)
@@ -821,16 +774,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .sort({ postedDate: -1 })
       .toArray();
 
-    // Noindex stale job pages (older than 60 days) to prevent thin/outdated content indexing
-    const jobDate = new Date(job.postedDate || job.scrapedDate || job.createdAt);
-    const sixtyDaysAgo = new Date();
-    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-    const isStale = jobDate < sixtyDaysAgo;
-
-    if (isStale) {
-      res.setHeader('X-Robots-Tag', 'noindex');
-    }
-
     return {
       props: {
         job: JSON.parse(JSON.stringify(job)),
@@ -839,14 +782,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         relatedCategories: [],
         relatedJobs: JSON.parse(JSON.stringify(relatedJobs)),
         moreFromCompany: JSON.parse(JSON.stringify(moreFromCompany)),
-        isStale: isStale,
       },
     };
   } catch (error) {
     console.error('Error fetching job:', error);
-    // Return 500 error page instead of redirecting to /jobs
-    // Redirecting on transient errors (DB timeout) causes GSC "Page with redirect" failures
-    // because Google re-validates and sees a redirect instead of the actual page
+    // Return 500 error page instead of redirecting — redirects on transient errors
+    // (DB timeout) cause GSC "Page with redirect" failures
     res.statusCode = 500;
     return {
       props: {

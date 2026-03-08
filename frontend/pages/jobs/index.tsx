@@ -420,11 +420,11 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
   // Generate meta title and description based on filters/search
   const pageTitle = searchQuery 
     ? `${searchQuery} Remote Jobs | ClickClickJob.com` 
-    : "Remote Admin & Data Entry Jobs | ClickClickJob.com";
-    
-  const pageDescription = searchQuery 
-    ? `Browse ${filteredJobs.length} remote ${searchQuery} jobs. Work from home opportunities updated daily.` 
-    : "Find verified remote data entry & administrative jobs. Work from home opportunities updated daily.";
+    : "Remote Admin Jobs & Data Entry Jobs From Home | ClickClickJob";
+
+  const pageDescription = searchQuery
+    ? `Browse ${filteredJobs.length} remote ${searchQuery} jobs. Work from home opportunities updated daily.`
+    : "Browse all remote admin, data entry, captioning & customer service jobs. Verified employers, updated daily. Entry-level to experienced.";
 
   // Function to load more jobs
   const loadMoreJobs = () => {

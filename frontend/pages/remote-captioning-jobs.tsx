@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import ImprovedJobCard from '../components/common/ImprovedJobCard';
 import SearchBar from '../components/common/SearchBar';
+import SchemaHead from '../components/seo/SchemaHead';
+import { generateFAQSchema, generateBreadcrumbSchema, generateJobPostingSchema } from '../utils/schemaGenerator';
 import { EmailCaptureForm } from '../components/email-capture/EmailCaptureForm';
 import type { Job } from '../types/job';
 
@@ -15,6 +17,32 @@ interface PageProps {
 
 const RemoteCaptioningJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, error }) => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.clickclickjob.com';
+  const pageUrl = `${baseUrl}/remote-captioning-jobs`;
+
+  // FAQ items based on page content
+  const faqItems = [
+    {
+      question: 'What do remote captioners do?',
+      answer: 'Remote captioners convert spoken audio into written text for videos, broadcasts, live events, and pre-recorded content. Captions are time-synchronized with audio and include speaker identification and sound effects. Captioners work across entertainment, education, legal, and medical industries.'
+    },
+    {
+      question: 'How much do captioning jobs pay?',
+      answer: 'Entry-level post-production captioning pays $15-20/hour. Experienced real-time captioning pays $25-40/hour. Specialized broadcast and CART captioning pays $40-80/hour. Rush jobs and specialized content like legal or medical captioning command premium rates.'
+    },
+    {
+      question: 'What equipment do I need for remote captioning?',
+      answer: 'For post-production captioning, you need a standard computer, reliable internet (10+ Mbps), quality headphones ($50-150), and optionally a foot pedal ($30-60). For real-time captioning, you need a stenography machine ($1,500-3,000), high-speed internet (50+ Mbps), a backup internet connection, and a professional headset.'
+    },
+    {
+      question: 'What types of captioning jobs are available?',
+      answer: 'The main types are: Real-Time Captioner ($25-45/hour) for live events using stenography, Post-Production Captioner ($15-30/hour) for pre-recorded videos, Broadcast Captioner ($30-50/hour) for TV networks ensuring FCC compliance, and CART Provider ($40-80/hour) for educational and legal accessibility services.'
+    },
+    {
+      question: 'What skills are needed for captioning jobs?',
+      answer: 'Required skills include typing speed of 60-80 WPM for post-production or 200+ WPM with stenography for real-time work, 98%+ accuracy rate, excellent grammar and punctuation, strong audio comprehension, attention to detail, and time management skills.'
+    }
+  ];
 
   const filterChips = [
     { label: 'Entry-Level', value: 'entry-level' },
@@ -53,7 +81,7 @@ const RemoteCaptioningJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
     captioningJobs = jobs.slice(0, 12);
   }
 
-  const filteredJobs = activeFilter 
+  const filteredJobs = activeFilter
     ? captioningJobs.filter(job => {
         const title = job.title?.toLowerCase() || '';
         const description = job.description?.toLowerCase() || '';
@@ -67,11 +95,46 @@ const RemoteCaptioningJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
       })
     : captioningJobs;
 
+  // Generate structured data schemas
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: baseUrl },
+    { name: 'Remote Captioning Jobs', url: pageUrl }
+  ]);
+
+  const faqSchema = generateFAQSchema(faqItems);
+
+  const jobSchemas = captioningJobs.slice(0, 10).map(job => generateJobPostingSchema({
+    _id: job._id,
+    title: job.title,
+    company: job.company,
+    location: (job as any).location || 'Remote',
+    description: job.description || `${job.title} position at ${job.company}.`,
+    salary: (job as any).salary,
+    postedDate: job.postedDate ? new Date(job.postedDate).toISOString() : new Date().toISOString(),
+    employmentType: (job as any).employmentType || (job as any).jobType,
+    experienceLevel: (job as any).experienceLevel,
+  }));
+
+  const allSchemas = [breadcrumbSchema, faqSchema, ...jobSchemas];
+
+  const pageTitle = "Captioning Jobs from Home - Remote & Closed Captioning | ClickClickJob";
+  const pageDescription = "Find captioning jobs from home including closed captioning, real-time captioning, and transcription. Remote captioning positions with flexible hours and competitive pay.";
+
   return (
-    <Layout
-      title="Captioning Jobs from Home - Remote & Closed Captioning | ClickClickJob"
-      description="Find captioning jobs from home including closed captioning, real-time captioning, and transcription. Remote captioning positions with flexible hours and competitive pay."
-    >
+    <>
+    <SchemaHead
+      schemas={allSchemas}
+      title={pageTitle}
+      description={pageDescription}
+      canonical={pageUrl}
+      openGraph={{
+        title: pageTitle,
+        description: pageDescription,
+        url: pageUrl,
+        type: 'website'
+      }}
+    />
+    <Layout>
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -419,27 +482,204 @@ const RemoteCaptioningJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
           <div className="mt-12 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Related Job Categories</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Link 
+              <Link
                 href="/categories/transcription"
                 className="bg-blue-50 rounded-lg p-4 hover:bg-blue-100 transition-colors"
               >
                 <h4 className="font-semibold text-gray-900 mb-2">Transcription Jobs</h4>
                 <p className="text-sm text-gray-600">Related audio-to-text work</p>
               </Link>
-              <Link 
+              <Link
                 href="/categories/data-entry"
                 className="bg-blue-50 rounded-lg p-4 hover:bg-blue-100 transition-colors"
               >
                 <h4 className="font-semibold text-gray-900 mb-2">Data Entry Jobs</h4>
                 <p className="text-sm text-gray-600">Entry-level remote positions</p>
               </Link>
-              <Link 
+              <Link
                 href="/work-from-home-administrative-jobs"
                 className="bg-blue-50 rounded-lg p-4 hover:bg-blue-100 transition-colors"
               >
                 <h4 className="font-semibold text-gray-900 mb-2">Administrative Jobs</h4>
                 <p className="text-sm text-gray-600">General remote admin work</p>
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How to Spot Legitimate Captioning Jobs */}
+      <section className="py-12 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">How to Spot Legitimate Captioning Jobs</h2>
+            <p className="text-lg text-gray-700 mb-6">
+              Remote captioning is a growing field, but that growth has also attracted scammers. Knowing how to tell a real opportunity from a fraudulent one can save you time and money. Use the checklist below to evaluate any captioning job posting before you apply.
+            </p>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-xl font-semibold text-green-700 mb-4">Green Flags (Legitimate)</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Real company website</strong> with an About page, contact information, and verifiable history</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Clear job description</strong> that specifies duties, required skills, hours, and content types</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700"><strong>No upfront fees</strong> -- the employer never asks you to pay for training, software, or equipment access</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Reasonable pay range</strong> of $15-25/hr for post-production work, consistent with industry standards</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Professional hiring process</strong> with a skills test, interview, or sample captioning assignment</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Established reputation</strong> -- you can find reviews from other captioners on forums or Glassdoor</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-red-700 mb-4">Red Flags (Potential Scams)</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Asks for money upfront</strong> for training materials, certification programs, or software licenses</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Vague job descriptions</strong> that do not specify what content you will caption or what tools you will use</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Unrealistic pay promises</strong> such as "earn $60/hour with no experience" or "make $5,000 your first week"</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span className="text-gray-700"><strong>No company information</strong> -- no website, no physical address, and no way to verify the business exists</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Pressure to act immediately</strong> with claims like "only 3 spots left" or "offer expires today"</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span className="text-gray-700"><strong>Requests sensitive information early</strong> such as your Social Security number or bank details before any interview</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div className="mt-6 p-4 bg-white rounded-lg">
+              <p className="text-sm text-gray-700">
+                <strong>Remember:</strong> Legitimate captioning employers will never ask you to pay for the opportunity to work. They invest in your training because quality captioning protects their business reputation. All positions listed on ClickClickJob are screened, but always research a company independently before sharing personal information.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How to Get Started in Remote Captioning */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">How to Get Started in Remote Captioning</h2>
+            <p className="text-lg text-gray-700 mb-8">
+              Breaking into captioning work is achievable at any experience level. Post-production captioning has a lower barrier to entry than real-time work, making it an ideal starting point. Follow these steps to build a captioning career from scratch.
+            </p>
+            <div className="space-y-8">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">1. Assess and Improve Your Typing Speed</h3>
+                <p className="text-gray-700 mb-3">
+                  Post-production captioning requires a minimum of 60-80 words per minute with at least 98% accuracy. Use free tools such as TypingTest.com or Keybr.com to measure your current speed. If you are below the threshold, dedicate 20-30 minutes per day to typing practice. Most people can gain 10-15 WPM within a month of consistent practice. For real-time captioning, you will eventually need 200+ WPM using stenography, but that is an advanced skill to develop later.
+                </p>
+                <div className="bg-blue-50 rounded p-3">
+                  <p className="text-sm text-gray-700"><strong>Tip:</strong> Many captioning companies include a timed typing and accuracy test as part of their application. Practicing beforehand gives you a significant advantage.</p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">2. Learn Captioning Standards and Get Certified</h3>
+                <p className="text-gray-700 mb-3">
+                  Captioning follows specific formatting rules that differ from general transcription. Study the Described and Captioned Media Program (DCMP) captioning guidelines, which cover timing, placement, speaker identification, and sound effect notation. For post-production work, a formal certification is not always required, but completing an online captioning course demonstrates commitment to employers. If you plan to pursue real-time or CART captioning, consider enrolling in a court reporting or stenography program, which typically takes 12-36 months.
+                </p>
+                <div className="bg-blue-50 rounded p-3">
+                  <p className="text-sm text-gray-700"><strong>Tip:</strong> Free resources like the DCMP guidelines and YouTube tutorials on subtitle timing can help you learn the basics before investing in paid training.</p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">3. Choose Your Captioning Niche</h3>
+                <p className="text-gray-700 mb-3">
+                  Captioning spans many content types, and specializing can help you stand out and earn higher rates. Entertainment captioning covers movies, TV shows, and streaming content. Educational captioning focuses on lectures, courses, and training videos. Legal captioning involves court proceedings and depositions. Medical captioning covers healthcare conferences and patient education materials. Consider your existing knowledge and interests when choosing a niche. Captioners with subject-matter expertise produce more accurate work and are more competitive for specialized positions.
+                </p>
+                <div className="bg-blue-50 rounded p-3">
+                  <p className="text-sm text-gray-700"><strong>Tip:</strong> Specializing in a technical field like legal or medical captioning can increase your hourly rate by 30-50% compared to general captioning work.</p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">4. Apply to Reputable Captioning Companies</h3>
+                <p className="text-gray-700 mb-3">
+                  Start by applying to established captioning companies that hire remote workers. Companies such as Rev, 3Play Media, Vitac, and CaptionSync regularly hire post-production captioners and often provide their own training and software. When applying, highlight your typing speed, accuracy rate, and any relevant experience with audio-to-text work. Tailor each application to the specific company rather than sending identical submissions. Expect to complete a skills assessment that tests your ability to caption a short audio or video clip with proper timing and formatting.
+                </p>
+                <div className="bg-blue-50 rounded p-3">
+                  <p className="text-sm text-gray-700"><strong>Tip:</strong> Apply to 3-5 companies at a time and follow up after one week if you have not received a response. Persistence matters in this field.</p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">5. Build Your Portfolio and Advance Your Career</h3>
+                <p className="text-gray-700 mb-3">
+                  Once you land your first captioning role, focus on building a strong track record. Maintain a 98%+ accuracy rate and meet every deadline. Save examples of your best work (with permission) to build a portfolio you can show to future clients or employers. As you gain experience, you can take on more complex projects, move into real-time captioning, or transition to broadcast work for higher pay. Joining professional organizations like the National Court Reporters Association (NCRA) provides networking opportunities, continuing education, and access to higher-paying positions.
+                </p>
+                <div className="bg-blue-50 rounded p-3">
+                  <p className="text-sm text-gray-700"><strong>Tip:</strong> Volunteer to caption content for nonprofits or community organizations on platforms like Amara. This builds your portfolio while contributing to accessibility.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Extended FAQ Section */}
+          <div className="mt-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Frequently Asked Questions About Remote Captioning</h2>
+            <div className="space-y-6">
+              {faqItems.map((faq, index) => (
+                <div key={index} className="bg-white shadow-md rounded-lg p-6 border-l-4 border-blue-600">
+                  <h3 className="font-semibold text-lg text-gray-900 mb-3">{faq.question}</h3>
+                  <p className="text-gray-700 leading-relaxed">{faq.answer}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -488,6 +728,7 @@ const RemoteCaptioningJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
         </div>
       </section>
     </Layout>
+    </>
   );
 };
 

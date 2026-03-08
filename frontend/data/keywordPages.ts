@@ -436,6 +436,39 @@ export const keywordPagesData: Record<string, KeywordPageData> = {
       }
     ]
   },
+  'healthcare-data-entry-jobs': {
+    slug: 'healthcare-data-entry-jobs',
+    title: 'Healthcare Data Entry Jobs Remote - Work From Home in Healthcare | ClickClickJob',
+    h1: 'Healthcare Data Entry Jobs - Remote Positions in the Medical Field',
+    description: 'Find remote healthcare data entry jobs. Work from home entering patient records, insurance claims, and medical billing data. Entry-level positions available. Apply today.',
+    valueProposition: 'Discover verified remote healthcare data entry opportunities. Entry-level to experienced roles with HIPAA-compliant employers.',
+    jobFilters: {
+      category: 'data-entry',
+      specialization: 'medical'
+    },
+    faqItems: [
+      {
+        question: 'What is healthcare data entry?',
+        answer: 'Healthcare data entry involves inputting medical information into electronic systems, including patient demographics, insurance details, lab results, clinical notes, and billing codes. Workers use Electronic Health Record (EHR) systems like Epic or Cerner. Unlike general data entry, healthcare data entry requires understanding of medical terminology and strict adherence to HIPAA privacy regulations.'
+      },
+      {
+        question: 'How much do healthcare data entry jobs pay?',
+        answer: 'Remote healthcare data entry positions typically pay $15-22 per hour for entry-level roles, with experienced specialists earning $20-28 per hour. Specialized roles like medical coding or billing data entry can pay $22-30 per hour. Annual salaries range from $32,000 to $58,000 depending on experience, certifications, and the specific healthcare organization.'
+      },
+      {
+        question: 'Do I need medical experience for healthcare data entry?',
+        answer: 'Most entry-level healthcare data entry positions do not require prior medical experience. Employers typically provide training on their specific EHR systems and HIPAA compliance. However, basic knowledge of medical terminology, ICD-10 codes, or CPT codes can make you a stronger candidate. Many free online resources can help you learn these basics before applying.'
+      },
+      {
+        question: 'What certifications help for healthcare data entry?',
+        answer: 'Helpful certifications include: Certified Electronic Health Records Specialist (CEHRS), HIPAA compliance certification, Certified Medical Administrative Assistant (CMAA), and Certified Billing and Coding Specialist (CBCS). While not always required for entry-level roles, certifications can increase your starting pay by $2-5 per hour and open doors to more advanced positions.'
+      },
+      {
+        question: 'Is healthcare data entry a good career path?',
+        answer: 'Yes, healthcare data entry offers strong career growth potential. You can advance from entry-level data entry ($15-17/hr) to medical coding specialist ($18-22/hr), medical billing specialist ($20-25/hr), health information technician ($22-28/hr), or medical records manager ($28-35/hr). The healthcare industry is growing steadily, and remote positions are increasingly common, providing job stability and flexibility.'
+      }
+    ]
+  },
   'remote-administrative-assistant-jobs': {
     slug: 'remote-administrative-assistant-jobs',
     title: 'Remote Administrative Assistant Jobs - Virtual Admin Positions | ClickClickJob',

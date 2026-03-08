@@ -418,8 +418,8 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug, hasJo
 
   return (
     <Layout
-      title={`${category.name} | Work From Home | ClickClickJob.com`}
-      description={`Find verified ${category.name.toLowerCase()}. Average pay $15-20/hr. 100% work from home positions, updated daily with verified employers.`}
+      title={`${category.name} - Remote Work From Home Positions | ClickClickJob`}
+      description={`Find remote ${category.name.toLowerCase()} you can do from home. $15-20/hr avg pay. Verified employers, entry-level welcome. Updated daily.`}
     >
       {/* Hero Section */}
       <section className="bg-blue-50 py-12 border-b border-blue-100">
@@ -525,16 +525,47 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug, hasJo
         </div>
       </section>
 
+      {/* Browse by State Section */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            BROWSE {category.name.toUpperCase()} BY STATE
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {[
+              { name: 'Texas', slug: 'texas' },
+              { name: 'California', slug: 'california' },
+              { name: 'Florida', slug: 'florida' },
+              { name: 'New York', slug: 'new-york' },
+              { name: 'Georgia', slug: 'georgia' },
+              { name: 'North Carolina', slug: 'north-carolina' },
+              { name: 'Pennsylvania', slug: 'pennsylvania' },
+              { name: 'Ohio', slug: 'ohio' },
+              { name: 'Illinois', slug: 'illinois' },
+              { name: 'Virginia', slug: 'virginia' },
+            ].map((state) => (
+              <Link
+                key={state.slug}
+                href={`/jobs/${slug}/${state.slug}`}
+                className="block bg-white rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700 hover:text-blue-600 hover:border-blue-300 transition-colors text-center"
+              >
+                {state.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Related Categories Section */}
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
             RELATED CATEGORIES
           </h2>
-          
+
           <div className="grid gap-6 md:grid-cols-3">
             {category.relatedCategories.map((relatedCategory, index) => (
-              <CategoryCard 
+              <CategoryCard
                 key={index}
                 name={relatedCategory.name}
                 slug={relatedCategory.slug}
