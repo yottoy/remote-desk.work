@@ -8,6 +8,7 @@ class QualityFilter {
   constructor() {
     this.config = config.qualityScoring;
     this.redFlags = this.config.redFlags || [];
+    this.titleBlocklist = this.config.titleBlocklist || [];
     this.relevanceKeywords = this.config.relevanceKeywords || { high: [], medium: [] };
     this.threshold = this.config.threshold || 5;
   }
@@ -26,6 +27,12 @@ class QualityFilter {
     logger.info(`Filtering ${jobs.length} jobs using quality threshold ${this.threshold}`);
     
     const filteredJobs = jobs.filter(job => {
+      // Hard title blocklist check — reject irrelevant job types outright
+      if (this.isTitleBlocked(job)) {
+        logger.debug(`Rejected (title blocklist): "${job.title}"`);
+        return false;
+      }
+
       // Calculate quality score
       const qualityScore = this.calculateQualityScore(job);
       
@@ -38,6 +45,19 @@ class QualityFilter {
     
     logger.info(`Filtered out ${jobs.length - filteredJobs.length} jobs, keeping ${filteredJobs.length}`);
     return filteredJobs;
+  }
+
+  /**
+   * Check if a job title matches the hard blocklist.
+   * Any match is an immediate rejection — we don't want software engineers,
+   * product managers, data scientists, etc. on this site.
+   * @param {Object} job - Job listing
+   * @returns {boolean} - True if the title should be blocked
+   */
+  isTitleBlocked(job) {
+    if (!job.title) return false;
+    const title = job.title.toLowerCase();
+    return this.titleBlocklist.some(term => title.includes(term.toLowerCase()));
   }
 
   /**
@@ -86,4 +106,4 @@ class QualityFilter {
 
 // Export singleton instance
 const qualityFilter = new QualityFilter();
-module.exports = qualityFilter; 
+module.exports = qualityFilter;
