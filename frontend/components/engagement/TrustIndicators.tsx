@@ -150,8 +150,6 @@ interface TrustIndicatorsProps {
 const TrustIndicators: React.FC<TrustIndicatorsProps> = ({ job, showAll = false }) => {
   return (
     <div className="space-y-4">
-      <CompanyVerification job={job} />
-      <RedFlagWarning job={job} />
       {showAll && (
         <>
           <JobSafetyTip />
