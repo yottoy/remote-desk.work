@@ -84,10 +84,14 @@ function filterMockJobs(jobs: any[]): any[] {
   });
 }
 
-export const getServerSideProps = async () => {
+export const getServerSideProps = async ({ res }: { res: any }) => {
+  // Cache at Vercel's CDN edge: fresh for 5 min, serve stale while revalidating for 10 min
+  // This dramatically reduces TTFB for repeat visitors and Googlebot, improving LCP scores
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+
   try {
     // Use environment variable for API URL, fallback to localhost for dev, production URL for prod
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL
       ? `${process.env.NEXT_PUBLIC_API_URL}/api/jobs`
       : (process.env.NODE_ENV === 'development'
         ? 'http://localhost:3000/api/jobs'

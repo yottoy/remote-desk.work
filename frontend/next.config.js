@@ -10,6 +10,10 @@ const nextConfig = {
   },
   images: {
     domains: ['images.unsplash.com'],
+    // Serve AVIF then WebP — smaller files = faster LCP on supported browsers
+    formats: ['image/avif', 'image/webp'],
+    // Cache optimized images for 24h at the CDN edge
+    minimumCacheTTL: 86400,
   },
   env: {
     // Environment variables that will be available on the client side
