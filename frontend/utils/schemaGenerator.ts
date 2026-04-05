@@ -300,10 +300,8 @@ export function generateJobPostingSchema(job: JobData): object {
   const expLevel = job.experienceLevel?.toLowerCase() || '';
   if (expLevel.includes('entry') || expLevel.includes('junior')) {
     schema.qualifications = "Basic computer skills and attention to detail. No prior experience required.";
-    schema.experienceRequirements = {
-      "@type": "OccupationalExperienceRequirements",
-      "monthsOfExperience": 0
-    };
+    // No experienceRequirements block — Google requires monthsOfExperience to be positive,
+    // and omitting it correctly signals "no experience required"
   } else if (expLevel.includes('senior') || expLevel.includes('lead')) {
     schema.qualifications = "Extensive experience in administrative or data entry roles. Strong organizational and communication skills.";
     schema.experienceRequirements = {

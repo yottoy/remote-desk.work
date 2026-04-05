@@ -17,11 +17,6 @@ import { ApplicationInstructions, CopyToClipboard } from '../../../components/en
 
 // Import job types
 import { EnhancedJobListing } from '../../../types/job';
-import Metadata from '../../../components/seo/Metadata';
-import JobSchema from '../../../components/seo/JobSchema';
-import OrganizationSchema from '../../../components/seo/OrganizationSchema';
-import BreadcrumbSchema from '../../../components/seo/BreadcrumbSchema';
-import FAQSchema from '../../../components/seo/FAQSchema';
 import InternalLinking from '../../../components/seo/InternalLinking';
 import Layout from '../../../components/layout/Layout';
 // import ShareButton from '../../../components/common/ShareButton';
@@ -342,7 +337,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
           </ol>
         </nav>
 
-        <main className="bg-white min-h-screen" itemScope itemType="https://schema.org/JobPosting">
+        <main className="bg-white min-h-screen">
           <header className="bg-white shadow-sm border-b border-gray-200">
             <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -368,7 +363,7 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                       </li>
                     </ol>
                   </nav>
-                  <h1 className="mt-2 text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate" itemProp="title">
+                  <h1 className="mt-2 text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
                     {job.title}
                   </h1>
                   <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
@@ -473,7 +468,6 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({
                 <article 
                   ref={descriptionRef} 
                   className="prose max-w-none bg-white p-6 rounded-lg shadow-sm border border-gray-200 job-description"
-                  itemProp="description"
                 >
                   {/* Format description with proper markdown to HTML conversion */}
                   {job.description ? (
