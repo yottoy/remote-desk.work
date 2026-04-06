@@ -6,6 +6,7 @@ import Layout from '../../components/layout/Layout';
 import SearchBar from '../../components/common/SearchBar';
 import JobCard from '../../components/common/JobCard';
 import CategoryCard from '../../components/common/CategoryCard';
+import FAQSchema from '../../components/seo/FAQSchema';
 import { connectToDatabase, isValidJob, serializeJobForNextJS } from '../../utils/mongodb';
 import type { Job } from '../../types/job';
 import { isMockJob } from '../../types/job';
@@ -421,6 +422,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, jobs, slug, hasJo
       title={`${category.name} - Remote Work From Home Positions | ClickClickJob`}
       description={`Find remote ${category.name.toLowerCase()} you can do from home. $15-20/hr avg pay. Verified employers, entry-level welcome. Updated daily.`}
     >
+      <FAQSchema faqs={category.faqs} />
       {/* Hero Section */}
       <section className="bg-blue-50 py-12 border-b border-blue-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
