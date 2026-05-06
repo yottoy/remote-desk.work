@@ -46,6 +46,12 @@ jobs:
           echo "Installed scraper dependencies" | tee ../logs/scraper-deps.log
           ls -la node_modules/ | head -10 | tee -a ../logs/scraper-deps.log
       
+      - name: Install Playwright browsers
+        run: |
+          cd experimental-scrapers
+          npx playwright install chromium
+          npx playwright install-deps chromium
+
       - name: Test MongoDB connection
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
@@ -67,25 +73,25 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: |
+          set -o pipefail
           cd experimental-scrapers
           echo "Starting OnlineJobs.ph scraper..." | tee ../logs/onlinejobs-scraper.log
-          
-          # Run the scraper with detailed logging
+
           node deploy-production.js run-once 2>&1 | tee -a ../logs/onlinejobs-scraper.log
-          scraper_exit_code=$?
+          scraper_exit_code=${PIPESTATUS[0]}
           echo "OnlineJobs.ph scraper exit code: $scraper_exit_code" | tee -a ../logs/onlinejobs-scraper.log
-          
-          # Check if we got results
+
           if [ -f "production-data/latest-onlinejobs.json" ]; then
             job_count=$(cat production-data/latest-onlinejobs.json | grep -o '"totalJobs":[0-9]*' | cut -d':' -f2)
             echo "✅ Scraper completed successfully with $job_count jobs" | tee -a ../logs/onlinejobs-scraper.log
           else
             echo "⚠️ No results file found" | tee -a ../logs/onlinejobs-scraper.log
           fi
-          
-          # List all result files
+
           echo "Result files created:" | tee -a ../logs/onlinejobs-scraper.log
           ls -la production-data/ | tee -a ../logs/onlinejobs-scraper.log
+
+          exit $scraper_exit_code
       
       - name: Verify database save
         env:
