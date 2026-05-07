@@ -111,7 +111,15 @@ class OnlineJobsPhScraper extends BaseScraper {
       });
 
       if (!jobsLoaded) {
-        logger.warn(`No job listings found on page ${pageNumber}`);
+        const debugInfo = await this.page.evaluate(() => ({
+          url: window.location.href,
+          title: document.title,
+          bodyText: document.body.innerText.substring(0, 500),
+          hasLoginForm: !!document.querySelector('form[action*="login"], input[type="password"]'),
+          hasCaptcha: !!document.querySelector('[class*="captcha"], [id*="captcha"], iframe[src*="captcha"], iframe[src*="challenge"]'),
+        }));
+        logger.warn(`No job listings found on page ${pageNumber}. Debug: URL=${debugInfo.url}, title=${debugInfo.title}, hasLogin=${debugInfo.hasLoginForm}, hasCaptcha=${debugInfo.hasCaptcha}`);
+        logger.warn(`Page text preview: ${debugInfo.bodyText}`);
         return [];
       }
 
