@@ -3,21 +3,26 @@ name: Main Job Scraper
 on:
   workflow_dispatch:  # Manual trigger button
   schedule:
-    - cron: '0 */12 * * *'  # Every 12 hours (00:00 and 12:00 UTC)
+    - cron: '0 0 * * 0,3'  # Every 48 hours (Sunday & Wednesday at 00:00 UTC)
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   scrape-jobs:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: 'pip'
+          cache-dependency-path: 'requirements.txt'
       
       - name: Environment diagnostics
         run: |
@@ -36,7 +41,9 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install python-jobspy==1.1.80 pandas beautifulsoup4 markdownify
+          # Install from requirements.txt so the install matches the pip cache
+          # key (cache-dependency-path: 'requirements.txt' above).
+          pip install -r requirements.txt
           echo "✅ Installed Python dependencies"
       
       - name: Run job scraper
@@ -63,10 +70,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
 
       - name: Install Node.js dependencies
         if: success()
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit
 
       - name: Run RSS-based scrapers
         continue-on-error: true
@@ -135,13 +143,22 @@ jobs:
             echo "📋 Found result files to import:"
             echo "$result_files"
             
-            node import-scraper-to-mongodb.js --overwrite 2>&1 | tee logs/mongodb-import.log
-            import_exit_code=$?
-            
-            if [ $import_exit_code -eq 0 ]; then
+            # Capture node's real exit code via PIPESTATUS[0], NOT `$?` (which
+            # would be tee's status, always 0) — otherwise a failed import is
+            # reported as success. set +e lets us print and exit deliberately.
+            # --execute performs an upsert-by-URL import (no collection wipe).
+            # The importer defaults to dry-run, so --execute is required to write.
+            set +e
+            node import-scraper-to-mongodb.js --execute 2>&1 | tee logs/mongodb-import.log
+            import_exit_code=${PIPESTATUS[0]}
+            set -e
+
+            echo "MongoDB import exit code: $import_exit_code"
+            if [ "$import_exit_code" -eq 0 ]; then
               echo "✅ Successfully imported jobs to MongoDB!"
             else
               echo "❌ MongoDB import failed with exit code: $import_exit_code"
+              exit "$import_exit_code"
             fi
           fi
 

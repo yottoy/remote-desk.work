@@ -1,0 +1,10 @@
+# Python dependencies for the job scrapers.
+#
+# Used by .github/workflows/direct-scraper.yml. This file is the pip cache key
+# for actions/setup-python (cache-dependency-path: 'requirements.txt'); the
+# workflow installs from it (`pip install -r requirements.txt`) so the cache key
+# and what actually gets installed stay aligned and caching works in CI.
+python-jobspy==1.1.80
+pandas
+beautifulsoup4
+markdownify

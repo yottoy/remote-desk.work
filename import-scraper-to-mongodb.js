@@ -1,24 +1,49 @@
 /**
- * Import Direct Scraper Results to MongoDB
- * 
- * This script imports the formatted combined-results.json file
- * into the clickclickjob.jobs MongoDB collection, replacing existing jobs
- * to ensure all job descriptions have proper formatting.
+ * Import Scraper Results to MongoDB (upsert-by-URL)
+ *
+ * Phase 2.5 / Fix 2 — replaces the destructive `--overwrite` path
+ * (deleteMany({}) + insertMany) with an idempotent upsert keyed on the job's
+ * source URL. This:
+ *   - PRESERVES `_id` for existing jobs, so /jobs/view/<id> URLs stay stable
+ *     (the old wipe reassigned every _id every ~48h — an SEO problem and the
+ *     reason promoted columns were destroyed each run).
+ *   - PRESERVES promoted columns (status, category, pre_promotion_*, promoted_*)
+ *     and proposed_* columns (proposed_category, proposed_status, proposed_flag,
+ *     processed_at): they are NEVER in the $set payload, so any value already on
+ *     a doc is left untouched. Decoupled 2026-05-30: the importer no longer runs
+ *     the classifier and no longer WRITES proposed_* on insert either — it only
+ *     cleans text and upserts by URL. $setOnInsert sets just firstSeenAt.
+ *   - Handles delistings by SOFT-EXPIRING (expired:true) jobs not seen in the
+ *     feed for EXPIRE_AFTER_DAYS, instead of hard-deleting them. Re-listed jobs
+ *     are un-expired automatically.
+ *
+ * Natural key: `url` (job.url || job.job_url || job.job_url_direct). The source
+ * URL is the most stable identifier the feeds provide and is what the prior
+ * non-overwrite path already matched on. Jobs without a URL fall back to
+ * title+company (less stable, but few jobs lack a URL).
+ *
+ * SAFETY: dry-run by DEFAULT (no writes). Pass --execute to write.
+ *   node import-scraper-to-mongodb.js                 # DB dry-run (counts only)
+ *   node import-scraper-to-mongodb.js --execute       # real upsert + expiry
+ *   node import-scraper-to-mongodb.js --simulate=combined-results.json
+ *                                                     # offline, no DB
+ *
+ * Env: MONGODB_URI, MONGODB_DB, EXPIRE_AFTER_DAYS (default 14),
+ *      SMALL_FEED_MIN (absolute floor below which expiry is skipped, default 50).
  */
 
 const fs = require('fs');
 const path = require('path');
 const { MongoClient } = require('mongodb');
+const { cleanText } = require('./src/utils/cleanText');
 require('dotenv').config();
 
-// Configure logger
 const logger = {
   info: (...args) => console.log(`INFO: ${args.join(' ')}`),
   warn: (...args) => console.warn(`WARNING: ${args.join(' ')}`),
   error: (...args) => console.error(`ERROR: ${args.join(' ')}`)
 };
 
-// Configuration
 // Try root directory first, then results subdirectory
 const RESULTS_FILE = fs.existsSync(path.join(__dirname, 'combined-results.json'))
   ? path.join(__dirname, 'combined-results.json')
@@ -26,8 +51,9 @@ const RESULTS_FILE = fs.existsSync(path.join(__dirname, 'combined-results.json')
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.MONGODB_DB || 'clickclickjob';
 const COLLECTION_NAME = 'jobs';
+const EXPIRE_AFTER_DAYS = parseInt(process.env.EXPIRE_AFTER_DAYS || '14', 10);
+const SMALL_FEED_MIN = parseInt(process.env.SMALL_FEED_MIN || '50', 10);
 
-// Add timeout configuration
 const MONGO_OPTIONS = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -35,23 +61,16 @@ const MONGO_OPTIONS = {
   socketTimeoutMS: 30000
 };
 
-/**
- * Read the combined results file
- */
+/** Read the combined results file. */
 async function readResultsFile() {
   try {
     if (!fs.existsSync(RESULTS_FILE)) {
       logger.error(`Results file not found: ${RESULTS_FILE}`);
       return null;
     }
-    
     const data = fs.readFileSync(RESULTS_FILE, 'utf8');
     const parsedData = JSON.parse(data);
-    
-    // Handle both array format and object with jobs property
-    const jobs = Array.isArray(parsedData) ? parsedData : 
-                 (parsedData.jobs ? parsedData.jobs : []);
-    
+    const jobs = Array.isArray(parsedData) ? parsedData : (parsedData.jobs ? parsedData.jobs : []);
     logger.info(`Loaded ${jobs.length} jobs from ${RESULTS_FILE}`);
     return jobs;
   } catch (error) {
@@ -60,134 +79,225 @@ async function readResultsFile() {
   }
 }
 
+const urlOf = (job) => job.url || job.job_url || job.job_url_direct || '';
+
 /**
- * Import jobs to MongoDB, replacing existing ones
+ * Clean + dedupe the feed and build the upsert plan for each unique job.
+ * Returns { records, skipped } where each record has { key, filter, set,
+ * setOnInsert } ready for a bulkWrite updateOne.
  */
-async function importToMongoDB(jobs) {
-  if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
-    logger.warn('No jobs to import');
-    return { saved: 0, updated: 0, errors: 0 };
+function buildUpsertPlan(jobs) {
+  const seenUrls = new Set();
+  const seenTitleCompany = new Set();
+  const records = [];
+  let skipped = 0;
+
+  for (const job of jobs) {
+    const cleanedTitle = cleanText(job.title) || 'Untitled Position';
+    const cleanedCompany = cleanText(job.company) || 'Unknown Company';
+    const url = urlOf(job);
+    const titleCompanyKey = `${cleanedTitle}::${cleanedCompany}`;
+
+    if ((url && seenUrls.has(url)) || seenTitleCompany.has(titleCompanyKey)) {
+      skipped++;
+      continue;
+    }
+    if (url) seenUrls.add(url);
+    seenTitleCompany.add(titleCompanyKey);
+
+    // Match on URL when available, else on title+company.
+    const filter = url ? { url } : { title: cleanedTitle, company: cleanedCompany };
+    const key = url || titleCompanyKey;
+
+    // Fields refreshed on EVERY import (content + freshness + re-list recovery).
+    // NOTE: createdAt and scrapedDate are refreshed here to preserve the prior
+    // overwrite-path semantics so periodic-database-cleanup's age logic is
+    // unchanged by this commit. `firstSeenAt` (setOnInsert) is the stable
+    // creation marker. See handoffs/phase2.5-summary.md for the proposed
+    // follow-up to make cleanup prune by lastSeenAt.
+    const set = {
+      title: cleanedTitle,
+      company: cleanedCompany,
+      description: cleanText(job.description) || '',
+      descriptionText: cleanText(job.descriptionText) || '',
+      location: job.location || 'Remote',
+      salary: job.salary || '',
+      postedDate: job.postedDate ? new Date(job.postedDate)
+        : job.date_posted ? new Date(job.date_posted)
+        : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      remote: true,
+      url: url,
+      source: job.source || job.site_source || 'direct_scraper',
+      jobType: 'admin_data_entry',
+      site: job.site || job.site_source || job.source || 'unknown',
+      site_source: job.site_source || job.site || job.source || 'direct_scraper',
+      scrapedDate: new Date(),
+      updatedAt: new Date(),
+      createdAt: job.createdAt ? new Date(job.createdAt) : new Date(),
+      lastSeenAt: new Date(),
+      // Re-list recovery: a job back in the feed is no longer expired.
+      expired: false,
+      expiredAt: null
+    };
+
+    // Written ONLY on insert. Decoupled 2026-05-30: the importer no longer runs
+    // the classifier or writes any proposed_* columns — it cleans text and
+    // upserts by URL only. firstSeenAt is the stable creation marker; existing
+    // promoted/proposed_* columns are still never in $set, so any value already
+    // on a doc is preserved untouched.
+    const setOnInsert = {
+      firstSeenAt: new Date()
+    };
+
+    records.push({ key, url, titleCompanyKey, filter, set, setOnInsert });
   }
-  
+
+  return { records, skipped };
+}
+
+/**
+ * Look up which of the planned jobs already exist, returning a Map of
+ * key -> existing _id. Used to report upsert-vs-insert and to confirm matched
+ * jobs keep their _id.
+ */
+async function findExisting(collection, records) {
+  const map = new Map();
+  const urls = records.filter((r) => r.url).map((r) => r.url);
+
+  if (urls.length > 0) {
+    const cursor = collection.find({ url: { $in: urls } }, { projection: { _id: 1, url: 1 } });
+    for await (const doc of cursor) {
+      if (doc.url) map.set(doc.url, doc._id);
+    }
+  }
+
+  // Jobs without a URL: match individually on title+company.
+  for (const r of records.filter((rec) => !rec.url)) {
+    const doc = await collection.findOne(r.filter, { projection: { _id: 1 } });
+    if (doc) map.set(r.key, doc._id);
+  }
+
+  return map;
+}
+
+/**
+ * Run the import. Dry-run unless opts.execute is true.
+ */
+async function runImport({ execute = false } = {}) {
   if (!MONGODB_URI) {
-    logger.error('MONGODB_URI environment variable is not set');
+    logger.error('MONGODB_URI not set (use --simulate=<file> for an offline run)');
     return { error: 'MONGODB_URI not set' };
   }
-  
-  logger.info(`Importing ${jobs.length} jobs to MongoDB (${DB_NAME}.${COLLECTION_NAME})`);
-  
+
+  const jobs = await readResultsFile();
+  if (!jobs) return { error: 'failed to read results file' };
+
+  const { records, skipped } = buildUpsertPlan(jobs);
+  const uniqueFeed = records.length;
+
   let client;
-  
   try {
-    // Connect to MongoDB with options
     client = new MongoClient(MONGODB_URI, MONGO_OPTIONS);
-    
-    logger.info('Attempting to connect to MongoDB...');
-    logger.info(`Using database: ${DB_NAME}`);
-    
     await client.connect();
-    logger.info('Connected to MongoDB');
-    
-    const db = client.db(DB_NAME);
-    const collection = db.collection(COLLECTION_NAME);
-    
-    // Get count before import
+    logger.info(`Connected to MongoDB (${DB_NAME}.${COLLECTION_NAME})`);
+    const collection = client.db(DB_NAME).collection(COLLECTION_NAME);
+
     const countBefore = await collection.countDocuments();
-    logger.info(`Collection contains ${countBefore} jobs before import`);
-    
-    // Process jobs in batches
-    const batchSize = 50;
-    const stats = {
-      processed: 0,
-      inserted: 0,
-      updated: 0,
-      errors: 0
-    };
-    
-    for (let i = 0; i < jobs.length; i += batchSize) {
-      const batch = jobs.slice(i, i + batchSize);
-      logger.info(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(jobs.length / batchSize)} (${batch.length} jobs)`);
-      
-      const operations = [];
-      
-      for (const job of batch) {
-        try {
-          // Standardize job fields
-          const processedJob = {
-            // Base job fields - ensure consistent schema
-            title: job.title || 'Untitled Position',
-            company: job.company || 'Unknown Company',
-            description: job.description || '',
-            descriptionText: job.descriptionText || '',
-            location: job.location || 'Remote',
-            salary: job.salary || '',
-            // Preserve original posting date if available, otherwise use reasonable fallback
-            postedDate: job.postedDate ? new Date(job.postedDate) : 
-                       job.date_posted ? new Date(job.date_posted) : 
-                       new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Default to 7 days ago instead of today
-            remote: true, // Admin and data entry jobs are remote
-            // FIX: JobSpy returns 'job_url' not 'url'
-            url: job.url || job.job_url || job.job_url_direct || '',
-            source: job.source || job.site_source || 'direct_scraper',
-            
-            // Additional fields for job quality
-            jobType: 'admin_data_entry',
-            site: job.site || job.site_source || job.source || 'unknown',
-            site_source: job.site_source || job.site || job.source || 'direct_scraper',
-            
-            // Timestamps
-            scrapedDate: new Date(),
-            updatedAt: new Date(),
-            createdAt: job.createdAt ? new Date(job.createdAt) : new Date()
-          };
-          
-          // Create unique identifier for matching
-          let query;
-          if (processedJob.url) {
-            // Match by URL if available
-            query = { url: processedJob.url };
-          } else {
-            // Match by title and company otherwise
-            query = { 
-              title: processedJob.title,
-              company: processedJob.company
-            };
-          }
-          
-          operations.push({
-            updateOne: {
-              filter: query,
-              update: { $set: processedJob },
-              upsert: true
-            }
-          });
-          
-          stats.processed++;
-        } catch (error) {
-          logger.error(`Error processing job: ${error.message}`);
-          stats.errors++;
-        }
-      }
-      
-      // Execute batch operations
-      if (operations.length > 0) {
-        try {
-          const result = await collection.bulkWrite(operations);
-          stats.inserted += result.upsertedCount || 0;
-          stats.updated += result.modifiedCount || 0;
-          logger.info(`Batch result: ${result.upsertedCount} inserted, ${result.modifiedCount} updated`);
-        } catch (error) {
-          logger.error(`Error executing batch operations: ${error.message}`);
-          stats.errors += operations.length;
-        }
+    const existing = await findExisting(collection, records);
+
+    const toUpsert = records.filter((r) => existing.has(r.key));   // match -> update in place
+    const toInsert = records.filter((r) => !existing.has(r.key));  // new -> insert
+
+    // Expiry plan: jobs not seen for EXPIRE_AFTER_DAYS and not in this feed.
+    const cutoff = new Date(Date.now() - EXPIRE_AFTER_DAYS * 24 * 60 * 60 * 1000);
+    const feedUrls = new Set(records.map((r) => r.url).filter(Boolean));
+    const feedTC = new Set(records.map((r) => r.titleCompanyKey));
+
+    // Safety guard: never run the expiry sweep on a suspiciously small feed
+    // (e.g. most scrapers failed), which could mass-expire live jobs over time.
+    const feedFloor = Math.max(SMALL_FEED_MIN, Math.floor(0.2 * countBefore));
+    const feedHealthy = uniqueFeed >= feedFloor;
+
+    let expireCandidates = [];
+    if (feedHealthy) {
+      const cursor = collection.find(
+        { lastSeenAt: { $lt: cutoff }, expired: { $ne: true } },
+        { projection: { _id: 1, url: 1, title: 1, company: 1, lastSeenAt: 1 } }
+      );
+      for await (const doc of cursor) {
+        const tc = `${doc.title}::${doc.company}`;
+        const stillInFeed = (doc.url && feedUrls.has(doc.url)) || feedTC.has(tc);
+        if (!stillInFeed) expireCandidates.push(doc);
       }
     }
-    
-    // Get count after import
+
+    logger.info('');
+    logger.info(`=== IMPORT (${execute ? 'EXECUTE' : 'DRY-RUN'}) ===`);
+    logger.info(`feed file:        ${RESULTS_FILE}`);
+    logger.info(`feed jobs:        ${jobs.length} (unique ${uniqueFeed}, duplicates skipped ${skipped})`);
+    logger.info(`collection size:  ${countBefore} before`);
+    logger.info(`would UPSERT (existing, _id preserved): ${toUpsert.length}`);
+    logger.info(`would INSERT (new):                     ${toInsert.length}`);
+    logger.info(`expiry window:    not seen in ${EXPIRE_AFTER_DAYS} days`);
+    if (!feedHealthy) {
+      logger.warn(`SMALL FEED (${uniqueFeed} < floor ${feedFloor}); expiry sweep SKIPPED this run`);
+    }
+    logger.info(`would MARK-EXPIRED (delisted):          ${expireCandidates.length}`);
+
+    // _id-preservation confirmation: every upsert targets an existing _id and an
+    // update never changes _id, so no _id is reassigned for existing jobs.
+    logger.info(`_id check: ${toUpsert.length} matches reuse their existing _id; ` +
+      `${toInsert.length} inserts mint new _ids; 0 existing _ids reassigned.`);
+
+    const sample = (arr, fn, n = 5) => arr.slice(0, n).forEach((x) => logger.info('   ' + fn(x)));
+    if (toUpsert.length) { logger.info('sample upserts (existing _id -> title):');
+      sample(toUpsert, (r) => `${existing.get(r.key)}  ${r.set.title.slice(0, 50)}`); }
+    if (toInsert.length) { logger.info('sample inserts (new):');
+      sample(toInsert, (r) => `${r.set.title.slice(0, 50)}  [${r.url || r.titleCompanyKey.slice(0, 40)}]`); }
+    if (expireCandidates.length) { logger.info('sample expiries (delisted):');
+      sample(expireCandidates, (d) => `${d._id}  ${String(d.title).slice(0, 50)}  lastSeen=${d.lastSeenAt ? new Date(d.lastSeenAt).toISOString().slice(0, 10) : 'n/a'}`); }
+
+    if (!execute) {
+      logger.info('');
+      logger.info('DRY-RUN: no writes performed. Re-run with --execute to apply.');
+      return {
+        mode: 'dry-run', countBefore, uniqueFeed, skipped,
+        upserts: toUpsert.length, inserts: toInsert.length,
+        expireCandidates: expireCandidates.length, feedHealthy
+      };
+    }
+
+    // ---- EXECUTE -----------------------------------------------------------
+    const ops = records.map((r) => ({
+      updateOne: { filter: r.filter, update: { $set: r.set, $setOnInsert: r.setOnInsert }, upsert: true }
+    }));
+
+    let inserted = 0;
+    let modified = 0;
+    const batchSize = 200;
+    for (let i = 0; i < ops.length; i += batchSize) {
+      const res = await collection.bulkWrite(ops.slice(i, i + batchSize), { ordered: false });
+      inserted += res.upsertedCount || 0;
+      modified += res.modifiedCount || 0;
+      logger.info(`batch ${Math.floor(i / batchSize) + 1}: ${res.upsertedCount} inserted, ${res.modifiedCount} updated`);
+    }
+
+    // Expire delistings. Feed jobs were just refreshed (lastSeenAt = now), so a
+    // lastSeenAt<cutoff filter naturally excludes everything still in the feed.
+    let expired = 0;
+    if (feedHealthy) {
+      const res = await collection.updateMany(
+        { lastSeenAt: { $lt: cutoff }, expired: { $ne: true } },
+        { $set: { expired: true, expiredAt: new Date(), expired_reason: 'not_seen_in_feed' } }
+      );
+      expired = res.modifiedCount || 0;
+    }
+
     const countAfter = await collection.countDocuments();
-    logger.info(`Collection contains ${countAfter} jobs after import (${countAfter - countBefore} net change)`);
-    
-    return stats;
+    logger.info('');
+    logger.info(`EXECUTED: ${inserted} inserted, ${modified} updated, ${expired} marked expired.`);
+    logger.info(`collection size: ${countBefore} -> ${countAfter}`);
+    return { mode: 'execute', inserted, modified, expired, countBefore, countAfter };
   } catch (error) {
     logger.error(`MongoDB error: ${error.message}`);
     return { error: error.message };
@@ -199,232 +309,58 @@ async function importToMongoDB(jobs) {
   }
 }
 
-/**
- * Option to completely overwrite all jobs
- */
-async function overwriteAllJobs(jobs) {
-  if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
-    logger.warn('No jobs to import');
-    return { saved: 0, errors: 0 };
-  }
-  
-  if (!MONGODB_URI) {
-    logger.error('MONGODB_URI environment variable is not set');
-    return { error: 'MONGODB_URI not set' };
-  }
-  
-  logger.info(`COMPLETELY REPLACING ALL JOBS with ${jobs.length} new jobs in ${DB_NAME}.${COLLECTION_NAME}`);
-  
-  let client;
-  
-  try {
-    // Connect to MongoDB with options
-    client = new MongoClient(MONGODB_URI, MONGO_OPTIONS);
-    
-    logger.info('Attempting to connect to MongoDB...');
-    logger.info(`Using database: ${DB_NAME}`);
-    
-    await client.connect();
-    logger.info('Connected to MongoDB');
-    
-    const db = client.db(DB_NAME);
-    const collection = db.collection(COLLECTION_NAME);
-    
-    // BACKUP DISABLED: Backups were causing database quota issues by creating
-    // 50+ backup collections that consumed over 500 MB of storage.
-    // Since this script uses --overwrite mode and the scraper runs every 12 hours,
-    // we don't need backups. If manual backup is needed, use MongoDB export.
-    let backupCount = 0;
-    logger.info('Backup disabled to prevent database quota issues');
-    
-    // Uncomment below only if you need temporary backup for debugging:
-    // const backupCollection = `${COLLECTION_NAME}_backup_${new Date().toISOString().replace(/[:.]/g, '_')}`;
-    // logger.info(`Creating backup in collection: ${backupCollection}`);
-    // const copyResult = await db.collection(COLLECTION_NAME).aggregate([
-    //   { $match: {} },
-    //   { $out: backupCollection }
-    // ]).toArray();
-    // backupCount = await db.collection(backupCollection).countDocuments();
-    // logger.info(`Backed up ${backupCount} jobs to ${backupCollection}`);
-    
-    // Check for existing indexes that could cause problems
-    logger.info('Checking for existing unique indexes...');
-    const indexes = await collection.indexes();
-    const uniqueIndexes = indexes.filter(idx => 
-      idx.unique === true && 
-      idx.name !== '_id_' // Skip the default _id index
-    );
-    
-    // Store the unique indexes for restoration later
-    const uniqueIndexesToRestore = [];
-    for (const idx of uniqueIndexes) {
-      uniqueIndexesToRestore.push({
-        key: idx.key,
-        name: idx.name,
-        unique: true,
-        background: idx.background || true,
-        sparse: idx.sparse || false
-      });
-      
-      // Drop the unique index temporarily
-      logger.info(`Temporarily dropping unique index: ${idx.name}`);
-      await collection.dropIndex(idx.name);
-    }
-    
-    // Delete all documents from the main collection
-    const deleteResult = await collection.deleteMany({});
-    logger.info(`Deleted ${deleteResult.deletedCount} jobs from main collection`);
-    
-    // Process jobs in standardized format with unique identifiers
-    const seenUrls = new Set();
-    const seenTitleCompany = new Set();
-    
-    const processedJobs = [];
-    let skippedCount = 0;
-    
-    for (const job of jobs) {
-      const title = job.title || 'Untitled Position';
-      const company = job.company || 'Unknown Company';
-      const url = job.job_url || job.url || '';
-      
-      // Create a unique identifier to detect duplicates
-      const titleCompanyKey = `${title}::${company}`;
-      
-      // Skip if we've already seen this URL or title+company combination
-      if ((url && seenUrls.has(url)) || seenTitleCompany.has(titleCompanyKey)) {
-        skippedCount++;
-        continue;
-      }
-      
-      // Mark as seen
-      if (url) seenUrls.add(url);
-      seenTitleCompany.add(titleCompanyKey);
-      
-      // Create processed job document
-      processedJobs.push({
-        // Base job fields - ensure consistent schema
-        title: title,
-        company: company,
-        description: job.description || '',
-        descriptionText: job.descriptionText || '',
-        location: job.location || 'Remote',
-        salary: job.salary || '',
-        // Preserve original posting date if available, otherwise use reasonable fallback
-        postedDate: job.postedDate ? new Date(job.postedDate) : 
-                   job.date_posted ? new Date(job.date_posted) : 
-                   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Default to 7 days ago instead of today
-        remote: true, // Admin and data entry jobs are remote
-        url: url,
-        source: job.source || job.site_source || 'direct_scraper',
-        
-        // Additional fields for job quality
-        jobType: 'admin_data_entry',
-        site: job.site || job.site_source || job.source || 'unknown',
-        site_source: job.site_source || job.site || job.source || 'direct_scraper',
-        
-        // Timestamps
-        scrapedDate: new Date(),
-        updatedAt: new Date(),
-        createdAt: job.createdAt ? new Date(job.createdAt) : new Date()
-      });
-    }
-    
-    logger.info(`Processed ${processedJobs.length} unique jobs (skipped ${skippedCount} duplicates)`);
-    
-    // Insert all new jobs in batches to avoid memory issues
-    const batchSize = 100;
-    let insertedCount = 0;
-    
-    for (let i = 0; i < processedJobs.length; i += batchSize) {
-      const batch = processedJobs.slice(i, i + batchSize);
-      logger.info(`Inserting batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(processedJobs.length / batchSize)} (${batch.length} jobs)`);
-      
-      const result = await collection.insertMany(batch, { ordered: false });
-      insertedCount += result.insertedCount;
-    }
-    
-    logger.info(`Inserted ${insertedCount} new jobs`);
-    
-    // Restore the unique indexes if needed
-    if (uniqueIndexesToRestore.length > 0) {
-      logger.info(`Restoring ${uniqueIndexesToRestore.length} unique indexes...`);
-      
-      for (const idx of uniqueIndexesToRestore) {
-        try {
-          logger.info(`Recreating index: ${idx.name}`);
-          await collection.createIndex(idx.key, {
-            name: idx.name,
-            unique: idx.unique,
-            background: idx.background,
-            sparse: idx.sparse
-          });
-        } catch (error) {
-          logger.error(`Error recreating index ${idx.name}: ${error.message}`);
-        }
-      }
-    }
-    
-    return {
-      backed_up: backupCount,
-      deleted: deleteResult.deletedCount,
-      inserted: insertedCount,
-      skipped: skippedCount
-    };
-  } catch (error) {
-    logger.error(`MongoDB error: ${error.message}`);
-    return { error: error.message };
-  } finally {
-    if (client) {
-      await client.close();
-      logger.info('Disconnected from MongoDB');
-    }
-  }
+/** Offline plan over a local results file — no DB. */
+function simulate(file) {
+  const abs = path.isAbsolute(file) ? file : path.join(__dirname, file);
+  const data = JSON.parse(fs.readFileSync(abs, 'utf8'));
+  const jobs = Array.isArray(data) ? data : (data.jobs || []);
+  const { records, skipped } = buildUpsertPlan(jobs);
+  const withUrl = records.filter((r) => r.url).length;
+
+  logger.info('');
+  logger.info('=== IMPORT (SIMULATE, no DB, no writes) ===');
+  logger.info(`source:        ${file}`);
+  logger.info(`feed jobs:     ${jobs.length} (unique ${records.length}, duplicates skipped ${skipped})`);
+  logger.info(`with URL key:  ${withUrl}; title+company key: ${records.length - withUrl}`);
+  logger.info('per-job write plan:');
+  logger.info('   $set (every run): content + scrapedDate/updatedAt/lastSeenAt + expired:false');
+  logger.info('   $setOnInsert (new only): firstSeenAt');
+  logger.info('   NEVER written: status, category, pre_promotion_*, promoted_*, proposed_* (classifier decoupled)');
+  logger.info('(no DB connection used; existing-vs-new requires --execute/dry-run against MONGODB_URI)');
 }
 
-/**
- * Main function
- */
 async function main() {
   const args = process.argv.slice(2);
-  const shouldOverwrite = args.includes('--overwrite') || args.includes('-o');
-  
+  const execute = args.includes('--execute');
+  const simulateArg = args.find((a) => a.startsWith('--simulate='));
+
+  if (args.includes('--overwrite') || args.includes('-o')) {
+    logger.warn('--overwrite is DEPRECATED and ignored: the importer now upserts ' +
+      'by URL and never wipes the collection. Use --execute to write.');
+  }
+
   try {
     logger.info('Starting import of scraper results to MongoDB');
-    
-    // Read scraper results
-    const jobs = await readResultsFile();
-    if (!jobs) {
-      logger.error('Failed to read jobs from results file');
-      process.exit(1);
-    }
-    
-    // Import to MongoDB
-    let result;
-    if (shouldOverwrite) {
-      logger.warn('Overwrite mode activated - will replace ALL jobs in the database');
-      result = await overwriteAllJobs(jobs);
-    } else {
-      result = await importToMongoDB(jobs);
-    }
-    
-    logger.info('Import completed');
-    logger.info(`Results: ${JSON.stringify(result)}`);
-    
-    if (result.error) {
-      process.exit(1);
-    } else {
+
+    if (simulateArg) {
+      simulate(simulateArg.split('=')[1]);
       process.exit(0);
     }
+
+    const result = await runImport({ execute });
+    logger.info(`Result: ${JSON.stringify(result)}`);
+    process.exit(result && result.error ? 1 : 0);
   } catch (error) {
     logger.error(`Unhandled error: ${error.message}`);
     process.exit(1);
   }
 }
 
-// Run the main function
 if (require.main === module) {
-  main().catch(error => {
+  main().catch((error) => {
     logger.error(`Unhandled error in main: ${error.message}`);
     process.exit(1);
   });
-} 
+}
+
+module.exports = { buildUpsertPlan, findExisting, runImport, readResultsFile, urlOf };

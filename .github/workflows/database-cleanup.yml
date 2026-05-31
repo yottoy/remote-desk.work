@@ -1,8 +1,15 @@
-name: Database Cleanup (DISABLED - Main scraper does full replacement)
+name: Database Cleanup (DISABLED - runs inline in direct-scraper.yml)
 
 on:
-  # DISABLED: direct-scraper.yml does --overwrite which replaces all jobs daily
-  # This cleanup is redundant and was failing
+  # DISABLED (manual-only). Reconciled in Phase 2.5: direct-scraper.yml no longer
+  # does --overwrite (it upserts by URL). Delistings are now SOFT-EXPIRED by the
+  # importer (expired:true, not seen in EXPIRE_AFTER_DAYS), not by a daily wipe.
+  # Age-based hard-delete (with 410 tracking) still runs INLINE in
+  # direct-scraper.yml ("Database cleanup" step, periodic-database-cleanup.js),
+  # so this standalone weekly workflow remains redundant and disabled.
+  # NOTE (follow-up, needs approval): with persistence, periodic-database-cleanup
+  # should prune by lastSeenAt (delisted age) rather than postedDate/createdAt so
+  # it never hard-deletes a job still present in the feed. See phase2.5 handoff.
   # schedule:
   #   - cron: '0 3 * * 0'  # Run weekly on Sundays at 3 AM UTC
   workflow_dispatch:

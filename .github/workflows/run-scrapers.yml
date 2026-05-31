@@ -160,15 +160,21 @@ jobs:
             echo "Found result files to import:" | tee -a logs/mongodb-import.log
             echo "$result_files" | tee -a logs/mongodb-import.log
             
-            # Run the import with overwrite mode to replace old data with fresh data
-            node import-scraper-to-mongodb.js --overwrite 2>&1 | tee -a logs/mongodb-import.log
-            import_exit_code=$?
+            # Capture node's real exit code via PIPESTATUS[0], NOT `$?` (which
+            # would be tee's status, always 0) — otherwise a failed import is
+            # reported as success.
+            # --execute performs an upsert-by-URL import (no collection wipe).
+            set +e
+            node import-scraper-to-mongodb.js --execute 2>&1 | tee -a logs/mongodb-import.log
+            import_exit_code=${PIPESTATUS[0]}
+            set -e
             echo "MongoDB import exit code: $import_exit_code" | tee -a logs/mongodb-import.log
-            
+
             if [ $import_exit_code -eq 0 ]; then
               echo "✅ Successfully imported fresh jobs to MongoDB!" | tee -a logs/mongodb-import.log
             else
               echo "❌ MongoDB import failed" | tee -a logs/mongodb-import.log
+              exit "$import_exit_code"
             fi
           fi
 
