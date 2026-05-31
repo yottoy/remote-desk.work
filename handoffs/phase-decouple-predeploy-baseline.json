@@ -1,0 +1,233 @@
+{
+  "capturedAt": "2026-05-31T22:29:24.554Z",
+  "db": "clickclickjob",
+  "collection": "jobs",
+  "totalCount": 622,
+  "withUrlCount": 622,
+  "expiredTrueCount": 0,
+  "proposedStatusCount": 322,
+  "statusCount": 0,
+  "categoryCount": 0,
+  "jobCategoryCount": 0,
+  "lastSeenAtCount": 0,
+  "firstSeenAtCount": 0,
+  "scrapedDateByDay": [
+    {
+      "day": "2026-05-24",
+      "count": 622
+    }
+  ],
+  "sampleCount": 30,
+  "sampleUrlToId": [
+    {
+      "url": "https://www.indeed.com/viewjob?jk=11fc7ace1c3f91e9",
+      "_id": "6a12f0ccad7ad8184cf3b7a3",
+      "scrapedDate": "2026-05-24T12:36:28.330Z",
+      "source": "indeed_linkedin",
+      "title": "Medical Assistant"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=e48a8228335d18de",
+      "_id": "6a12f0ccad7ad8184cf3b7b7",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Outreach and Retention Specialist"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=34e4f85dca31d9f8",
+      "_id": "6a12f0ccad7ad8184cf3b7cb",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Personal Assistant"
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4415501807",
+      "_id": "6a12f0ccad7ad8184cf3b7e0",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Data Verification Specialist"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=c73a8a490931075a",
+      "_id": "6a12f0ccad7ad8184cf3b7f4",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "TPWD - Administrative Assistant V (Office Manager)"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=8f164e2d91eb857c",
+      "_id": "6a12f0ccad7ad8184cf3b808",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Assistant Administrator"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=2804f1e497202da8",
+      "_id": "6a12f0ccad7ad8184cf3b81c",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Machine Shop Operator"
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4418683051",
+      "_id": "6a12f0ccad7ad8184cf3b833",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Administrative & Office Support Agent (Remote)"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=3c0937a0c0585a10",
+      "_id": "6a12f0ccad7ad8184cf3b848",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Senior Assistant Caseworker- DCFS Southwest Region (St. Geor"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=c312caec14d0101f",
+      "_id": "6a12f0ccad7ad8184cf3b85c",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Enrollment Specialist"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=c7c1debce06a698f",
+      "_id": "6a12f0cdad7ad8184cf3b871",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Occupational Therapy Assistant (OTA)"
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4416434462",
+      "_id": "6a12f0cdad7ad8184cf3b885",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Business Development Manager, Office Coffee & Supply/Special"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=b6cc87c301c0097f",
+      "_id": "6a12f0cdad7ad8184cf3b899",
+      "scrapedDate": "2026-05-24T12:36:28.331Z",
+      "source": "indeed_linkedin",
+      "title": "Judicial Law Clerk I for the Honorable Sheila Woods-Skipper"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=bca05c80396e8b1d",
+      "_id": "6a12f0cdad7ad8184cf3b8ad",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Nutrition Informatics Dietitian"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=3ed61d161c5312c9",
+      "_id": "6a12f0cdad7ad8184cf3b8c1",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Coord Quality Coding Outpatient"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=92a272ba104954b5",
+      "_id": "6a12f0cead7ad8184cf3b8d5",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Salesforce Platform Scrum Master & Administrator"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=598480c9ca47ed03",
+      "_id": "6a12f0cead7ad8184cf3b8e9",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Nurse Educator Surgical Services"
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4410317750",
+      "_id": "6a12f0cead7ad8184cf3b8fd",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Field Inspections Coordinator"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=b1045a7d765d3f0b",
+      "_id": "6a12f0cead7ad8184cf3b911",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Laboratory Assistant (ETS)| Temporary"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=dc1928c20721cbe1",
+      "_id": "6a12f0cead7ad8184cf3b927",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Senior Project & Corporate Accountant"
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4414619498",
+      "_id": "6a12f0cead7ad8184cf3b93b",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Executive Assistant"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=319a704c5af2ec2e",
+      "_id": "6a12f0cead7ad8184cf3b94f",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Director Med Staff Services"
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4415922448",
+      "_id": "6a12f0cead7ad8184cf3b963",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Data Representative"
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4417178245",
+      "_id": "6a12f0cead7ad8184cf3b978",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Medical Transcriptionist"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=603a19ee63ab29b6",
+      "_id": "6a12f0cead7ad8184cf3b98c",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Telehealth Medical Receptionist (Remote)"
+    },
+    {
+      "url": "https://www.indeed.com/viewjob?jk=d845e5cced20271c",
+      "_id": "6a12f0cead7ad8184cf3b9a0",
+      "scrapedDate": "2026-05-24T12:36:28.332Z",
+      "source": "indeed_linkedin",
+      "title": "Professional Denials & Follow-up Rep- Partnership Services- "
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4255345755",
+      "_id": "6a12f0cfad7ad8184cf3be6d",
+      "scrapedDate": "2026-05-24T12:36:28.335Z",
+      "source": "combined",
+      "title": "Data Entry Operator (Work from Office to Home)"
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4255156413",
+      "_id": "6a12f0cfad7ad8184cf3bfd0",
+      "scrapedDate": "2026-05-24T12:36:28.335Z",
+      "source": "combined",
+      "title": "Call Center Associate I - Lottery (Home/Remote, RI)"
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/4346169798",
+      "_id": "6a12f0cfad7ad8184cf3c196",
+      "scrapedDate": "2026-05-24T12:36:28.336Z",
+      "source": "combined",
+      "title": "(REMOTE) Claims Technician"
+    },
+    {
+      "url": "https://remoteOK.com/remote-jobs/remote-outbound-sales-development-representative-latin-america-bluelight-consulting-1131843",
+      "_id": "6a12f0cfad7ad8184cf3c1c9",
+      "scrapedDate": "2026-05-24T12:36:28.336Z",
+      "source": "direct_scraper",
+      "title": "Outbound Sales Development Representative Latin America"
+    }
+  ]
+}
