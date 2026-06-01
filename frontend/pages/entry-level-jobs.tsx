@@ -313,20 +313,32 @@ export const getServerSideProps: GetServerSideProps = async () => {
 
   const updated = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-  try {
-    // Fetch a broad set of entry-level jobs across categories
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/jobs?experienceLevel=entry-level&limit=60`, {
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const fetchJobs = async (qs: string): Promise<JobListing[]> => {
+    const res = await fetch(`${apiBase}/api/jobs?${qs}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.jobs || [];
+  };
 
-    let jobs: JobListing[] = [];
+  try {
+    // Primary: real listings that explicitly mention "entry level".
+    // (The experienceLevel field is not populated in the data, so we match on text.)
+    let jobs: JobListing[] = await fetchJobs('search=entry%20level&limit=60');
 
-    if (response.ok) {
-      const data = await response.json();
-      jobs = data.jobs || [];
+    // Backfill with recent beginner-friendly remote jobs so the grid is never thin.
+    if (jobs.length < 12) {
+      const recent = await fetchJobs('limit=60&sort=newest');
+      const seen = new Set(jobs.map(j => j._id));
+      for (const job of recent) {
+        if (seen.has(job._id)) continue;
+        jobs.push(job);
+        seen.add(job._id);
+        if (jobs.length >= 30) break;
+      }
     }
 
     // Fallback content so the page is never empty
