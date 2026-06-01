@@ -5,10 +5,10 @@
 You have **5 active subscribers**:
 
 1. **yotamt@gmail.com** (subscribed May 18, 2025)
-2. *****REMOVED***** (subscribed Jan 21, 2026)
-3. *****REMOVED***** (subscribed Jan 23, 2026)
-4. *****REMOVED***** (subscribed Jan 25, 2026)
-5. *****REMOVED***** (subscribed Jan 28, 2026)
+2. **subscriber1@example.com** (subscribed Jan 21, 2026)
+3. **subscriber2@example.com** (subscribed Jan 23, 2026)
+4. **subscriber4@example.com** (subscribed Jan 25, 2026)
+5. **subscriber3@example.com** (subscribed Jan 28, 2026)
 
 ---
 
@@ -70,7 +70,7 @@ Total: 5 subscribers
    Subscribed: 5/18/2025
    Source: manual
 
-2. ***REMOVED***
+2. subscriber1@example.com
    Status: active
    Subscribed: 1/21/2026
    Source: api

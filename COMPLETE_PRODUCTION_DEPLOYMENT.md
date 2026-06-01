@@ -16,10 +16,10 @@ This deployment includes:
 # Backend Environment Variables (Root .env)
 MONGODB_URI=your_production_mongodb_uri
 JWT_SECRET=your_strong_jwt_secret
-EMAIL_USER=daily.app.2024@gmail.com
-EMAIL_PASS=***REMOVED***
+EMAIL_USER=your_gmail_address
+EMAIL_PASS=your_gmail_app_password
 FRONTEND_URL=https://www.clickclickjob.com
-CRON_SECRET=***REMOVED***
+CRON_SECRET=your_cron_secret
 NODE_ENV=production
 
 # Frontend Environment Variables (frontend/.env.production)

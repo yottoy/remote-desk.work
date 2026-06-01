@@ -130,7 +130,7 @@ To send a digest manually anytime:
 
 ```bash
 curl -X POST https://your-domain.vercel.app/api/digest/weekly \
-  -H "Authorization: Bearer ***REMOVED***" \
+  -H "Authorization: Bearer $CRON_SECRET" \
   -H "Content-Type: application/json"
 ```
 
@@ -140,7 +140,7 @@ cd frontend && npm run dev
 
 # In another terminal:
 curl -X POST http://localhost:3000/api/digest/weekly \
-  -H "Authorization: Bearer ***REMOVED***"
+  -H "Authorization: Bearer $CRON_SECRET"
 ```
 
 ---

@@ -24,10 +24,10 @@
 ✅ **5 active subscribers** synced from MailerLite to MongoDB:
 
 1. yotamt@gmail.com
-2. ***REMOVED***
-3. ***REMOVED***
-4. ***REMOVED***
-5. ***REMOVED***
+2. subscriber1@example.com
+3. subscriber2@example.com
+4. subscriber4@example.com
+5. subscriber3@example.com
 
 ### Job Freshness Query
 ✅ **10 fresh jobs** from last 7 days (all 0 days old as of Feb 2, 2026):

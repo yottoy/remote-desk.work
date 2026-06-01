@@ -11,10 +11,10 @@ async function sendDigestNow() {
   console.log('\n📧 Triggering Weekly Digest for ALL Subscribers...\n');
   console.log('Sending to:');
   console.log('  1. yotamt@gmail.com');
-  console.log('  2. ***REMOVED***');
-  console.log('  3. ***REMOVED***');
-  console.log('  4. ***REMOVED***');
-  console.log('  5. ***REMOVED***\n');
+  console.log('  2. subscriber1@example.com');
+  console.log('  3. subscriber2@example.com');
+  console.log('  4. subscriber4@example.com');
+  console.log('  5. subscriber3@example.com\n');
 
   const response = await fetch('https://clickclickjob.com/api/digest/weekly', {
     method: 'POST',

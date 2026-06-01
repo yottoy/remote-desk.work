@@ -7,7 +7,7 @@
 const https = require('https');
 require('dotenv').config({ path: require('path').join(__dirname, '../frontend/.env.local') });
 
-const CRON_SECRET = process.env.CRON_SECRET || '***REMOVED***';
+const CRON_SECRET = process.env.CRON_SECRET;
 
 console.log('\n📧 Manually triggering weekly digest email...\n');
 console.log('This will:');

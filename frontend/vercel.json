@@ -4,10 +4,7 @@
   "env": {
     "NEXT_PUBLIC_API_URL": "https://www.clickclickjob.com",
     "NEXT_PUBLIC_SITE_URL": "https://www.clickclickjob.com",
-    "MONGODB_DB": "clickclickjob",
-    "EMAIL_USER": "daily.app.2024@gmail.com",
-    "EMAIL_PASS": "***REMOVED***",
-    "CRON_SECRET": "***REMOVED***"
+    "MONGODB_DB": "clickclickjob"
   },
 
   "routes": [

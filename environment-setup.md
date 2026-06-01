@@ -15,8 +15,8 @@ JWT_SECRET=your-super-secure-jwt-secret-minimum-32-characters
 
 ### Email Service
 ```
-EMAIL_USER=daily.app.2024@gmail.com
-EMAIL_PASS=***REMOVED***
+EMAIL_USER=your_gmail_address
+EMAIL_PASS=your_gmail_app_password
 ```
 
 ### Frontend URLs
@@ -28,7 +28,7 @@ NEXT_PUBLIC_SITE_URL=https://www.clickclickjob.com
 
 ### Security
 ```
-CRON_SECRET=***REMOVED***
+CRON_SECRET=your_cron_secret
 NODE_ENV=production
 ```
 

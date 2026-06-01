@@ -4,8 +4,8 @@ import nodemailer from 'nodemailer';
 async function generateJobReport() {
   const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clickclickjob';
   const MONGODB_DB = process.env.MONGODB_DB || 'clickclickjob';
-  const EMAIL_USER = 'daily.app.2024@gmail.com';
-  const EMAIL_PASS = '***REMOVED***';
+  const EMAIL_USER = process.env.EMAIL_USER;
+  const EMAIL_PASS = process.env.EMAIL_PASS;
   const REPORT_EMAIL = 'yotamt@gmail.com';
 
   let client;

@@ -32,9 +32,9 @@
    - Test: `cd frontend && npm run build` should succeed
 
 2. **Verify CRON_SECRET matches**
-   - Production secret: `***REMOVED***`
+   - Production secret: `$CRON_SECRET`
    - Test the auth endpoint once deployment succeeds
-   - Command: `curl -X POST https://www.clickclickjob.com/api/digest/weekly -H "Authorization: Bearer ***REMOVED***"`
+   - Command: `curl -X POST https://www.clickclickjob.com/api/digest/weekly -H "Authorization: Bearer $CRON_SECRET"`
 
 3. **Test the cron endpoint**
    - Should return 200 with success message
@@ -82,10 +82,10 @@ node scripts/send-to-all-subscribers-now.js
 
 ✅ Found 5 active subscribers:
    1. yotamt@gmail.com
-   2. ***REMOVED***
-   3. ***REMOVED***
-   4. ***REMOVED***
-   5. ***REMOVED***
+   2. subscriber1@example.com
+   3. subscriber2@example.com
+   4. subscriber4@example.com
+   5. subscriber3@example.com
 
 ✅ Found 10 fresh jobs from last 7 days
 
@@ -117,7 +117,7 @@ node scripts/send-to-all-subscribers-now.js
 3. Test cron endpoint manually:
    ```bash
    curl -X POST https://www.clickclickjob.com/api/digest/weekly \
-     -H "Authorization: Bearer ***REMOVED***" \
+     -H "Authorization: Bearer $CRON_SECRET" \
      -H "Content-Type: application/json"
    ```
 4. If it returns `{"error":"Unauthorized"}`, use manual send script instead
@@ -190,7 +190,7 @@ node scripts/test-fresh-jobs-query.js
 
 # Test automated endpoint
 curl -X POST https://www.clickclickjob.com/api/digest/weekly \
-  -H "Authorization: Bearer ***REMOVED***" \
+  -H "Authorization: Bearer $CRON_SECRET" \
   -H "Content-Type: application/json"
 ```
 
