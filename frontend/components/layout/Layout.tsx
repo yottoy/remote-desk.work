@@ -345,6 +345,11 @@ const Layout: React.FC<LayoutProps> = ({
                 </h2>
                 <ul className="mt-4 space-y-2">
                   <li>
+                    <Link href="/entry-level-jobs" className="text-blue-600 hover:text-blue-800 text-sm transition-colors font-medium">
+                      Entry Level Jobs
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/remote-data-entry-jobs" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
                       Data Entry Jobs
                     </Link>

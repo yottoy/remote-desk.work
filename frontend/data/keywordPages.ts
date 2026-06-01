@@ -296,6 +296,38 @@ export const keywordPagesData: Record<string, KeywordPageData> = {
       }
     ]
   },
+  'entry-level-jobs': {
+    slug: 'entry-level-jobs',
+    title: 'Entry Level Jobs - Remote & Work From Home, No Experience | ClickClickJob',
+    h1: 'Entry Level Remote Jobs - No Experience Required',
+    description: 'Browse entry level jobs hiring now. Remote & work-from-home roles with no experience required and paid training. New beginner-friendly positions added daily.',
+    valueProposition: 'Start your career with legitimate entry level remote jobs. Many roles require no prior experience and provide paid training — apply today.',
+    jobFilters: {
+      experienceLevel: 'entry-level'
+    },
+    faqItems: [
+      {
+        question: 'What are the best entry level remote jobs with no experience?',
+        answer: 'Some of the most accessible entry level remote jobs that hire with no experience include data entry, virtual assistant, customer service, online chat support, transcription, content moderation, and administrative assistant roles. These positions typically value reliability, basic computer skills, and good communication over a formal background, and many employers provide paid training. Browse the live listings above to find roles currently hiring beginners.'
+      },
+      {
+        question: 'What entry level jobs can I do from home?',
+        answer: 'Plenty of entry level jobs are fully remote: data entry clerk, virtual assistant, customer support representative, live chat agent, transcriptionist, captioning specialist, online tutor, social media assistant, and junior data analyst. All you usually need is a reliable internet connection, a computer, and a quiet workspace. The jobs listed on this page are all remote or work-from-home friendly.'
+      },
+      {
+        question: 'Do entry level remote jobs require a degree?',
+        answer: 'Most entry level remote jobs do not require a college degree. Employers hiring for data entry, customer service, virtual assistant, and similar beginner roles care far more about attention to detail, communication, and dependability than formal education. A degree can help for some career tracks (like data analytics), but you can land many legitimate entry-level work-from-home jobs with just a high school diploma and a willingness to learn.'
+      },
+      {
+        question: 'How much do entry level remote jobs pay?',
+        answer: 'Entry level remote jobs typically pay between $15 and $25 per hour, or roughly $30,000 to $50,000 per year depending on the role, company, and your location. Data entry and customer service positions usually start near the lower end, while junior analyst, bookkeeping, and specialized administrative roles can pay more. Many positions also offer raises after an initial training period.'
+      },
+      {
+        question: 'How do I avoid scams when looking for entry level work from home jobs?',
+        answer: 'Legitimate entry level remote jobs never ask you to pay a fee to get hired, buy your own equipment up front, or send money for "training kits." Be wary of listings promising unrealistic pay for little work, vague job descriptions, or recruiters who only communicate over text/chat apps. Every job on ClickClickJob is screened for quality and links to a real employer or application page, so you can apply with confidence.'
+      }
+    ]
+  },
   'entry-level-data-analyst-jobs': {
     slug: 'entry-level-data-analyst-jobs',
     title: 'Entry Level Data Analyst Jobs Remote - No Experience Required | ClickClickJob',

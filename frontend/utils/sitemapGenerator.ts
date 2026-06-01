@@ -179,6 +179,7 @@ export function generateKeywordPageEntries(baseUrl: string): SitemapEntry[] {
     'remote-data-entry-jobs',
     'medical-data-entry-jobs',
     'remote-administrative-assistant-jobs',
+    'entry-level-jobs',
     'entry-level-data-analyst-jobs',
     'customer-service-work-from-home-jobs',
     'online-tutoring-jobs-college-students',
