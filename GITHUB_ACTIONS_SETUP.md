@@ -22,7 +22,7 @@ You need to add 5 secrets to your GitHub repository:
 
 #### 1. MONGODB_URI
 ```
-mongodb+srv://yotamtroim:***REMOVED***@cluster0.p4kzd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+mongodb+srv://USERNAME:PASSWORD@YOUR-CLUSTER.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 ```
 
 #### 2. MONGODB_DB
@@ -32,7 +32,7 @@ clickclickjob
 
 #### 3. SENDGRID_API_KEY
 ```
-***REMOVED***
+SG.your-sendgrid-api-key-here
 ```
 
 #### 4. SENDGRID_FROM_EMAIL

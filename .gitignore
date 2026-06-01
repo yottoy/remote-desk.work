@@ -12,7 +12,11 @@ logs/
 python-bridge/bridge_pid.txt
 python-bridge/scrape-results.json
 
-# Environment variables
-.env
-.env.local
+# Environment variables (all variants, incl. accidental " 2" copies)
+.env*
+!.env.example
 .vercel
+
+# Python virtualenv
+.venv/
+venv/

@@ -107,7 +107,7 @@ jobs:
             
             async function checkJobs() {
               const mongodb = new MongoDBIntegration({
-                connectionString: process.env.MONGODB_URI || 'mongodb+srv://yotamt:***REMOVED***@cluster0.mjemntb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+                connectionString: process.env.MONGODB_URI,
                 databaseName: 'remote-desk-work',
                 collectionName: 'jobs'
               });

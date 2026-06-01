@@ -23,7 +23,7 @@ class ProductionDeployment {
       outputDir: config.outputDir || './production-data',
       
       // MongoDB configuration
-      mongoConnectionString: process.env.MONGODB_URI || 'mongodb+srv://yotamt:***REMOVED***@cluster0.mjemntb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+      mongoConnectionString: process.env.MONGODB_URI,
       mongoDatabaseName: 'clickclickjob',
       mongoCollectionName: 'jobs',
       

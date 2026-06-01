@@ -83,7 +83,7 @@ Total: 5 subscribers
 **Best for:** Integration with other systems, custom queries
 
 **Using MongoDB Compass:**
-- Connect to: `mongodb+srv://yotamtroim:***REMOVED***@cluster0.p4kzd.mongodb.net/`
+- Connect to: `mongodb+srv://USERNAME:PASSWORD@YOUR-CLUSTER.mongodb.net/`
 - Database: `clickclickjob`
 - Collection: `subscribers`
 

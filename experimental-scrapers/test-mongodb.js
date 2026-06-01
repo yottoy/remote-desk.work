@@ -10,7 +10,7 @@ async function testMongoDB() {
     
     // Initialize MongoDB integration
     const mongodb = new MongoDBIntegration({
-      connectionString: 'mongodb+srv://yotamt:***REMOVED***@cluster0.mjemntb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+      connectionString: process.env.MONGODB_URI,
       databaseName: 'remote-desk-work',
       collectionName: 'jobs'
     });
