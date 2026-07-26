@@ -367,7 +367,10 @@ async function main() {
           logger.error(`❌ Cycle failed: ${result.error}`);
           process.exit(1);
         }
-        break;
+        // The MongoDB client holds the event loop open, so a successful cycle
+        // would hang here until CI kills it at the 6h limit. Close and exit.
+        await deployment.mongodb.disconnect();
+        process.exit(0);
         
       case 'monitor':
         logger.info('🔄 Starting continuous monitoring');
