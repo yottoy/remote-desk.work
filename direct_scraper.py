@@ -390,6 +390,44 @@ def format_job_description(description, source=None):
         # Return description with basic line breaks as a fallback
         return description.replace('\n', '<br>')
 
+# Jobs whose description is shorter than this are dropped instead of being
+# saved with a stub. Must match MIN_INDEXABLE_DESCRIPTION_LENGTH in
+# frontend/utils/jobIndexability.ts, which noindexes thinner job pages.
+MIN_DESCRIPTION_CHARS = 300
+
+def apply_descriptions(jobs_list, site_name):
+    """Format each job's description; drop jobs with no real description.
+
+    Previously these got a stub ("<Title> position at <Company> in <City>.
+    Please visit the job link for full details."), which produced thin,
+    noindexed pages. Skipping them keeps thin jobs out of the database.
+    """
+    kept = []
+    for job in jobs_list:
+        # Check various possible description fields from JobSpy
+        description_text = None
+        for desc_field in ['description', 'job_description', 'summary', 'job_summary']:
+            if desc_field in job and job[desc_field]:
+                description_text = job[desc_field]
+                break
+
+        if not description_text:
+            continue
+
+        # Format the description with proper HTML
+        job['description'] = format_job_description(description_text, site_name)
+        # Plain text version for search indexing, with whitespace collapsed
+        job['descriptionText'] = ' '.join(re.sub(r'<[^>]+>', ' ', job['description']).split())
+
+        if len(job['descriptionText']) < MIN_DESCRIPTION_CHARS:
+            continue
+        kept.append(job)
+
+    skipped = len(jobs_list) - len(kept)
+    if skipped:
+        logger.warning(f"Skipped {skipped}/{len(jobs_list)} {site_name} jobs with descriptions under {MIN_DESCRIPTION_CHARS} chars")
+    return kept
+
 # Modify save_jobs_to_file to apply formatting
 def save_jobs_to_file(df, site_name, search_term):
     """Save job results to a JSON file"""
@@ -404,83 +442,11 @@ def save_jobs_to_file(df, site_name, search_term):
                 jobs_json = df.to_json(orient="records", date_format="iso")
                 jobs_list = json.loads(jobs_json)
                 
-                # Format job descriptions and ensure they exist
-                for job in jobs_list:
-                    # Check various possible description fields from JobSpy
-                    description_text = None
-                    for desc_field in ['description', 'job_description', 'summary', 'job_summary']:
-                        if desc_field in job and job[desc_field]:
-                            description_text = job[desc_field]
-                            break
-                    
-                    if description_text:
-                        # Format the description with proper HTML
-                        job['description'] = format_job_description(description_text, site_name)
-                        
-                        # Add a plain text version for search indexing
-                        job['descriptionText'] = re.sub(r'<[^>]+>', ' ', job['description']).strip()
-                        
-                        # Clean up whitespace in descriptionText
-                        job['descriptionText'] = ' '.join(job['descriptionText'].split())
-                    else:
-                        # Try to create a basic description from available fields
-                        description_parts = []
-                        
-                        # Use any available text fields
-                        if 'summary' in job and job['summary']:
-                            description_parts.append(job['summary'])
-                        if 'job_type' in job and job['job_type']:
-                            description_parts.append(f"Job Type: {job['job_type']}")
-                        if 'salary_min' in job and job['salary_min']:
-                            salary = f"Salary: ${job['salary_min']}"
-                            if 'salary_max' in job and job['salary_max']:
-                                salary += f" - ${job['salary_max']}"
-                            description_parts.append(salary)
-                        
-                        if description_parts:
-                            combined_desc = '. '.join(description_parts)
-                            job['description'] = f"<p>{combined_desc}</p>"
-                            job['descriptionText'] = combined_desc
-                        else:
-                            # Last resort - create minimal description
-                            job_title = job.get('title', 'Position')
-                            company = job.get('company', 'Company')
-                            location = job.get('location', 'Remote')
-                            basic_desc = f"{job_title} position at {company} in {location}. Please visit the job link for full details."
-                            job['description'] = f"<p>{basic_desc}</p>"
-                            job['descriptionText'] = basic_desc
-                    
-                    # Ensure all jobs have these fields
-                    if 'description' not in job or not job['description']:
-                        job['description'] = f"<p>Job details available at the source website.</p>"
-                    if 'descriptionText' not in job or not job['descriptionText']:
-                        job['descriptionText'] = "Job details available at the source website."
-                
+                jobs_list = apply_descriptions(jobs_list, site_name)
             except Exception as e:
                 logger.error(f"Error converting DataFrame to JSON: {str(e)}")
                 # Fallback conversion
-                jobs_list = df.to_dict(orient="records")
-                
-                # Also apply formatting to fallback jobs
-                for job in jobs_list:
-                    # Check various possible description fields from JobSpy
-                    description_text = None
-                    for desc_field in ['description', 'job_description', 'summary', 'job_summary']:
-                        if desc_field in job and job[desc_field]:
-                            description_text = job[desc_field]
-                            break
-                    
-                    if description_text:
-                        job['description'] = format_job_description(description_text, site_name)
-                        job['descriptionText'] = re.sub(r'<[^>]+>', ' ', job['description']).strip()
-                        job['descriptionText'] = ' '.join(job['descriptionText'].split())
-                    else:
-                        job_title = job.get('title', 'Position')
-                        company = job.get('company', 'Company')
-                        location = job.get('location', 'Remote')
-                        basic_desc = f"{job_title} position at {company} in {location}. Please visit the job link for full details."
-                        job['description'] = f"<p>{basic_desc}</p>"
-                        job['descriptionText'] = basic_desc
+                jobs_list = apply_descriptions(df.to_dict(orient="records"), site_name)
         
         # Add metadata
         results = {
@@ -632,6 +598,10 @@ def try_all_search_variations(site, base_terms):
             "hours_old": 336,      # Increased to last 14 days (was 168 = 7 days)
             "is_remote": True      # Explicitly look for remote jobs
         }
+        
+        if "linkedin" in str(site).lower():
+            # Without this, JobSpy returns LinkedIn jobs with no description at all
+            params["linkedin_fetch_description"] = True
         
         if "indeed" in str(site).lower():
             params.update({
