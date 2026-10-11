@@ -160,7 +160,7 @@ export default function CategoryStateModifierPage({
       <Head>
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
-        <link rel="canonical" href={metadata.canonical} />
+        <link rel="canonical" href={metadata.canonical} key="canonical" />
         <meta property="og:title" content={metadata.title} />
         <meta property="og:description" content={metadata.description} />
         <meta property="og:url" content={metadata.canonical} />

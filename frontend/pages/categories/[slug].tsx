@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GetStaticProps, GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -834,12 +834,11 @@ interface ClientOnlyJobsSectionProps {
 }
 
 function ClientOnlyJobsSection({ category, jobs, slug }: ClientOnlyJobsSectionProps) {
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
-  const [hasJobs, setHasJobs] = useState(false);
-  
-  useEffect(() => {
+  // Filter synchronously so the jobs are in the server-rendered HTML. Filtering
+  // in useEffect meant crawlers always saw the "No jobs available" empty state.
+  const filteredJobs = useMemo(() => {
     // Super aggressive filtering to remove any trace of mock jobs
-    const safeJobs = jobs.filter((job: Job) => {
+    return jobs.filter((job: Job) => {
       // Basic null check
       if (!job) return false;
       
@@ -863,11 +862,8 @@ function ClientOnlyJobsSection({ category, jobs, slug }: ClientOnlyJobsSectionPr
       
       return true;
     });
-    
-    console.log(`ClientOnly filtering: ${jobs.length} jobs reduced to ${safeJobs.length} safe jobs`);
-    setFilteredJobs(safeJobs);
-    setHasJobs(safeJobs.length > 0);
   }, [jobs]);
+  const hasJobs = filteredJobs.length > 0;
   
   // Show FEATURED JOBS section only if we have valid jobs
   if (!hasJobs) {

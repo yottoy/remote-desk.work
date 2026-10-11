@@ -24,8 +24,14 @@ const Layout: React.FC<LayoutProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
   
+  // Canonical URL: path without tracking params (e.g. Google for Jobs utm_*),
+  // keeping only pagination so paginated archives stay distinct.
+  const [pathOnly, queryString = ''] = router.asPath.split('#')[0].split('?');
+  const pageParam = new URLSearchParams(queryString).get('page');
+  const canonicalUrl = `https://www.clickclickjob.com${pathOnly === '/' ? '/' : pathOnly.replace(/\/$/, '')}${pageParam && pageParam !== '1' ? `?page=${pageParam}` : ''}`;
+
   // Generate full URL for Open Graph
-  const currentUrl = ogUrl || `https://www.clickclickjob.com${router.asPath}`;
+  const currentUrl = ogUrl || canonicalUrl;
   const fullOgImage = ogImage.startsWith('http') ? ogImage : `https://www.clickclickjob.com${ogImage}`;
   
 
@@ -80,6 +86,7 @@ const Layout: React.FC<LayoutProps> = ({
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
+        <link rel="canonical" href={canonicalUrl} key="canonical" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
         

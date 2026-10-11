@@ -154,15 +154,24 @@ export function generateContentPageEntries(baseUrl: string): SitemapEntry[] {
 /**
  * Generates job listing page entries (placeholder for dynamic job pages)
  */
-export function generateJobPageEntries(baseUrl: string, jobIds: string[]): SitemapEntry[] {
+export function generateJobPageEntries(
+  baseUrl: string,
+  jobs: (string | { id: string; lastmod?: Date | string })[]
+): SitemapEntry[] {
   const today = new Date().toISOString().split('T')[0];
   
-  return jobIds.map(jobId => ({
-    url: `${baseUrl}/jobs/view/${jobId}`,
-    lastmod: today,
-    changefreq: 'weekly' as const,
-    priority: 0.6
-  }));
+  // Use each job's real modification date; stamping every URL with today's
+  // date teaches Google to ignore our lastmod values.
+  return jobs.map(job => {
+    const { id, lastmod } = typeof job === 'string' ? { id: job, lastmod: undefined } : job;
+    const date = lastmod ? new Date(lastmod) : null;
+    return {
+      url: `${baseUrl}/jobs/view/${id}`,
+      lastmod: date && !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : today,
+      changefreq: 'weekly' as const,
+      priority: 0.6
+    };
+  });
 }
 
 /**
@@ -245,8 +254,11 @@ export function generateMainSitemap(options: SitemapOptions): string {
 /**
  * Generates a job-specific sitemap (for dynamic job listings)
  */
-export function generateJobsSitemap(baseUrl: string, jobIds: string[]): string {
-  const entries = generateJobPageEntries(baseUrl, jobIds);
+export function generateJobsSitemap(
+  baseUrl: string,
+  jobs: (string | { id: string; lastmod?: Date | string })[]
+): string {
+  const entries = generateJobPageEntries(baseUrl, jobs);
   return generateSitemapXML(entries);
 }
 

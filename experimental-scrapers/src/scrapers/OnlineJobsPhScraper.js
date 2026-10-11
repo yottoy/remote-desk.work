@@ -12,6 +12,21 @@ const {
 /**
  * Scraper for onlinejobs.ph with pagination support
  */
+/**
+ * Strip the card metadata that leaks into OnlineJobs.ph titles, e.g.
+ * "Senior Video Editor Full Time Posted on 2026-10-08 16:25:53 $900-$1500"
+ * -> "Senior Video Editor". Also drops "????" runs left by lost emoji.
+ */
+function normalizeOnlineJobsTitle(title) {
+  if (!title) return title;
+  return title
+    .replace(/\s+Posted on\b.*$/i, '')
+    .replace(/\s+(Full Time|Part Time|Gig|Any)$/i, '')
+    .replace(/\?{2,}/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 class OnlineJobsPhScraper extends BaseScraper {
   constructor(config = {}) {
     super('OnlineJobsPh', {
@@ -241,33 +256,20 @@ class OnlineJobsPhScraper extends BaseScraper {
       } catch (error) {
         // Continue with empty title
       }
+      // The job link wraps the whole card, so its text also carries the
+      // employment type, "Posted on <timestamp>" and the salary.
+      title = normalizeOnlineJobsTitle(title);
 
       // Extract company/poster information - improved logic
       let company = '';
       try {
         // Look for poster information in the text
         const posterMatch = fullText.match(/([^•\n]+)\s*•\s*Posted on/i);
+        // OnlineJobs.ph hides the employer. Guessing from the card's other
+        // lines picked up description fragments ("JOB OVERVIEW", "N/A", the
+        // salary) as the company, so fall back to the generic poster label.
         if (posterMatch) {
           company = cleanText(posterMatch[1]);
-        } else {
-          // Try to find company in structured way
-          const lines = fullText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-          
-          // Look for a line that might be the company/poster name
-          for (const line of lines) {
-            if (line !== title && 
-                line.length > 2 && 
-                line.length < 100 && 
-                !line.includes('Posted on') &&
-                !line.includes('Full Time') &&
-                !line.includes('Part Time') &&
-                !line.includes('$') &&
-                !line.includes('PHP') &&
-                !line.includes('Any')) {
-              company = cleanText(line);
-              break;
-            }
-          }
         }
       } catch (error) {
         // Continue without company
@@ -353,4 +355,4 @@ class OnlineJobsPhScraper extends BaseScraper {
   }
 }
 
-module.exports = OnlineJobsPhScraper; 
+module.exports = OnlineJobsPhScraper; module.exports.normalizeOnlineJobsTitle = normalizeOnlineJobsTitle;

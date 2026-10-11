@@ -145,7 +145,9 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
   
   const [jobs, setJobs] = useState<Job[]>(initialJobs);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(initialJobs);
-  const [isLoading, setIsLoading] = useState(true); // Start with loading state
+  // Server-rendered jobs must be visible in the initial HTML; only show the
+  // loading state when SSR returned nothing.
+  const [isLoading, setIsLoading] = useState(initialJobs.length === 0);
   const [apiError, setApiError] = useState<Error | null>(null); // Don't show initial error
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>(initialFilters);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);

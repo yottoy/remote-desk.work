@@ -60,7 +60,7 @@ const KeywordMetadata: React.FC<KeywordMetadataProps> = ({
       <meta name="twitter:description" content={formattedDescription} />
 
       {/* Canonical URL - important for SEO */}
-      <link rel="canonical" href={canonicalUrl} />
+      <link rel="canonical" href={canonicalUrl} key="canonical" />
       
       {/* Mobile optimization */}
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />

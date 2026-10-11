@@ -68,7 +68,7 @@ const EnhancedJobMetaTags: React.FC<EnhancedJobMetaTagsProps> = ({
       <meta name="keywords" content={`remote jobs, work from home, ${job.title.toLowerCase()}, ${job.company.toLowerCase()}, remote work opportunities, telecommute jobs`} />
       
       {/* Canonical URL */}
-      <link rel="canonical" href={currentUrl} />
+      <link rel="canonical" href={currentUrl} key="canonical" />
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content="article" />

@@ -82,19 +82,19 @@ const MedicalDataEntryJobsPage: React.FC<KeywordPageProps> = ({ title, h1, descr
   
   return (
     <>
-      <SchemaHead
-        schemas={allSchemas}
-        title={title}
-        description={description}
-        canonical={pageUrl}
-        openGraph={{
-          title: title,
-          description: description,
-          url: pageUrl,
-          type: 'website'
-        }}
-      />
       <Layout>
+        <SchemaHead
+          schemas={allSchemas}
+          title={title}
+          description={description}
+          canonical={pageUrl}
+          openGraph={{
+            title: title,
+            description: description,
+            url: pageUrl,
+            type: 'website'
+          }}
+        />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Breadcrumb Navigation */}
           <nav className="mb-8 text-sm text-gray-600" aria-label="Breadcrumb">

@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next';
 import { generateJobsSitemap } from '../utils/sitemapGenerator';
 import { connectToDatabase } from '../utils/mongodb';
+import { JOB_INDEXABLE_MONGO_FILTER } from '../utils/jobIndexability';
 
 // This component doesn't render anything - it's just for the sitemap generation
 export default function JobsSitemap() {
@@ -13,7 +14,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
 
     // Query DB directly to only include fresh, valid jobs
     // This avoids the API's pagination limit and ensures we filter by date
-    let jobIds: string[] = [];
+    let jobs: { id: string; lastmod?: Date }[] = [];
 
     try {
       const { db } = await connectToDatabase();
@@ -25,7 +26,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
         const sixtyDaysAgo = new Date();
         sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-        const jobs = await db.collection('jobs').find({
+        const docs = await db.collection('jobs').find({
           // Must have basic required fields
           title: { $exists: true, $ne: null },
           company: { $exists: true, $ne: null },
@@ -35,26 +36,32 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
           // Exclude mock/test jobs
           _id: { $not: { $regex: /^job\d+$/ } },
           $and: [
+            // Thin/malformed jobs are noindexed on the page, so keep them out too
+            JOB_INDEXABLE_MONGO_FILTER,
             { company: { $ne: 'TechCorp Solutions' } },
             { $or: [{ isMock: { $ne: true } }, { isMock: { $exists: false } }] },
             { $or: [{ is_mock_data: { $ne: true } }, { is_mock_data: { $exists: false } }] },
           ]
         }, {
-          projection: { _id: 1 },
+          projection: { _id: 1, updatedAt: 1, postedDate: 1 },
         })
+        .sort({ postedDate: -1 })
         .limit(10000)
         .toArray();
 
-        jobIds = jobs.map((job: any) => job._id.toString());
-        console.log(`Generated jobs sitemap with ${jobIds.length} fresh jobs (within 60 days)`);
+        jobs = docs.map((job: any) => ({
+          id: job._id.toString(),
+          lastmod: job.updatedAt || job.postedDate,
+        }));
+        console.log(`Generated jobs sitemap with ${jobs.length} fresh, indexable jobs (within 60 days)`);
       }
     } catch (dbError) {
       console.error('Error querying jobs for sitemap:', dbError);
-      // Continue with empty jobIds array
+      // Continue with empty jobs array
     }
 
     // Generate the jobs sitemap XML
-    const sitemapXML = generateJobsSitemap(baseUrl, jobIds);
+    const sitemapXML = generateJobsSitemap(baseUrl, jobs);
 
     // Set appropriate headers
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');

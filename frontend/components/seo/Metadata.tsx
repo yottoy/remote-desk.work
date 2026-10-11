@@ -72,7 +72,7 @@ const Metadata: React.FC<JobMetadataProps> = ({
       <meta name="twitter:description" content={description} />
 
       {/* Canonical URL - important for duplicate content */}
-      {pageUrl && <link rel="canonical" href={pageUrl} />}
+      {pageUrl && <link rel="canonical" href={pageUrl} key="canonical" />}
       
       {/* Mobile optimization */}
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />

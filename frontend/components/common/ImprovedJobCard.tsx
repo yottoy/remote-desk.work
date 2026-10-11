@@ -84,7 +84,9 @@ const ImprovedJobCard: React.FC<JobCardProps> = ({ job, variant = 'default', key
   
   // Get job link - handle both keyword pages and regular job pages
   const getJobLink = () => {
-    if (keyword) {
+    // Real DB jobs always link to their on-site detail page so crawlers can
+    // discover job pages from the keyword landing pages.
+    if (keyword && !/^[a-f0-9]{24}$/.test(String(job._id))) {
       return job.applyUrl || `#job-${job._id}`;
     }
     return `/jobs/view/${job._id}`;
@@ -273,8 +275,8 @@ const ImprovedJobCard: React.FC<JobCardProps> = ({ job, variant = 'default', key
             </span>
             
             <a 
-              href={getJobLink()} 
-              target={job.applyUrl ? "_blank" : undefined} 
+              href={job.applyUrl || getJobLink()}
+              target={job.applyUrl ? "_blank" : undefined}
               rel={job.applyUrl ? "noopener noreferrer" : undefined}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
             >

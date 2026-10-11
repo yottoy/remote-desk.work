@@ -36,7 +36,7 @@ const SchemaHead: React.FC<SchemaHeadProps> = ({
       {description && <meta name="description" content={description} />}
       
       {/* Canonical URL */}
-      {canonical && <link rel="canonical" href={canonical} />}
+      {canonical && <link rel="canonical" href={canonical} key="canonical" />}
       
       {/* Robots meta */}
       <meta name="robots" content={noindex ? "noindex,nofollow" : "index,follow"} />

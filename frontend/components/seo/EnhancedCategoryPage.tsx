@@ -184,7 +184,7 @@ const EnhancedCategoryPage: React.FC<EnhancedCategoryPageProps> = ({
         <meta name="keywords" content={`remote ${categoryName.toLowerCase()}, work from home ${categoryName.toLowerCase()}, ${categorySlug.replace('-', ' ')}, remote work opportunities, telecommute jobs`} />
         
         {/* Canonical URL */}
-        <link rel="canonical" href={`https://www.clickclickjob.com/categories/${categorySlug}`} />
+        <link rel="canonical" href={`https://www.clickclickjob.com/categories/${categorySlug}`} key="canonical" />
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />

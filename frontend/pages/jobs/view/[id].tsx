@@ -24,6 +24,7 @@ import ErrorBoundary from '../../../components/common/ErrorBoundary';
 import JobCard from '../../../components/common/JobCard';
 import { connectToDatabase } from '../../../utils/mongodb';
 import { formatJobDate, formatJobDescription } from '../../../utils/jobUtils';
+import { isIndexableJob } from '../../../utils/jobIndexability';
 import SchemaHead from '../../../components/seo/SchemaHead';
 import { generateJobPostingSchema, generateBreadcrumbSchema, JobData, BreadcrumbItem } from '../../../utils/schemaGenerator';
 import { ObjectId } from 'mongodb';
@@ -787,7 +788,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     // Get related jobs (same category or similar title words)
-    const titleWords = job.title.toLowerCase().split(' ')
+    // Strip punctuation before building the regex: titles like
+    // "Virtual Assistant (Client Onboarding)" produced an invalid pattern
+    // ("(client") and crashed the page with a 500.
+    const titleWords = job.title.toLowerCase().split(/\s+/)
+      .map((word: string) => word.replace(/[^a-z0-9]/g, ''))
       .filter((word: string) => word.length > 3 && !['the', 'and', 'for', 'with', 'this', 'that'].includes(word))
       .slice(0, 3);
     
@@ -795,7 +800,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       _id: { $ne: job._id },
       $or: [
         { jobCategory: job.jobCategory },
-        { title: { $regex: new RegExp(titleWords.join('|'), 'i') } }
+        ...(titleWords.length > 0 ? [{ title: { $regex: new RegExp(titleWords.join('|'), 'i') } }] : [])
       ]
     };
 
@@ -821,7 +826,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
     const isStale = jobDate < sixtyDaysAgo;
 
-    if (isStale) {
+    // Also noindex thin/malformed jobs (see utils/jobIndexability.ts)
+    const shouldNoindex = isStale || !isIndexableJob(job);
+
+    if (shouldNoindex) {
       res.setHeader('X-Robots-Tag', 'noindex');
     }
 
@@ -833,7 +841,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         relatedCategories: [],
         relatedJobs: JSON.parse(JSON.stringify(relatedJobs)),
         moreFromCompany: JSON.parse(JSON.stringify(moreFromCompany)),
-        isStale: isStale,
+        isStale: shouldNoindex,
       },
     };
   } catch (error) {

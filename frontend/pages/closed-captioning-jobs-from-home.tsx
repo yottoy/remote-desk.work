@@ -109,19 +109,19 @@ const ClosedCaptioningJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
 
   return (
     <>
-      <SchemaHead
-        schemas={allSchemas}
-        title={pageTitle}
-        description={pageDescription}
-        canonical={pageUrl}
-        openGraph={{
-          title: pageTitle,
-          description: pageDescription,
-          url: pageUrl,
-          type: 'website'
-        }}
-      />
       <Layout>
+        <SchemaHead
+          schemas={allSchemas}
+          title={pageTitle}
+          description={pageDescription}
+          canonical={pageUrl}
+          openGraph={{
+            title: pageTitle,
+            description: pageDescription,
+            url: pageUrl,
+            type: 'website'
+          }}
+        />
         {/* Hero Section */}
         <section className="bg-gradient-to-b from-blue-50 to-white py-16 border-b border-blue-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
