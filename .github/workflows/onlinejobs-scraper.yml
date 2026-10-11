@@ -1,9 +1,11 @@
 name: OnlineJobs.ph Scraper
 
 on:
+  # Schedule removed 2026-10-11: the OnlineJobs.ph source was dropped (listings
+  # target Philippine workers, not our US audience, and parsed poorly enough to
+  # hurt site-wide indexing). Existing records were moved to the
+  # jobs_archive_onlinejobs collection. Manual runs still possible.
   workflow_dispatch:
-  schedule:
-    - cron: '0 6 * * *'  # Daily at 6 AM UTC instead of every 6 hours
 
 jobs:
   scrape-onlinejobs:
