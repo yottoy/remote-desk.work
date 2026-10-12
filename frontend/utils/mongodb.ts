@@ -6,6 +6,10 @@ const MONGODB_DB = process.env.MONGODB_DB || 'clickclickjob';
 // Handle caching of the MongoDB connection
 let cachedClient: MongoClient | null = null;
 let cachedDb: any = null;
+// Requests that arrive while the first connection is still being made share
+// it. Without this, a crawler burst on a cold instance opened one client per
+// request, exhausted connections and surfaced as 500/503s in Search Console.
+let connecting: Promise<{ client: MongoClient | null; db: any }> | null = null;
 
 // Connect to MongoDB and cache the connection
 export async function connectToDatabase() {
@@ -14,29 +18,37 @@ export async function connectToDatabase() {
     return { client: cachedClient, db: cachedDb };
   }
 
-  // Connect to MongoDB
-  try {
-    if (!MONGODB_URI) {
-      throw new Error(
-        'Please define the MONGODB_URI environment variable'
-      );
-    }
+  if (!connecting) {
+    connecting = (async () => {
+      try {
+        if (!MONGODB_URI) {
+          throw new Error(
+            'Please define the MONGODB_URI environment variable'
+          );
+        }
 
-    const client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    
-    // Get the database
-    const db = client.db(MONGODB_DB);
-    
-    // Cache the client and connection
-    cachedClient = client;
-    cachedDb = db;
-    
-    return { client, db };
-  } catch (error) {
-    console.error('Failed to connect to MongoDB:', error);
-    return { client: null, db: null };
+        const client = new MongoClient(MONGODB_URI, {
+          maxPoolSize: 10,
+          serverSelectionTimeoutMS: 8000,
+        });
+        await client.connect();
+
+        // Cache the client and connection
+        cachedClient = client;
+        cachedDb = client.db(MONGODB_DB);
+
+        return { client, db: cachedDb };
+      } catch (error) {
+        console.error('Failed to connect to MongoDB:', error);
+        return { client: null, db: null };
+      } finally {
+        // Let a failed attempt be retried by the next request
+        connecting = null;
+      }
+    })();
   }
+
+  return connecting;
 }
 
 // Validate a job object to ensure it's not a mock/invalid job

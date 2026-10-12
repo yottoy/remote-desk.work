@@ -7,24 +7,17 @@
  * This helps with Google Search Console "Crawled - currently not indexed" issue.
  */
 
-import { MongoClient, Db } from 'mongodb';
+import { Db } from 'mongodb';
+import { connectToDatabase } from './mongodb';
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
-const MONGODB_DB = process.env.MONGODB_DB || 'clickclickjob';
-
-let cachedClient: MongoClient | null = null;
-
+// Reuse the app's shared connection; a second client per instance doubled
+// the connections opened during crawler bursts.
 async function getDatabase(): Promise<Db> {
-  if (!MONGODB_URI) {
-    throw new Error('MONGODB_URI is not defined');
+  const { db } = await connectToDatabase();
+  if (!db) {
+    throw new Error('Database connection unavailable');
   }
-
-  if (!cachedClient) {
-    cachedClient = new MongoClient(MONGODB_URI);
-    await cachedClient.connect();
-  }
-
-  return cachedClient.db(MONGODB_DB);
+  return db;
 }
 
 /**
