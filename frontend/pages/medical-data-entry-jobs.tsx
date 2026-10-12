@@ -5,7 +5,7 @@ import { keywordPagesData } from '../data/keywordPages';
 import Layout from '../components/layout/Layout';
 import ImprovedJobCard from '../components/common/ImprovedJobCard';
 import SchemaHead from '../components/seo/SchemaHead';
-import { generateFAQSchema, generateBreadcrumbSchema, generateJobPostingSchema } from '../utils/schemaGenerator';
+import { generateFAQSchema, generateBreadcrumbSchema, generateJobListSchema } from '../utils/schemaGenerator';
 
 interface JobListing {
   _id: string;
@@ -66,17 +66,7 @@ const MedicalDataEntryJobsPage: React.FC<KeywordPageProps> = ({ title, h1, descr
 
   const faqSchema = generateFAQSchema(faqItems);
 
-  const jobSchemas = jobs.slice(0, 10).map(job => generateJobPostingSchema({
-    _id: job._id,
-    title: job.title,
-    company: job.company,
-    location: job.location,
-    description: job.description,
-    salary: job.salary,
-    postedDate: job.postedDate,
-    employmentType: job.employmentType || job.jobType,
-    experienceLevel: job.experienceLevel,
-  }));
+  const jobSchemas = [generateJobListSchema(jobs.slice(0, 10))];
 
   const allSchemas = [breadcrumbSchema, faqSchema, ...jobSchemas];
   

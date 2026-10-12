@@ -168,6 +168,35 @@ function normalizeEmploymentType(jobType?: string): string[] {
   return ['FULL_TIME'];
 }
 
+const US_STATES: Record<string, string> = {
+  alabama: 'AL', alaska: 'AK', arizona: 'AZ', arkansas: 'AR', california: 'CA',
+  colorado: 'CO', connecticut: 'CT', delaware: 'DE', florida: 'FL', georgia: 'GA',
+  hawaii: 'HI', idaho: 'ID', illinois: 'IL', indiana: 'IN', iowa: 'IA',
+  kansas: 'KS', kentucky: 'KY', louisiana: 'LA', maine: 'ME', maryland: 'MD',
+  massachusetts: 'MA', michigan: 'MI', minnesota: 'MN', mississippi: 'MS',
+  missouri: 'MO', montana: 'MT', nebraska: 'NE', nevada: 'NV', 'new hampshire': 'NH',
+  'new jersey': 'NJ', 'new mexico': 'NM', 'new york': 'NY', 'north carolina': 'NC',
+  'north dakota': 'ND', ohio: 'OH', oklahoma: 'OK', oregon: 'OR', pennsylvania: 'PA',
+  'rhode island': 'RI', 'south carolina': 'SC', 'south dakota': 'SD', tennessee: 'TN',
+  texas: 'TX', utah: 'UT', vermont: 'VT', virginia: 'VA', washington: 'WA',
+  'west virginia': 'WV', wisconsin: 'WI', wyoming: 'WY', 'district of columbia': 'DC',
+};
+const US_STATE_CODES = new Set(Object.values(US_STATES));
+
+/**
+ * Split "Chicago, IL" / "Austin, Texas, US" into addressLocality + addressRegion.
+ * Falls back to the raw string as the locality when no US state is found.
+ */
+export function parseUSLocation(location: string): { addressLocality?: string; addressRegion?: string } {
+  const parts = location.split(',').map(p => p.trim()).filter(Boolean)
+    .filter(p => !/^(us|usa|united states)$/i.test(p));
+  const stateIndex = parts.findIndex(p => US_STATE_CODES.has(p.toUpperCase()) || US_STATES[p.toLowerCase()]);
+  if (stateIndex === -1) return { addressLocality: location.trim() };
+  const region = US_STATES[parts[stateIndex].toLowerCase()] || parts[stateIndex].toUpperCase();
+  const locality = parts.slice(0, stateIndex).join(', ');
+  return locality ? { addressLocality: locality, addressRegion: region } : { addressRegion: region };
+}
+
 /**
  * Generates Google-compliant JobPosting Schema.org markup for individual job listings
  * Follows all requirements from https://developers.google.com/search/docs/appearance/structured-data/job-posting
@@ -230,8 +259,9 @@ export function generateJobPostingSchema(job: JobData): object {
       "value": job._id
     },
 
-    // Application method
-    "directApply": true,
+    // Applications happen on the employer's site, not ours. Claiming
+    // directApply when it isn't true violates Google's job posting policy.
+    "directApply": false,
     "applicationContact": {
       "@type": "ContactPoint",
       "url": job.url || `${baseUrl}/jobs/view/${job._id}`
@@ -243,12 +273,15 @@ export function generateJobPostingSchema(job: JobData): object {
   if (isRemote) {
     schema.jobLocationType = "TELECOMMUTE";
     schema.applicantLocationRequirements = { "@type": "Country", "name": "US" };
+    // Fully remote jobs need no jobLocation; a country-only address just
+    // triggers "Missing streetAddress/postalCode/addressRegion" warnings.
+    delete schema.jobLocation;
   } else if (job.location && job.location.trim()) {
     schema.jobLocation = {
       "@type": "Place",
       "address": {
         "@type": "PostalAddress",
-        "addressLocality": job.location,
+        ...parseUSLocation(job.location),
         "addressCountry": "US"
       }
     };
@@ -558,3 +591,22 @@ export function generateJobBoardSchema(jobCount: number): object {
 export function generateJSONLD(schema: object): string {
   return JSON.stringify(schema, null, 0);
 } 
+
+/**
+ * Schema for a page that lists jobs. Google only allows JobPosting markup on
+ * a job's own detail page, so list pages point at those pages via an ItemList
+ * instead of repeating JobPosting blocks.
+ */
+export function generateJobListSchema(jobs: { _id?: any }[], baseUrl: string = 'https://www.clickclickjob.com') {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "itemListElement": jobs
+      .filter(job => job && job._id)
+      .map((job, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "url": `${baseUrl}/jobs/view/${job._id}`
+      }))
+  };
+}

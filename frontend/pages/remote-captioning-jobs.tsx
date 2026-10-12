@@ -5,7 +5,7 @@ import Layout from '../components/layout/Layout';
 import ImprovedJobCard from '../components/common/ImprovedJobCard';
 import SearchBar from '../components/common/SearchBar';
 import SchemaHead from '../components/seo/SchemaHead';
-import { generateFAQSchema, generateBreadcrumbSchema, generateJobPostingSchema } from '../utils/schemaGenerator';
+import { generateFAQSchema, generateBreadcrumbSchema, generateJobListSchema } from '../utils/schemaGenerator';
 import { EmailCaptureForm } from '../components/email-capture/EmailCaptureForm';
 import type { Job } from '../types/job';
 
@@ -103,17 +103,7 @@ const RemoteCaptioningJobsPage: React.FC<PageProps> = ({ jobs, recentJobsCount, 
 
   const faqSchema = generateFAQSchema(faqItems);
 
-  const jobSchemas = captioningJobs.slice(0, 10).map(job => generateJobPostingSchema({
-    _id: job._id,
-    title: job.title,
-    company: job.company,
-    location: (job as any).location || 'Remote',
-    description: job.description || `${job.title} position at ${job.company}.`,
-    salary: (job as any).salary,
-    postedDate: job.postedDate ? new Date(job.postedDate).toISOString() : new Date().toISOString(),
-    employmentType: (job as any).employmentType || (job as any).jobType,
-    experienceLevel: (job as any).experienceLevel,
-  }));
+  const jobSchemas = [generateJobListSchema(captioningJobs.slice(0, 10))];
 
   const allSchemas = [breadcrumbSchema, faqSchema, ...jobSchemas];
 
