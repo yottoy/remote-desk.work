@@ -81,6 +81,11 @@ async function readResultsFile() {
 
 const urlOf = (job) => job.url || job.job_url || job.job_url_direct || '';
 
+// direct_scraper.py's create_fallback_results() emits placeholder jobs
+// (is_mock_data, example.com URLs) when scraping fails; never import them.
+const isMockJob = (job) =>
+  job.is_mock_data === true || /^https?:\/\/(www\.)?example\.com\//i.test(urlOf(job));
+
 /**
  * Clean + dedupe the feed and build the upsert plan for each unique job.
  * Returns { records, skipped } where each record has { key, filter, set,
@@ -93,6 +98,10 @@ function buildUpsertPlan(jobs) {
   let skipped = 0;
 
   for (const job of jobs) {
+    if (isMockJob(job)) {
+      skipped++;
+      continue;
+    }
     const cleanedTitle = cleanText(job.title) || 'Untitled Position';
     const cleanedCompany = cleanText(job.company) || 'Unknown Company';
     const url = urlOf(job);
