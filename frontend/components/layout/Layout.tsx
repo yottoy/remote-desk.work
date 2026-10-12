@@ -17,7 +17,7 @@ const Layout: React.FC<LayoutProps> = ({
   children, 
   title = 'ClickClickJob.com | Remote Jobs',
   description = 'Find verified remote data entry & administrative jobs. 100+ work-from-home opportunities updated daily. No experience options available.',
-  ogImage = 'https://via.placeholder.com/1200x630/3B82F6/FFFFFF?text=ClickClickJob.com%20-%20Remote%20Jobs',
+  ogImage = '/og-image.jpg',
   ogUrl
 }) => {
   const router = useRouter();
@@ -89,6 +89,8 @@ const Layout: React.FC<LayoutProps> = ({
         <link rel="canonical" href={canonicalUrl} key="canonical" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
@@ -448,7 +450,7 @@ const Layout: React.FC<LayoutProps> = ({
                     </Link>
                   </li>
                   <li>
-                    <Link href="/jobs/administrative/texas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
+                    <Link href="/remote-admin-jobs-texas" className="text-gray-600 hover:text-blue-600 text-sm transition-colors">
                       Admin Jobs in Texas
                     </Link>
                   </li>

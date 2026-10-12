@@ -6,7 +6,7 @@ import {
 } from '../data/programmaticSeo';
 
 function generateSiteMap(): string {
-  const baseUrl = 'https://clickclickjob.com';
+  const baseUrl = 'https://www.clickclickjob.com';
   const today = new Date().toISOString().split('T')[0];
   
   const urls: string[] = [];
