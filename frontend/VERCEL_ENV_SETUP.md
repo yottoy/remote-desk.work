@@ -53,4 +53,21 @@ If you encounter build errors:
 For MongoDB connection issues, ensure:
 - Your MongoDB server allows connections from Vercel IP addresses
 - Your database user has the correct permissions
-- Network access is properly configured in MongoDB Atlas (if using Atlas) 
+- Network access is properly configured in MongoDB Atlas (if using Atlas)
+
+## AdSense (optional)
+
+The AdSense head script and `public/ads.txt` use publisher `ca-pub-3377844943647950`
+by default; override with `NEXT_PUBLIC_ADSENSE_CLIENT_ID` if the account changes.
+
+The two manual display units on `/jobs` render only when their slot IDs are set.
+Create the units in AdSense (Ads > By ad unit > Display) and copy the `data-ad-slot`
+values into Vercel:
+
+| Variable | Unit |
+|---|---|
+| `NEXT_PUBLIC_ADSENSE_SLOT_JOBS_TOP` | Horizontal unit above the job list |
+| `NEXT_PUBLIC_ADSENSE_SLOT_JOBS_BOTTOM` | Rectangle unit below the job list |
+
+Leave them unset to rely on Auto Ads alone. Never use placeholder slot IDs: an
+unknown slot renders an empty box and earns nothing.

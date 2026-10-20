@@ -1,4 +1,5 @@
 import Document, { Html, Head, Main, NextScript, DocumentContext } from 'next/document';
+import { ADSENSE_CLIENT_ID } from '../config/ads';
 
 class MyDocument extends Document {
   static async getInitialProps(ctx: DocumentContext) {
@@ -23,8 +24,13 @@ class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
-          {/* Google AdSense */}
-          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3377844943647950" crossOrigin="anonymous"></script>
+          {/* Google AdSense: site verification + the single adsbygoogle.js load for the page */}
+          <meta name="google-adsense-account" content={ADSENSE_CLIENT_ID} />
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
+            crossOrigin="anonymous"
+          ></script>
           {/* TinyAdz */}
           <script src="https://cdn.apitiny.net/scripts/v2.0/main.js" data-site-id="6a00b100afd556cb45e3ae03" data-test-mode="false" async></script>
           {/*
