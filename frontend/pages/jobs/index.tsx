@@ -6,6 +6,7 @@ import SearchBar from '../../components/common/SearchBar';
 import JobList from '../../components/common/JobList';
 import AdvancedFilters from '../../components/common/AdvancedFilters';
 import AdBanner from '../../components/ads/AdBanner';
+import { ADSENSE_SLOTS } from '../../config/ads';
 import analytics from '../../utils/analytics';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import type { Job } from '../../types/job';
@@ -484,13 +485,12 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
                 </button>
               </div>
               
-              {/* Top ad banner - fixed height */}
-              <div className="mb-6" style={{ height: '90px', overflow: 'hidden' }}>
-                <AdBanner 
-                  adSlotId="1234567890" 
-                  adFormat="horizontal"
-                />
-              </div>
+              {/* Top ad unit; rendered only when NEXT_PUBLIC_ADSENSE_SLOT_JOBS_TOP is set */}
+              {ADSENSE_SLOTS.jobsTop && (
+                <div className="mb-6">
+                  <AdBanner adSlotId={ADSENSE_SLOTS.jobsTop} adFormat="horizontal" minHeight={90} />
+                </div>
+              )}
               
               {/* Job listings with proper error handling */}
               <ErrorBoundary>
@@ -510,13 +510,12 @@ const JobListingsPage: React.FC<JobsPageProps> = ({
                 />
               </ErrorBoundary>
               
-              {/* Bottom ad banner - fixed height */}
-              <div className="mt-6" style={{ height: '250px', overflow: 'hidden' }}>
-                <AdBanner 
-                  adSlotId="0987654321" 
-                  adFormat="rectangle"
-                />
-              </div>
+              {/* Bottom ad unit; rendered only when NEXT_PUBLIC_ADSENSE_SLOT_JOBS_BOTTOM is set */}
+              {ADSENSE_SLOTS.jobsBottom && (
+                <div className="mt-6">
+                  <AdBanner adSlotId={ADSENSE_SLOTS.jobsBottom} adFormat="rectangle" minHeight={250} />
+                </div>
+              )}
             </div>
           </div>
           
