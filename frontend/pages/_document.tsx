@@ -31,8 +31,6 @@ class MyDocument extends Document {
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
             crossOrigin="anonymous"
           ></script>
-          {/* TinyAdz */}
-          <script src="https://cdn.apitiny.net/scripts/v2.0/main.js" data-site-id="6a00b100afd556cb45e3ae03" data-test-mode="false" async></script>
           {/*
             Google Fonts removed — Inter is now self-hosted via next/font/google in _app.tsx.
             This eliminates the render-blocking external font request that was hurting LCP.
