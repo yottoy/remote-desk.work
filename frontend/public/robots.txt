@@ -1,11 +1,30 @@
 # Robots.txt for ClickClickJob.com
-# Updated: 2026-01-31
+# Updated: 2026-10-29
+
+# AI-training and SEO-tool crawlers: no search value, large share of request volume
+User-agent: meta-externalagent
+User-agent: Meta-ExternalFetcher
+User-agent: AhrefsBot
+User-agent: AhrefsSiteAudit
+User-agent: PetalBot
+User-agent: ExaBot
+User-agent: SemrushBot
+User-agent: Baiduspider
+User-agent: barkrowler
+User-agent: SERankingBacklinksBot
+User-agent: ClaudeBot
+User-agent: Amazonbot
+User-agent: GPTBot
+User-agent: CCBot
+User-agent: Bytespider
+User-agent: MJ12bot
+User-agent: DotBot
+Disallow: /
 
 User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /admin/
-Disallow: /_next/
 Disallow: /test*
 Disallow: /*.json$
 

@@ -112,9 +112,7 @@ class AnalyticsService {
     }
     
     // In production, send to analytics server
-    if (process.env.NODE_ENV === 'production') {
-      this.sendToAnalyticsServer('pageview', payload);
-    } else if (this.debugMode) {
+    if (this.debugMode) {
       console.log('PageView tracked:', payload);
     }
   }
@@ -138,9 +136,7 @@ class AnalyticsService {
     };
     
     // In production, send to analytics server
-    if (process.env.NODE_ENV === 'production') {
-      this.sendToAnalyticsServer('event', payload);
-    } else if (this.debugMode) {
+    if (this.debugMode) {
       console.log('Event tracked:', payload);
     }
   }
@@ -175,9 +171,7 @@ class AnalyticsService {
     }
     
     // In production, send to analytics server
-    if (process.env.NODE_ENV === 'production') {
-      this.sendToAnalyticsServer('filter', payload);
-    } else if (this.debugMode) {
+    if (this.debugMode) {
       console.log('Filter usage tracked:', payload);
     }
     
@@ -221,9 +215,7 @@ class AnalyticsService {
     }
     
     // In production, send to analytics server
-    if (process.env.NODE_ENV === 'production') {
-      this.sendToAnalyticsServer('search', payload);
-    } else if (this.debugMode) {
+    if (this.debugMode) {
       console.log('Search tracked:', payload);
     }
     
@@ -265,9 +257,7 @@ class AnalyticsService {
     }
     
     // In production, send to analytics server
-    if (process.env.NODE_ENV === 'production') {
-      this.sendToAnalyticsServer('error', payload);
-    } else if (this.debugMode) {
+    if (this.debugMode) {
       console.error('Error tracked:', payload);
     }
   }
@@ -298,34 +288,8 @@ class AnalyticsService {
       });
     }
     
-    if (process.env.NODE_ENV === 'production') {
-      this.sendToAnalyticsServer('job_interaction', payload);
-    } else if (this.debugMode) {
+    if (this.debugMode) {
       console.log('Job interaction tracked:', payload);
-    }
-  }
-  
-  /**
-   * Send data to analytics server - implementation would depend on your backend
-   */
-  private sendToAnalyticsServer(eventType: string, payload: any): void {
-    try {
-      fetch('/api/analytics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          eventType,
-          payload
-        }),
-        // Use keepalive to ensure data is sent even if page is being unloaded
-        keepalive: true
-      }).catch(err => {
-        console.error('Failed to send analytics data:', err);
-      });
-    } catch (error) {
-      console.error('Error sending analytics data:', error);
     }
   }
   

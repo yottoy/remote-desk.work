@@ -37,22 +37,6 @@ export function reportWebVitals(metric: WebVitalsMetric) {
       entries: metric.entries
     });
   }
-  
-  // Send to custom analytics endpoint
-  if (typeof window !== 'undefined') {
-    try {
-      navigator.sendBeacon('/api/analytics/web-vitals', JSON.stringify({
-        name: metric.name,
-        value: metric.value,
-        delta: metric.delta,
-        id: metric.id,
-        url: window.location.href,
-        timestamp: Date.now()
-      }));
-    } catch (error) {
-      console.warn('Failed to send Web Vitals metric:', error);
-    }
-  }
 }
 
 /**
